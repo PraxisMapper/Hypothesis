@@ -1,46 +1,80 @@
+--TODO
+--ponder keeping DB open as optimization? Need to see if this is actually slow as is.
+--add game tables
+--track more data
+--ponder converting between S2, PlusCodes, and GPS coords. if not, remove from table.
+--enable smooth updates as i change the DB.
+--think about order of createBaselineContent and upgradeDatabaseVersion. create should probably be after.
+
+
 local sqlite3 = require("sqlite3")
+local db
+local dbVersionID = 1
 
 function startDatabase()
     -- Open "data.db". If the file doesn't exist, it will be created
     local path = system.pathForFile("data.db", system.DocumentsDirectory)
-    local db = sqlite3.open(path)
+    db = sqlite3.open(path)
 
     -- Handle the "applicationExit" event to close the database
     local function onSystemEvent(event)
-        --if (event.type == "applicationExit") then db:close() end
+        if (event.type == "applicationExit" and db:isopen()) then db:close() end
         --I close it up in each function.
     end
 
-    -- Set up the table if it doesn't exist
-
+    -- Set up the table if it doesn't exist 
     --might need a daily table, to track cells visited today
     --same for weekly results.
     --plusCodesVisited will be permanent first-time visits
+    --I shouldn't use Inserts in this block, since they'll still be run each startup.
     local tablesetup =
-        [[CREATE TABLE IF NOT EXISTS test (id INTEGER PRIMARY KEY, content, content2);
-        CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, totalVisits);
+        [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, totalVisits);
         CREATE TABLE IF NOT EXISTS acheivements(id INTEGER PRIMARY KEY, name, acheived, acheivedOn);
-        CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked);
+        CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked, totalPoints, totalCellVisits);
+        CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID);
+        CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
+        CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         ]]
+        --CREATE TABLE IF NOT EXISTS ConversionLinks(id INTEGER PRIMARY KEY, pluscode, s2Cell, lat, long); --not sure yet if this is a thing i want to bother with.
+        --INSERT INTO systemData(dbVersionID) values (]] .. dbVersionID .. [[);
+
     if (debug) then 
-        print(tablesetup) 
+        --print(tablesetup) 
         print("SQLite version " .. sqlite3.version())
     end
     Exec(tablesetup)
+    upgradeDatabaseVersion()
+    createBaselineContent()
 
     -- Setup the event listener to catch "applicationExit"
-    --Runtime:addEventListener("system", onSystemEvent)
+    Runtime:addEventListener("system", onSystemEvent)
 
-    db:close();
+    --db:close();
+end
+
+function upgradeDatabaseVersion()
+    --query DB for current version
+    if (dbVersionID <= 1) then
+        --do any scripting to match upgrade to version 1
+        --which should be none, since that's the baseline for this feature.
+    end
+    if (dbVersionID <= 2) then
+        --do any scripting to match upgrade to version 2
+        --
+    end
 end
 
 function ResetDatabase()
-    local path = system.pathForFile("data.db", system.DocumentsDirectory)
-    local db = sqlite3.open(path)
+    --db:close()
+    path = system.pathForFile("data.db", system.DocumentsDirectory)
+    db = sqlite3.open(path)
     db:exec("drop table test")
     db:exec("drop table plusCodesVisited")
     db:exec("drop table acheivements")
     db:exec("drop table playerData")
+    db:exec("drop table systemData")
+    db:exec("drop table weeklyVisited")
+    db:exec("drop table dailyVisited")
     db:close()
     startDatabase()
 end
@@ -48,12 +82,12 @@ end
 function Query(sql)
     if (debug) then print("sql command:" .. sql) end
     results = {}
-    local path = system.pathForFile("data.db", system.DocumentsDirectory)
-    local db = sqlite3.open(path)
+    --local path = system.pathForFile("data.db", system.DocumentsDirectory)
+    --local db = sqlite3.open(path)
     for row in db:rows(sql) do
-        table.insert(results, row)
+        table.insert(results, row) --todo potential optimization? especially if I just iPairs this table.
     end
-    db:close()
+    --db:close()
     if (debug) then dump(results) end
     return results
 end
@@ -61,74 +95,47 @@ end
 function Exec(sql)
     if (debug) then print("sql command:" .. sql) end
     results = {}
-    local path = system.pathForFile("data.db", system.DocumentsDirectory)
-    local db = sqlite3.open(path) 
+    --local path = system.pathForFile("data.db", system.DocumentsDirectory)
+    --local db = sqlite3.open(path) 
     local resultCode = db:exec(sql);
     
     if (resultCode == 0) then
-        db:close()
+        --db:close()
         return
     end
 
     --now its all error tracking.
     local errormsg = db:errmsg()
     if (debug) then print("sql exec error: " .. errormsg) end
-    db:close()
+    --db:close()
 end
 
 function createBaselineContent()
      -- Open "data.db". If the file doesn't exist, it will be created (should have been done above.)
-     local path = system.pathForFile("data.db", system.DocumentsDirectory)
-     local db = sqlite3.open(path)
+     --local path = system.pathForFile("data.db", system.DocumentsDirectory)
+     --local db = sqlite3.open(path)
 
-     --pre-fill plus codes? nah.
+     --insert system data row
+     local query = "SELECT COUNT(*) FROM playerData"
+     local dataPresent = Query(query)
+     for i,row in ipairs(Query(query)) do
+        if (row[1] == 1) then
+            --data exists, bail out.
+            return
+        else
+            --Database is empty, time to create the baseline data.
+            local cmd = ""
+            cmd = "INSERT INTO systemData(dbVersionID) values (" .. dbVersionID .. ")";
+            Exec(cmd)
+            cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits) values (0, 0, 0)";
+            Exec(cmd)
+        end
+    end
 
      --create acheivement data.
      local acheivementRows = { "INSERT INTO acheivements VALUES ()", "", ""}
      --foreach these strings.
 
-     --examples.
-     -- Add rows with an auto index in 'id'. You don't need to specify a set of values because we're populating all of them.
-    local testvalue = {}
-    testvalue[1] = "Hello"
-    testvalue[2] = "World"
-    testvalue[3] = "Lua"
-    local tablefill = [[INSERT INTO test VALUES (NULL, ']] .. testvalue[1] ..
-                          [[',']] .. testvalue[2] .. [['); ]]
-    local tablefill2 = [[INSERT INTO test VALUES (NULL, ']] .. testvalue[2] ..
-                           [[',']] .. testvalue[1] .. [['); ]]
-    local tablefill3 = [[INSERT INTO test VALUES (NULL, ']] .. testvalue[1] ..
-                           [[',']] .. testvalue[3] .. [['); ]]
-    db:exec(tablefill)
-    db:exec(tablefill2)
-    db:exec(tablefill3)
-
-    db:close()
-end
-
-function AddPlusCode(code) --string, pluscode
-    if (debug) then print("begin adding plus code") end
-    --check 1: is this a brand new cell?
-    local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE pluscode = '" .. code .. "'"
-    for i,row in ipairs(Query(query)) do --todo: find better parsing method
-        if (debug) then print("row data:" .. dump(row)) end
-        if (row[1] == 0) then
-            if (debug) then print("inserting new row") end
-            local insert = "INSERT INTO plusCodesVisited (pluscode, lat, long, firstVisitedOn, totalVisits) VALUES ('" .. code .. "', 0,0, " .. os.time() .. ", 1)" --TODO acutal lat and long value, or drop those from the table?
-            Exec(insert)
-        else
-            if (debug) then print("updating existing data") end
-            local update = "UPDATE plusCodesVisited SET totalVisits = totalVisits + 1 WHERE plusCode = '" .. code  .. "'"
-            Exec(update)
-        end
-    end 
-
-    --check 2: this our first visit this week?
-
-    --check 3? this our first visit today?
-
-
-    
     --db:close()
 end
 
@@ -150,9 +157,19 @@ function VisitedCell(pluscode)
     end
 end
 
+--should probably be a gamelogic method
 function TotalExploredCells()
     if (debug) then print("opening total explored cells ") end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited"
+    --if Query(query)[1] == 1 then
+    for i,row in ipairs(Query(query)) do
+        return row[1]
+    end
+end
+
+function Score()
+    if (debug) then print("opening score ") end
+    local query = "SELECT totalPoints as p from playerData"
     --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
         return row[1]
