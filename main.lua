@@ -10,6 +10,11 @@
 --add game logic for game.
 --name and baseline assets.
 --use Composer functionality to allow multiple scenes/screens.
+--make a screen that draws the whole explored map you have, scaled to screen? requires drawing directly to a bitmap
+--look into using timer.performwithdelay() as a method for updating objects repeatedly instead of only on events.
+--calculate distance between location events, track distance travelled in db
+--make button to switch between 8-digit and 10-digit grids.
+--draw 8-digit grid. Make it distinct from 10-digit grid.
 
 system.setIdleTimer(false) --disables screen auto-off.
 
@@ -34,12 +39,9 @@ require("plusCodes")
 currentPlusCode = ""
 lastPlusCode = ""
 
-require("UIParts")
-CreateSquareGrid(23)
+local composer = require("composer")
+composer.gotoScene("10GridScene")
 
-function update()
-    --todo: call this once a second to update the screen? or only update on location change
-end
 
 local function gpsListener(event)
     if (debug) then
@@ -54,12 +56,7 @@ local function gpsListener(event)
 
     local pluscode = tryMyEncode(event.latitude, event.longitude, 10); --only goes to 10 right now. TODO expand if I want to for fun.
     if (debug)then print ("Plus Code: " .. pluscode) end
-    currentPlusCode = pluscode
-
-    --update stuff that always needs updated    
-    timeText.text = "Current time:" .. os.date("%X")
-    directionArrow.rotation = event.direction
-
+    currentPlusCode = pluscode   
     if (lastPlusCode == currentPlusCode) then
         --dont update stuff, we're still standing in the same spot.
         return
@@ -71,15 +68,8 @@ local function gpsListener(event)
     --do DB processing on plus codes.
     --this should be a gameLogic function
     grantPoints(currentPlusCode)
-
-    --redraw grid on screen.
-    UpdateCustomGrid()    
-    
-    locationText.text = "Current location:" .. currentPlusCode
-    countText.text = "Total Explored Cells: " .. TotalExploredCells()
-    pointText.text = "Score: " .. Score()
-
 end
 
 --will need to remove this manually on exit
 Runtime:addEventListener("location", gpsListener) 
+

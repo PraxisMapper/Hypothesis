@@ -5,6 +5,7 @@
 --ponder converting between S2, PlusCodes, and GPS coords. if not, remove from table.
 --enable smooth updates as i change the DB.
 --think about order of createBaselineContent and upgradeDatabaseVersion. create should probably be after.
+--cache data in a table, so i can just ping memory instead of disk for all (23 * 23) cells twice a second. Possibly.
 
 
 local sqlite3 = require("sqlite3")
@@ -31,7 +32,7 @@ function startDatabase()
         [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, totalVisits);
         CREATE TABLE IF NOT EXISTS acheivements(id INTEGER PRIMARY KEY, name, acheived, acheivedOn);
         CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked, totalPoints, totalCellVisits);
-        CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID);
+        CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID, isGoodPerson, coffeesBought);
         CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         ]]
@@ -60,7 +61,8 @@ function upgradeDatabaseVersion()
     end
     if (dbVersionID <= 2) then
         --do any scripting to match upgrade to version 2
-        --
+        -- add isGoodPerson, coffeesBought to systemData
+        local v2Command = "ALTER TABLE systemData; UPDATE systemData SET isGoodPerson = 0, coffeesBought = 0;"
     end
 end
 
@@ -125,7 +127,7 @@ function createBaselineContent()
         else
             --Database is empty, time to create the baseline data.
             local cmd = ""
-            cmd = "INSERT INTO systemData(dbVersionID) values (" .. dbVersionID .. ")";
+            cmd = "INSERT INTO systemData(dbVersionID, isGoodPerson, coffeesBought) values (" .. dbVersionID .. ", 0, 0)";
             Exec(cmd)
             cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits) values (0, 0, 0)";
             Exec(cmd)

@@ -76,6 +76,8 @@ end
 function shiftCell(pluscode, xShift, yShift)
     --take the current cell, move it some number of cells in both directions (positive or negative)
     --will probably only work for values between -39 and 39. Shifting by 20 means you've move up 1 higher level cell entirely,
+
+    debug = false
     local newCode = pluscode
     local currentDigit = ""
     local digitIndex = 0
@@ -121,6 +123,7 @@ function shiftCell(pluscode, xShift, yShift)
     end
     if (debug)then print ("newcode is " .. newCode) end
 
+    debug = true
     return newCode
 end
 
