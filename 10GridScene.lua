@@ -22,7 +22,6 @@ local visitedCell = {.1, .1, .7, 1}
 local timerResults ={}
 
 local firstRun = true
-local loopTimer = true
 
 local locationText = ""
 local countText = ""
@@ -37,8 +36,9 @@ local function UpdateLocal()
     if (debug) then print("start UpdateLocal") end
     if (debug) then print(currentPlusCode) end
 
-    if (currentPlusCode ~= lastPlusCode or firstRun) then
+    if (currentPlusCode ~= previousPlusCode or firstRun) then
         firstRun = false
+        previousPlusCode = currentPlusCode
         for square = 1, #cellCollection do --this is supposed to be faster than ipairs
             --if (debug) then print("displaycell " .. cellCollection[square].gridX .. "," .. cellCollection[square].gridY) end
             --check each spot based on current cell, modified by gridX and gridY
@@ -56,17 +56,18 @@ local function UpdateLocal()
     countText.text = "Total Explored Cells: " .. TotalExploredCells()
     pointText.text = "Score: " .. Score()
     timeText.text = "Current time:" .. os.date("%X")
-    --directionArrow.rotation = event.direction 
+    directionArrow.rotation = currentHeading
 
 
     if (debug) then print("end updateLocal") end
-    if (loopTimer) then
-        timerResults = timer.performWithDelay(500, UpdateLocal, 1) 
-    end
 end
 
 local function SwitchToBigGrid()
-    composer.gotoScene("8GridScene")
+    local options = {
+        effect = "flip",
+        time = 125,
+    }
+    composer.gotoScene("8GridScene", options)
 end
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -102,7 +103,6 @@ function scene:create( event )
 
 end
  
- 
 -- show()
 function scene:show( event )
     if (debug) then print("showing 10GridScene") end
@@ -114,13 +114,9 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen 
-        --while (loopTimer) do
-            loopTimer = true
-            timerResults = timer.performWithDelay(500, UpdateLocal(), -1) 
-        --end
+            timerResults = timer.performWithDelay(500, UpdateLocal, -1)  
     end
 end
- 
  
 -- hide()
 function scene:hide( event )
@@ -129,16 +125,13 @@ function scene:hide( event )
     local phase = event.phase
 
     if ( phase == "will" ) then
-        -- Code here runs when the scene is on screen (but is about to go off screen)
-        loopTimer = false
-        --timer.cancel(timerResults)
+        timer.cancel(timerResults)
  
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
  
     end
 end
- 
  
 -- destroy()
 function scene:destroy( event )

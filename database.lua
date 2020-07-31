@@ -6,7 +6,7 @@
 --enable smooth updates as i change the DB.
 --think about order of createBaselineContent and upgradeDatabaseVersion. create should probably be after.
 --cache data in a table, so i can just ping memory instead of disk for all (23 * 23) cells twice a second. Possibly.
-
+require("helpers")
 
 local sqlite3 = require("sqlite3")
 local db
@@ -46,6 +46,7 @@ function startDatabase()
     Exec(tablesetup)
     upgradeDatabaseVersion()
     createBaselineContent()
+    ResetDailyWeekly(0)
 
     -- Setup the event listener to catch "applicationExit"
     Runtime:addEventListener("system", onSystemEvent)
@@ -82,7 +83,7 @@ function ResetDatabase()
 end
 
 function Query(sql)
-    if (debug) then print("sql command:" .. sql) end
+    --if (debug) then print("sql command:" .. sql) end
     results = {}
     --local path = system.pathForFile("data.db", system.DocumentsDirectory)
     --local db = sqlite3.open(path)
@@ -91,7 +92,7 @@ function Query(sql)
     end
     --db:close()
     if (debug) then dump(results) end
-    return results
+    return results 
 end
 
 function Exec(sql)
@@ -141,9 +142,15 @@ function createBaselineContent()
     --db:close()
 end
 
-function DBReset()
+function ResetDailyWeekly()
     --checks for daily and weekly reset times.
-    --if oldest date in daily/weekly table is over 24/(24 * 7) hours old, delete everything in the table.
+    --if oldest date in daily/weekly table is over 24/(24 * 7) hours old, delete everything in the table. (actually , do 22 hour reset)
+    local timeDiffDaily = os.time() - (60 * 60 * 22) --22 hours, converted to seconds.
+    local cmd = "DELETE FROM dailyVisited WHERE VisitedOn < " ..timeDiffDaily
+    Exec(cmd)
+    local timeDiffWeekly = os.time() - math.floor(60 * 60 * 24 * 6.9) -- 6.9 days, converted to seconds
+    cmd = "DELETE FROM weeklyVisited WHERE VisitedOn < " ..timeDiffWeekly
+    Exec(cmd)
 end
 
 function VisitedCell(pluscode)
@@ -159,10 +166,32 @@ function VisitedCell(pluscode)
     end
 end
 
+function Visited8Cell(pluscode)
+    if (debug) then print("Checking if visited current 8 cell " .. pluscode) end
+    local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE substr(pluscode, 1, 8) = '" .. pluscode .. "'"
+    --if Query(query)[1] == 1 then
+    for i,row in ipairs(Query(query)) do
+        if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
+            return true
+        else
+            return false
+        end
+    end
+end
+
 --should probably be a gamelogic method
 function TotalExploredCells()
     if (debug) then print("opening total explored cells ") end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited"
+    --if Query(query)[1] == 1 then
+    for i,row in ipairs(Query(query)) do
+        return row[1]
+    end
+end
+
+function TotalExplored8Cells()
+    if (debug) then print("opening total explored 8 cells ") end
+    local query = "SELECT COUNT(DISTINCT substr(pluscode, 1, 8)) as c FROM plusCodesVisited"
     --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
         return row[1]

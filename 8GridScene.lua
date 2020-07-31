@@ -12,17 +12,16 @@ if (debug) then print("10GridScene loading") end
 -- -----------------------------------------------------------------------------------
 
 --TODO
---additional colors, to indicate when a cell has a bonus waiting to be collected. (colors here are none/daily/weekly. FirstTime is on the other grid now)
+--additional colors, to indicate when a cell has a bonus waiting to be collected. (colors here are visited/notYetVisited. recurring bonuses are on the other grid)
 --add a bounce-and-fall popup for when you gain score, add a sound effect to that too.
 
 local cellCollection = {}
 --color codes
-local unvisitedCell = {.8, .3, .3, 1}
-local visitedCell = {.1, .7, .7, 1}
-local timerResults ={}
+local visitedCell = {.8, .3, .3, 1}
+local unvisitedCell = {.1, .7, .7, 1}
+local timerResults8 ={}
 
-local firstRun = true
-local loopTimer = true
+local firstRun8 = true
 
 local locationText = ""
 local countText = ""
@@ -31,18 +30,22 @@ local timeText = ""
 local directionArrow = ""
 
 --This is sufficiently fast with debug=false ot not be real concerned about performance issues.
-local function UpdateLocal()
+local function UpdateLocal8()
     --at size 23, this takes .04 seconds with debug = false
     --at size 23, this takes .55 seconds with debug = true. Lots of console writes take a while, huh
-    if (debug) then print("start UpdateLocal") end
-    if (debug) then print(currentPlusCode) end
+    if (debug) then print("start UpdateLocal8") end
+    local currentPlusCode8 = currentPlusCode:sub(1,8)
+    local previousPlusCode8 =  previousPlusCode:sub(1,8)
+    if (debug) then print(currentPlusCode8) end
 
-    if (currentPlusCode ~= lastPlusCode or firstRun) then
-        firstRun = false
+    if (currentPlusCode8 ~= previousPlusCode8 or firstRun8) then
+        firstRun8 = false
+        previousPlusCode8 = currentPlusCode8
+        if (debug) then print("in 8 grid loop " ..previousPlusCode8 .. " " .. currentPlusCode8) end
         for square = 1, #cellCollection do --this is supposed to be faster than ipairs
             --if (debug) then print("displaycell " .. cellCollection[square].gridX .. "," .. cellCollection[square].gridY) end
             --check each spot based on current cell, modified by gridX and gridY
-            if VisitedCell(shiftCell(currentPlusCode, cellCollection[square].gridX, cellCollection[square].gridY)) then
+            if Visited8Cell(Shift8Block(currentPlusCode8, cellCollection[square].gridX, cellCollection[square].gridY)) then
                 cellCollection[square].fill = visitedCell
             else
                 cellCollection[square].fill = unvisitedCell
@@ -50,23 +53,24 @@ local function UpdateLocal()
         end
     end
 
-    if (debug) then print("grid done or skipped") end
+    if (debug) then print("8grid done or skipped") end
     if (debug) then print(locationText.text) end
-    locationText.text = "Current location:" .. currentPlusCode
-    countText.text = "Total Explored Cells: " .. TotalExploredCells()
+    locationText.text = "Current 8 location:" .. currentPlusCode8
+    countText.text = "Total Explored 8 Cells: " .. TotalExplored8Cells()
     pointText.text = "Score: " .. Score()
     timeText.text = "Current time:" .. os.date("%X")
-    --directionArrow.rotation = event.direction 
+    directionArrow.rotation = currentHeading
 
 
-    if (debug) then print("end updateLocal") end
-    if (loopTimer) then
-        timerResults = timer.performWithDelay(500, UpdateLocal, 1) 
-    end
+    if (debug) then print("end updateLocal8") end
 end
 
 local function SwitchToSmallGrid()
-    composer.gotoScene("10GridScene")
+    local options = {
+        effect = "flip",
+        time = 125,
+    }
+    composer.gotoScene("10GridScene", options)
 end
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -75,7 +79,7 @@ end
 -- create()
 function scene:create( event )
  
-    if (debug) then print("creating 10GridScene") end
+    if (debug) then print("creating 8GridScene") end
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
@@ -84,12 +88,11 @@ function scene:create( event )
     countText = display.newText(sceneGroup, "Total Cells Explored: ?", display.contentCenterX, 240, native.systemFont, 20)
     pointText = display.newText(sceneGroup, "Score: ?", display.contentCenterX, 260, native.systemFont, 20)
 
-    CreateSquareGrid(11, 50, sceneGroup, cellCollection)
+    CreateSquareGrid(9, 65, sceneGroup, cellCollection)
 
-    directionArrow = display.newImageRect(sceneGroup, "arrow1.png", 25, 25)
+    directionArrow = display.newImageRect(sceneGroup, "arrow1.png", 65, 65)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
-
 
     local changeGrid = display.newImageRect(sceneGroup, "SmallGridButton.png", 300, 100)
     changeGrid.anchorX = 0
@@ -98,14 +101,14 @@ function scene:create( event )
     changeGrid.y = 1000
 
     changeGrid:addEventListener("tap", SwitchToSmallGrid)
-    if (debug) then print("created 10GridScene") end
+    if (debug) then print("created 8GridScene") end
 
 end
  
  
 -- show()
 function scene:show( event )
-    if (debug) then print("showing 10GridScene") end
+    if (debug) then print("showing 8GridScene") end
     local sceneGroup = self.view
     local phase = event.phase
  
@@ -114,24 +117,21 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen 
-        --while (loopTimer) do
-            loopTimer = true
-            timerResults = timer.performWithDelay(500, UpdateLocal(), -1) 
-        --end
+            loopTimer8 = true
+            timerResults8 = timer.performWithDelay(500, UpdateLocal8, -1) 
     end
 end
  
  
 -- hide()
 function scene:hide( event )
-    if (debug) then print("hiding 10GridScene") end
+    if (debug) then print("hiding 8GridScene") end
     local sceneGroup = self.view
     local phase = event.phase
 
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
-        loopTimer = false
-        --timer.cancel(timerResults)
+        timer.cancel(timerResults8)
  
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
@@ -142,7 +142,7 @@ end
  
 -- destroy()
 function scene:destroy( event )
-    if (debug) then print("destroying 10GridScene") end
+    if (debug) then print("destroying 8GridScene") end
  
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view

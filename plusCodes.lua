@@ -171,3 +171,50 @@ function ShiftWholeBlock(plusCode, xShift, yShift)
     if (debug)then print ("newcode is " .. newCode) end
     return newCode
 end
+
+--quick hack to avoid errors on an 8 digit code
+function Shift8Block(plusCode, xShift, yShift)
+    --this function is set to shift positions 7 and 8 in a plus code.
+    if (debug) then print("shifting 8 block") end
+    local newCode = plusCode
+    local currentDigit = ""
+    local digitIndex = 0
+    if (debug)then print ("shifting 8block " .. plusCode) end
+    --do X shift
+    if (xShift ~= 0) then
+        if (debug)then print ("Shifting X " .. xShift) end
+        currentDigit = plusCode:sub(8, 8)
+        digitIndex = CODE_ALPHABET_:find(currentDigit)
+        digitIndex = digitIndex + xShift
+        --i probably also need to adjust position 6 in the string if this happens in either direction
+        if (digitIndex <= 0) then
+            digitIndex = 20 + digitIndex
+        end
+        if (digitIndex > 20) then
+            digitIndex = digitIndex - 20
+        end
+        currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
+        newCode = newCode:sub(1, 7) .. currentDigit
+    end
+    if (debug)then print ("newcode is " .. newCode) end
+
+    --do Y shift
+    if (yShift ~= 0) then
+        if (debug)then print ("shifting Y " .. yShift) end
+        --get last digit, move it 1 notch higher on the list
+        currentDigit = plusCode:sub(7, 7)
+        digitIndex = CODE_ALPHABET_:find(currentDigit)
+        digitIndex = digitIndex + yShift
+        --i probably also need to adjust position 5 in the string if this happens in either direction
+        if (digitIndex <= 0) then
+            digitIndex = 20 + digitIndex
+        end
+        if (digitIndex > 20) then
+            digitIndex = digitIndex - 20
+        end
+        currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
+        newCode = newCode:sub(1, 6) .. currentDigit .. newCode:sub(8,8)
+    end
+    if (debug)then print ("newcode is " .. newCode) end
+    return newCode
+end
