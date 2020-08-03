@@ -69,6 +69,14 @@ local function SwitchToBigGrid()
     }
     composer.gotoScene("8GridScene", options)
 end
+
+local function SwitchToTrophy()
+    local options = {
+        effect = "flip",
+        time = 125,
+    }
+    composer.gotoScene("trophyScene", options)
+end
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -98,7 +106,14 @@ function scene:create( event )
     changeGrid.x = 60
     changeGrid.y = 1000
 
+    local changeTrophy = display.newImageRect(sceneGroup, "TrophyRoom.png", 300, 100)
+    changeTrophy.anchorX = 0
+    changeTrophy.anchorY = 0
+    changeTrophy.x = 390
+    changeTrophy.y = 1000
+
     changeGrid:addEventListener("tap", SwitchToBigGrid)
+    changeTrophy:addEventListener("tap", SwitchToTrophy)
     if (debug) then print("created 10GridScene") end
 
 end
@@ -111,6 +126,7 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
+        firstRun = true
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen 
