@@ -18,3 +18,43 @@ function CreateSquareGrid(gridSize, cellSize, gridGroup, cellCollection)
 
     if (debug) then print("Done CreateSquareGrid") end
 end
+
+function GoToStoreScene()
+    local options = {
+        effect = "flip",
+        time = 125,
+    }
+    composer.gotoScene("storeScene", options)
+end
+
+function GoToLeaderboardScene()
+    local options = {
+        effect = "flip",
+        time = 125,
+    }
+    composer.gotoScene("LeaderboardScene", options)
+end
+
+-- function SwitchToSmallGrid()
+--     local options = {
+--         effect = "flip",
+--         time = 125,
+--     }
+--     composer.gotoScene("10GridScene", options)
+-- end
+
+-- function SwitchToBigGrid()
+--     local options = {
+--         effect = "flip",
+--         time = 125,
+--     }
+--     composer.gotoScene("8GridScene", options)
+-- end
+
+-- function SwitchToTrophy()
+--     local options = {
+--         effect = "flip",
+--         time = 125,
+--     }
+--     composer.gotoScene("trophyScene", options)
+-- end

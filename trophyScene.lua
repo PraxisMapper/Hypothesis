@@ -12,6 +12,8 @@ local scene = composer.newScene()
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
+
+local nextUnlockAt
  
  
 local function SwitchToSmallGrid()
@@ -38,6 +40,7 @@ end
 -- create()
 function scene:create( event )
  
+    if (debug) then print("creating trophy scene") end
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
@@ -65,6 +68,31 @@ function scene:create( event )
 
     changeGrid:addEventListener("tap", SwitchToSmallGrid)
 
+    local bg = display.newImageRect(sceneGroup, "TrophyRoomBG.png", 720, 750 )
+    bg.anchorX = 0
+    bg.anchorY = 0
+    bg.x = 0
+    bg.y = 200
+
+
+    local header = display.newImageRect(sceneGroup, "TrophyRoom.png", 300, 100)
+    header.x = display.contentCenterX
+    header.y = 100
+
+    local textOptions = {}
+    textOptions.parent =  sceneGroup
+    textOptions.text = "Next Unlock at (TODO MATH AND UPDATES HERE)"
+    textOptions.x = display.contentCenterX
+    textOptions.y = 160
+    textOptions.width = 500
+    textOptions.height = 0
+    textOptions.font = native.systemFont
+    textOptions.fontSize = 20
+
+    nextUnlockAt = display.newText(textOptions)
+    --nextUnlockAt.anchorX = 0
+    nextUnlockAt.anchorY = 0
+    
     if (debug) then print("created TrophyScene") end
  
 end

@@ -6,9 +6,9 @@
 
 
 --TODO:
---Add headers to scene, to indicate which one we're on more clearly.
 --refactor and clean up code. move stuff and split into multiple files
 ----consider re-scoping variables, since calling a variable local in a file means other files can't see it. Not declaring it local makes it global, which is apparently slower.
+----figure out how to make the scene change functions reusable. It doesn't look like dropping them into UIParts worked the first time?
 --add game logic for game.
 --name and baseline assets.
 --implement store stuff and make scene for it
@@ -54,7 +54,6 @@ lastTime = 0
 
 local composer = require("composer")
 composer.gotoScene("10GridScene")
-
 
 local function gpsListener(event)
     if (debug) then

@@ -1,8 +1,7 @@
 --todo:
---track points earned here
+--Maybe consolidate commands that get run every seconds into a single statement when possible?
 --display gamey stuff somehow
 --add buttons to view different things
---IAP? buy dev a coffee?
 --separate walk points and explore points?
 --reconsider if i want to use level 10 (my house is 8 cells) or 9 (my city block is one cell)
 --add a display log at hte bottom of the screen to remind me what's happened recently. (or pop-up events that fall away)
@@ -19,28 +18,17 @@ function grantPoints(code)
         --if (debug) then print("row data:" .. dump(row)) end
         if (row[1] == 0) then
             if (debug) then print("inserting new row") end
-            local insert = "INSERT INTO plusCodesVisited (pluscode, lat, long, firstVisitedOn, totalVisits) VALUES ('" .. code .. "', 0,0, " .. os.time() .. ", 1)"
+            local insert = "INSERT INTO plusCodesVisited (pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits) VALUES ('" .. code .. "', 0,0, " .. os.time() .. ", " .. os.time() .. ", 1)"
             Exec(insert)
             addPoints = 10
         else
             if (debug) then print("updating existing data") end
-            local update = "UPDATE plusCodesVisited SET totalVisits = totalVisits + 1 WHERE plusCode = '" .. code  .. "'"
+            local update = "UPDATE plusCodesVisited SET totalVisits = totalVisits + 1, lastVisitedOn = " .. os.time() .. " WHERE plusCode = '" .. code  .. "'"
             Exec(update)
         end
     end 
 
-    --check 2: this our first visit this week?
-    query = "SELECT COUNT(*) as c FROM weeklyVisited WHERE pluscode = '" .. code .. "'"
-    for i,row in ipairs(Query(query)) do --todo: find better parsing method
-        if (row[1] == 0) then --we have not yet visited this cell this week
-            --Insert this cell
-            local cmd = "INSERT INTO weeklyVisited (pluscode, VisitedOn) VALUES('" .. code .. "', " .. os.time() .. ")"
-            Exec(cmd)
-            if (addPoints == 0) then addPoints = 5 end
-        end
-    end
-
-    --check 3? this our first visit today?
+    --check 2: this our first visit today?
     query = "SELECT COUNT(*) as c FROM dailyVisited WHERE pluscode = '" .. code .. "'"
     for i,row in ipairs(Query(query)) do --todo: find better parsing method
         if (row[1] == 0) then --we have not yet visited this cell today
@@ -51,10 +39,23 @@ function grantPoints(code)
         end
     end
 
-    if (addPoints > 0) then
+
+    --check 3: this our first visit this week?
+    query = "SELECT COUNT(*) as c FROM weeklyVisited WHERE pluscode = '" .. code .. "'"
+    for i,row in ipairs(Query(query)) do --todo: find better parsing method
+        if (row[1] == 0) then --we have not yet visited this cell this week
+            --Insert this cell
+            local cmd = "INSERT INTO weeklyVisited (pluscode, VisitedOn) VALUES('" .. code .. "', " .. os.time() .. ")"
+            Exec(cmd)
+            if (addPoints == 0) then addPoints = 5 end
+        end
+    end
+    
+    --remove the if so we can track total visits correcly.
+    --if (addPoints > 0) then
         local cmd = "UPDATE playerData SET totalCellVisits = totalCellVisits + 1, totalPoints = totalPoints + " .. addPoints
         Exec(cmd)
-    end
+    --end
 
 
 end

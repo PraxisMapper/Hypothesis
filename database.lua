@@ -10,7 +10,7 @@ require("helpers")
 
 local sqlite3 = require("sqlite3")
 local db
-local dbVersionID = 2
+local dbVersionID = 3
 
 function startDatabase()
     -- Open "data.db". If the file doesn't exist, it will be created
@@ -29,13 +29,13 @@ function startDatabase()
     --plusCodesVisited will be permanent first-time visits
     --I shouldn't use Inserts in this block, since they'll still be run each startup.
     local tablesetup =
-        [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, totalVisits);
+        [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits);
         CREATE TABLE IF NOT EXISTS acheivements(id INTEGER PRIMARY KEY, name, acheived, acheivedOn);
         CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed);
         CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID, isGoodPerson, coffeesBought, deviceID);
         CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
-        CREATE TABLE IF NOT EXISTS trophysBought(id INTEGER PRIMARY KEY, itemCode, boughtOn)
+        CREATE TABLE IF NOT EXISTS trophysBought(id INTEGER PRIMARY KEY, itemCode, boughtOn);
         ]]
         --CREATE TABLE IF NOT EXISTS ConversionLinks(id INTEGER PRIMARY KEY, pluscode, s2Cell, lat, long); --not sure yet if this is a thing i want to bother with.
         --INSERT INTO systemData(dbVersionID) values (]] .. dbVersionID .. [[);
@@ -80,9 +80,15 @@ function upgradeDatabaseVersion()
         [[ALTER TABLE playerData ADD COLUMN totalSecondsPlayed;
           UPDATE playerData SET totalSecondsPlayed = 0;
           ALTER TABLE systemData ADD COLUMN deviceID;
-          UPDATE systemData SET deviceID = ]] .. system.getInfo().deviceID  .. [[;
+          UPDATE systemData SET deviceID = ]] .. system.getInfo("deviceID")  .. [[;
+          ALTER TABLE plusCodesVisited ADD COLUMN lastVisitedOn; 
+          UPDATE plusCodesVisited SET lastVisitedOn = ]] .. os.time() .. [[
           ]]
           Exec(v3Command)
+    end
+    if (dbVersionID < 4) then
+         --do any scripting to match upgrade to version 4
+         --might need to move ADD lastVisitedOn here
     end
 end
 
@@ -148,7 +154,7 @@ function createBaselineContent()
         else
             --Database is empty, time to create the baseline data.
             local cmd = ""
-            cmd = "INSERT INTO systemData(dbVersionID, isGoodPerson, coffeesBought, deviceID) values (" .. dbVersionID .. ", 0, 0, " .. system.getInfo().deviceID .. ")";
+            cmd = "INSERT INTO systemData(dbVersionID, isGoodPerson, coffeesBought, deviceID) values (" .. dbVersionID .. ", 0, 0, " .. system.getInfo(deviceID) .. ")";
             Exec(cmd)
             cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits) values (0, 0, 0)";
             Exec(cmd)
@@ -243,9 +249,18 @@ function GetClientData()
     --stuff to send up to leaderboards API
     if (debug) then print("loading client data ") end
     local query = "SELECT * from playerData P LEFT JOIN systemData S" --this gets everything, just has 2 columns named ID that should both be 1.
-    var results = Query(query) --or just return this?
+    local results = Query(query) --or just return this?
     for i,row in ipairs(results) do
-        --1 row, several columns. Map it to a table and send that over?
+        --1 row, several columns. Map it to a table and send that over? 
         --return row[1] --this is only the first value.
+    end 
+end
+
+
+--testing a performance thing
+function AddRandomCells()
+    for i = 1, 800, 1 do
+        local cmd= "INSERT INTO plusCodesVisited (pluscode) VALUES (" .. math.random() .. ")" --just have something to look for
+        Exec(cmd)
     end
 end

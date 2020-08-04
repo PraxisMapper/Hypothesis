@@ -5,6 +5,10 @@
 --do all the google logic first, then figure out how to handle apple purchases later.
 --I need a product identifier, 
 
+--these need to come from google.
+local coffeePurchaseID = ""
+local goodPersonPurchaseID = ""
+
 local store
  
 local targetAppStore = system.getInfo( "targetAppStore" )
@@ -29,7 +33,7 @@ local function transactionListener( event )
         -- No errors; proceed
         --google check
         if (event.name == "init") then
-            --not a purchase
+            --not a purchase but we might want to do some pre-processing
         else if (event.name == "storeTransaction") then
             --is a purchase
         end
@@ -38,3 +42,6 @@ end
 end
 
 store.init(transactionListener)
+
+
+

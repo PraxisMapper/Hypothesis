@@ -19,7 +19,7 @@ local cellCollection = {}
 --color codes
 local visitedCell = {.8, .3, .3, 1}
 local unvisitedCell = {.1, .7, .7, 1}
-local timerResults8 ={}
+local timerResults8 = nil
 
 local firstRun8 = true
 
@@ -61,6 +61,9 @@ local function UpdateLocal8()
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading
 
+    if (timerResults8 == nil) then
+        timerResults8 = timer.performWithDelay(500, UpdateLocal8, -1) 
+    end
 
     if (debug) then print("end updateLocal8") end
 end
@@ -79,6 +82,22 @@ local function SwitchToTrophy()
         time = 125,
     }
     composer.gotoScene("trophyScene", options)
+end
+
+local function GoToStoreScene()
+    local options = {
+        effect = "flip",
+        time = 125,
+    }
+    composer.gotoScene("storeScene", options)
+end
+
+local function GoToLeaderboardScene()
+    local options = {
+        effect = "flip",
+        time = 125,
+    }
+    composer.gotoScene("LeaderboardScene", options)
 end
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -116,6 +135,26 @@ function scene:create( event )
 
     changeGrid:addEventListener("tap", SwitchToSmallGrid)
     changeTrophy:addEventListener("tap", SwitchToTrophy)
+    
+    local header = display.newImageRect(sceneGroup, "BigGridButton.png", 300, 100)
+    header.x = display.contentCenterX
+    header.y = 100
+
+    local store = display.newImageRect(sceneGroup, "StoreIcon.png", 100, 100)
+    store.anchorX = 0
+    --store.anchorY = 0
+    store.x = 50
+    store.y = 100
+    store:addEventListener("tap", GoToStoreScene)
+
+    local leaderboard = display.newImageRect(sceneGroup, "LeaderboardIcon.png", 100, 100)
+    leaderboard.anchorX = 0
+    --leaderboard.anchorY = 0
+    leaderboard.x = 580
+    leaderboard.y = 100
+    leaderboard:addEventListener("tap", GoToLeaderboardScene)
+
+
     if (debug) then print("created 8GridScene") end
 
 end
@@ -133,8 +172,7 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen 
-            loopTimer8 = true
-            timerResults8 = timer.performWithDelay(500, UpdateLocal8, -1) 
+        UpdateLocal8()
     end
 end
  
@@ -148,6 +186,7 @@ function scene:hide( event )
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
         timer.cancel(timerResults8)
+        timerResults8 = nil
  
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
