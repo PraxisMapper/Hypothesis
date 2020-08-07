@@ -6,8 +6,8 @@
 --I need a product identifier, 
 
 --these need to come from google.
-local coffeePurchaseID = ""
-local goodPersonPurchaseID = ""
+local coffeePurchaseID = "coffee_purchase"
+local goodPersonPurchaseID = "good_person"
 
 local store
  

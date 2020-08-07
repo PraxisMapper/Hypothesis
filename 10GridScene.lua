@@ -14,6 +14,7 @@ if (debug) then print("10GridScene loading") end
 --TODO
 --additional colors, to indicate when a cell has a bonus waiting to be collected. (colors here are none/daily/weekly. FirstTime is on the other grid now)
 --add a bounce-and-fall popup for when you gain score, add a sound effect to that too.
+--add score line to bottom of screen
 
 local cellCollection = {}
 --color codes
@@ -28,13 +29,14 @@ local countText = ""
 local pointText = ""
 local timeText = ""
 local directionArrow = ""
+local scoreLog = ""
 
 --This is sufficiently fast with debug=false ot not be real concerned about performance issues.
 local function UpdateLocal()
     --at size 23, this takes .04 seconds with debug = false
     --at size 23, this takes .55 seconds with debug = true. Lots of console writes take a while, huh
-    if (debug) then print("start UpdateLocal") end
-    if (debug) then print(currentPlusCode) end
+    if (debugGPS) then print("start UpdateLocal") end
+    if (debugGPS) then print(currentPlusCode) end
 
     if (currentPlusCode ~= previousPlusCode or firstRun) then
         firstRun = false
@@ -50,20 +52,21 @@ local function UpdateLocal()
         end
     end
 
-    if (debug) then print("grid done or skipped") end
-    if (debug) then print(locationText.text) end
+    if (debugGPS) then print("grid done or skipped") end
+    if (debugGPS) then print(locationText.text) end
     locationText.text = "Current location:" .. currentPlusCode
     countText.text = "Total Explored Cells: " .. TotalExploredCells()
     pointText.text = "Score: " .. Score()
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading
+    scoreLog.text = lastScoreLog
 
     if timerResults == nil then
         timerResults = timer.performWithDelay(500, UpdateLocal, -1)  
     end
 
 
-    if (debug) then print("end updateLocal") end
+    if (debugGPS) then print("end updateLocal") end
 end
 
 local function SwitchToBigGrid()
@@ -112,6 +115,7 @@ function scene:create( event )
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
     countText = display.newText(sceneGroup, "Total Cells Explored: ?", display.contentCenterX, 240, native.systemFont, 20)
     pointText = display.newText(sceneGroup, "Score: ?", display.contentCenterX, 260, native.systemFont, 20)
+    scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1250, native.systemFont, 20)
 
     CreateSquareGrid(23, 25, sceneGroup, cellCollection)
 

@@ -1,1 +1,4 @@
 --the class for handling sending data to/from the API server
+--TODO:
+--leaderboards connection
+--OpenStreetMaps stuff (future idea, separate game? should test here anyways)

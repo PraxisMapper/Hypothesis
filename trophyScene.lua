@@ -1,11 +1,14 @@
 local composer = require( "composer" )
- 
 local scene = composer.newScene()
+
+require("gameLogic")
+require("database")
 
 --TODO
 --create baseline background image for trophy room.
 --draw pictures for all the things user can by
 --actually display things user has bought.
+--Display data for the next trophy to unlock (score, 10Cell, 8Cell)
 
 
 -- -----------------------------------------------------------------------------------
@@ -31,6 +34,12 @@ local function SwitchToBigGrid()
     }
     composer.gotoScene("8GridScene", options)
 end
+
+local function BuyTrophy()
+    local query = "SELECT MAX(itemCode) FROM trophysBought"
+    local id = Query(query)[1]
+end
+
  
  
 -- -----------------------------------------------------------------------------------
@@ -66,7 +75,7 @@ function scene:create( event )
     unlockTrophy.x = 210
     unlockTrophy.y = 1110
 
-    changeGrid:addEventListener("tap", SwitchToSmallGrid)
+    unlockTrophy:addEventListener("tap", BuyTrophy)
 
     local bg = display.newImageRect(sceneGroup, "TrophyRoomBG.png", 720, 750 )
     bg.anchorX = 0

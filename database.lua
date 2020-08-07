@@ -3,9 +3,10 @@
 --track more data
 --ponder converting between S2, PlusCodes, and GPS coords. if not, remove from table.
 --enable smooth updates as i change the DB.
---think about order of createBaselineContent and upgradeDatabaseVersion. create should probably be after.
 --cache data in a table, so i can just ping memory instead of disk for all (23 * 23) cells twice a second. Possibly.
 --encrypt database to stop people from just opening the file and editing as they want.
+--possible optimization: store 8cell and 10cell both in the table, to avoid using substr() in queries
+--possible optimization: add indexes to DB. I need to see where it slows down first.
 require("helpers")
 
 local sqlite3 = require("sqlite3")
@@ -20,14 +21,11 @@ function startDatabase()
     -- Handle the "applicationExit" event to close the database
     local function onSystemEvent(event)
         if (event.type == "applicationExit" and db:isopen()) then db:close() end
-        --I close it up in each function.
     end
 
     -- Set up the table if it doesn't exist 
-    --might need a daily table, to track cells visited today
-    --same for weekly results.
-    --plusCodesVisited will be permanent first-time visits
-    --I shouldn't use Inserts in this block, since they'll still be run each startup.
+    --plusCodesVisited will be permanent first-time visits plus most recent data.
+    --I shouldn't use Inserts in this block, since they'll still be run each startup. PUt those in createBaselineContent
     local tablesetup =
         [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits);
         CREATE TABLE IF NOT EXISTS acheivements(id INTEGER PRIMARY KEY, name, acheived, acheivedOn);
@@ -47,7 +45,7 @@ function startDatabase()
     Exec(tablesetup)
     upgradeDatabaseVersion()
     createBaselineContent()
-    ResetDailyWeekly(0)
+    ResetDailyWeekly()
 
     -- Setup the event listener to catch "applicationExit"
     Runtime:addEventListener("system", onSystemEvent)
@@ -122,7 +120,7 @@ function Query(sql)
 end
 
 function Exec(sql)
-    if (debug) then print("sql command:" .. sql) end
+    if (debug) then print("exec sql command:" .. sql) end
     results = {}
     --local path = system.pathForFile("data.db", system.DocumentsDirectory)
     --local db = sqlite3.open(path) 
@@ -154,9 +152,9 @@ function createBaselineContent()
         else
             --Database is empty, time to create the baseline data.
             local cmd = ""
-            cmd = "INSERT INTO systemData(dbVersionID, isGoodPerson, coffeesBought, deviceID) values (" .. dbVersionID .. ", 0, 0, " .. system.getInfo(deviceID) .. ")";
+            cmd = "INSERT INTO systemData(dbVersionID, isGoodPerson, coffeesBought, deviceID) values (" .. dbVersionID .. ", 0, 0, " .. system.getInfo("deviceID") .. ")";
             Exec(cmd)
-            cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits) values (0, 0, 0)";
+            cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed) values (0, 0, 0, 0)";
             Exec(cmd)
         end
     end
@@ -172,10 +170,10 @@ function ResetDailyWeekly()
     --checks for daily and weekly reset times.
     --if oldest date in daily/weekly table is over 24/(24 * 7) hours old, delete everything in the table. (actually , do 22 hour reset)
     local timeDiffDaily = os.time() - (60 * 60 * 22) --22 hours, converted to seconds.
-    local cmd = "DELETE FROM dailyVisited WHERE VisitedOn < " ..timeDiffDaily
+    local cmd = "DELETE FROM dailyVisited WHERE VisitedOn < " .. timeDiffDaily
     Exec(cmd)
     local timeDiffWeekly = os.time() - math.floor(60 * 60 * 24 * 6.9) -- 6.9 days, converted to seconds
-    cmd = "DELETE FROM weeklyVisited WHERE VisitedOn < " ..timeDiffWeekly
+    cmd = "DELETE FROM weeklyVisited WHERE VisitedOn < " .. timeDiffWeekly
     Exec(cmd)
 end
 
@@ -207,7 +205,7 @@ end
 
 --should probably be a gamelogic method
 function TotalExploredCells()
-    if (debug) then print("opening total explored cells ") end
+    --if (debug) then print("opening total explored cells ") end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited"
     --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
@@ -216,7 +214,7 @@ function TotalExploredCells()
 end
 
 function TotalExplored8Cells()
-    if (debug) then print("opening total explored 8 cells ") end
+    --if (debug) then print("opening total explored 8 cells ") end
     local query = "SELECT COUNT(DISTINCT substr(pluscode, 1, 8)) as c FROM plusCodesVisited"
     --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
@@ -225,7 +223,7 @@ function TotalExplored8Cells()
 end
 
 function Score()
-    if (debug) then print("opening score ") end
+    --if (debug) then print("opening score ") end
     local query = "SELECT totalPoints as p from playerData"
     --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do

@@ -6,6 +6,7 @@
 
 
 --TODO:
+--CRITICAL: game does not start up if database does not exist. Fix the DB Creation scripts.
 --refactor and clean up code. move stuff and split into multiple files
 ----consider re-scoping variables, since calling a variable local in a file means other files can't see it. Not declaring it local makes it global, which is apparently slower.
 ----figure out how to make the scene change functions reusable. It doesn't look like dropping them into UIParts worked the first time?
@@ -25,7 +26,7 @@
 --create project with cutting-edge MS tech for server side
 ---whatever cheapest windows server AWS has, IIS latest, SQL Server (developer) latest, .NET 5 and API stuff
 ----or some other stuff? DOcker? but I also kinda want to show off specific familiar tools.
-
+--may want to have that initial timer for UpdateLocal run on a tiny (10ms?) delay so that it doesn't impede the draw on switching scenes.
 system.setIdleTimer(false) --disables screen auto-off.
 
 require("store")
@@ -34,6 +35,8 @@ require("gameLogic")
 
 require("database")
 debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
+debugShift = false --display math for shifting PlusCodes
+debugGPS = false --display data for the GPS event and timer loop
 --uncomment when testing to clear local data.
 --ResetDatabase()
 startDatabase()
@@ -51,12 +54,13 @@ lastPlusCode = "" --the previously received value for the location event, may be
 previousPlusCode = ""  --the previous DIFFERENT pluscode value we visited.
 currentHeading = 0
 lastTime = 0
+lastScoreLog = ""
 
 local composer = require("composer")
 composer.gotoScene("10GridScene")
 
 local function gpsListener(event)
-    if (debug) then
+    if (debugGPS) then
         print("got GPS event")
         if (event.errorCode ~= nil) then
             print("GPS Error " .. event.errorCode)
@@ -69,7 +73,7 @@ local function gpsListener(event)
     currentHeading = event.direction
 
     local pluscode = tryMyEncode(event.latitude, event.longitude, 10); --only goes to 10 right now. TODO expand if I want to for fun.
-    if (debug)then print ("Plus Code: " .. pluscode) end
+    if (debugGPS)then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode   
     if (lastPlusCode == currentPlusCode) then
         --dont update stuff, we're still standing in the same spot.
@@ -81,13 +85,14 @@ local function gpsListener(event)
 
     --do DB processing on plus codes.
     --this should be a gameLogic function
-    grantPoints(currentPlusCode)
+    if(debugGPS) then print("calculating score") end
+    lastScoreLog = "Earned " .. grantPoints(currentPlusCode) .. " points from cell " .. currentPlusCode
 
-    if(debug) then print("calculating distance") end
+    if(debugGPS) then print("calculating distance") end
     --easy-calc distance travelled
     local speed = event.speed
     if (lastTime == 0) then
-        if(debug) then print("Didn't move, no distance to add.") end
+        if(debugGPS) then print("Didn't move, no distance to add.") end
         lastTime = event.time --will never be less than 1 second, since this is seconds since epoch.
         return
     end
@@ -96,7 +101,7 @@ local function gpsListener(event)
     AddDistance(metersTravelled)
     AddSeconds(event.time)
     lastTime = event.time --will never be less than 1 second, since this is seconds since epoch
-    if(debug) then print("Finished location event") end
+    if(debugGPS) then print("Finished location event") end
 
 end
 

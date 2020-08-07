@@ -33,15 +33,15 @@ local directionArrow = ""
 local function UpdateLocal8()
     --at size 23, this takes .04 seconds with debug = false
     --at size 23, this takes .55 seconds with debug = true. Lots of console writes take a while, huh
-    if (debug) then print("start UpdateLocal8") end
+    if (debugGPS) then print("start UpdateLocal8") end
     local currentPlusCode8 = currentPlusCode:sub(1,8)
     local previousPlusCode8 =  previousPlusCode:sub(1,8)
-    if (debug) then print(currentPlusCode8) end
+    if (debugGPS) then print(currentPlusCode8) end
 
     if (currentPlusCode8 ~= previousPlusCode8 or firstRun8) then
         firstRun8 = false
         previousPlusCode8 = currentPlusCode8
-        if (debug) then print("in 8 grid loop " ..previousPlusCode8 .. " " .. currentPlusCode8) end
+        if (debugGPS) then print("in 8 grid loop " ..previousPlusCode8 .. " " .. currentPlusCode8) end
         for square = 1, #cellCollection do --this is supposed to be faster than ipairs
             --if (debug) then print("displaycell " .. cellCollection[square].gridX .. "," .. cellCollection[square].gridY) end
             --check each spot based on current cell, modified by gridX and gridY
@@ -53,8 +53,8 @@ local function UpdateLocal8()
         end
     end
 
-    if (debug) then print("8grid done or skipped") end
-    if (debug) then print(locationText.text) end
+    if (debugGPS) then print("8grid done or skipped") end
+    if (debugGPS) then print(locationText.text) end
     locationText.text = "Current 8 location:" .. currentPlusCode8
     countText.text = "Total Explored 8 Cells: " .. TotalExplored8Cells()
     pointText.text = "Score: " .. Score()
@@ -65,7 +65,7 @@ local function UpdateLocal8()
         timerResults8 = timer.performWithDelay(500, UpdateLocal8, -1) 
     end
 
-    if (debug) then print("end updateLocal8") end
+    if (debugGPS) then print("end updateLocal8") end
 end
 
 local function SwitchToSmallGrid()

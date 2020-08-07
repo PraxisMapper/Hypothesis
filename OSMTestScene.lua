@@ -1,0 +1,3 @@
+--todo:
+--fill this in for testing OSM API for finding containing or nearby features, if i can read their docs.
+--NOPE, i'd have to fill in my own server for this.

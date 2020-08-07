@@ -10,7 +10,7 @@ application =
 		width = 720,
 		height = 1280, 
 		scale = "letterbox",
-		fps = 60,
+		fps = 30, --reduced to save battery life even more.
 		
 		--[[
 		imageSuffix =

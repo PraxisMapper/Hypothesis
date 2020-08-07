@@ -77,14 +77,14 @@ function shiftCell(pluscode, xShift, yShift)
     --take the current cell, move it some number of cells in both directions (positive or negative)
     --will probably only work for values between -39 and 39. Shifting by 20 means you've move up 1 higher level cell entirely,
 
-    debug = false
+    --debug = false
     local newCode = pluscode
     local currentDigit = ""
     local digitIndex = 0
-    if (debug)then print ("shifting cell " .. pluscode) end
+    if (debugShift)then print ("shifting cell " .. pluscode) end
     --do X shift
     if (xShift ~= 0) then
-        if (debug)then print ("Shifting X " .. xShift) end
+        if (debugShift)then print ("Shifting X " .. xShift) end
         currentDigit = pluscode:sub(11, 11)
         digitIndex = CODE_ALPHABET_:find(currentDigit)
         digitIndex = digitIndex + xShift
@@ -100,11 +100,11 @@ function shiftCell(pluscode, xShift, yShift)
         currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
         newCode = newCode:sub(1, 10) .. currentDigit
     end
-    if (debug)then print ("newcode is " .. newCode) end
+    if (debugShift)then print ("newcode is " .. newCode) end
 
     --do Y shift
     if (yShift ~= 0) then
-        if (debug)then print ("shifting Y " .. yShift) end
+        if (debugShift)then print ("shifting Y " .. yShift) end
         --get last digit, move it 1 notch higher on the list
         currentDigit = pluscode:sub(10, 10)
         digitIndex = CODE_ALPHABET_:find(currentDigit)
@@ -121,9 +121,9 @@ function shiftCell(pluscode, xShift, yShift)
         currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
         newCode = newCode:sub(1, 9) .. currentDigit .. newCode:sub(11,11)
     end
-    if (debug)then print ("newcode is " .. newCode) end
+    if (debugShift)then print ("newcode is " .. newCode) end
 
-    debug = true
+    --debug = true
     return newCode
 end
 
@@ -132,10 +132,10 @@ function ShiftWholeBlock(plusCode, xShift, yShift)
     local newCode = plusCode
     local currentDigit = ""
     local digitIndex = 0
-    if (debug)then print ("shifting cell " .. plusCode) end
+    if (debugShift)then print ("shifting cell " .. plusCode) end
     --do X shift
     if (xShift ~= 0) then
-        if (debug)then print ("Shifting X " .. xShift) end
+        if (debugShift)then print ("Shifting X " .. xShift) end
         currentDigit = plusCode:sub(8, 8)
         digitIndex = CODE_ALPHABET_:find(currentDigit)
         digitIndex = digitIndex + xShift
@@ -149,11 +149,11 @@ function ShiftWholeBlock(plusCode, xShift, yShift)
         currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
         newCode = newCode:sub(1, 7) .. currentDigit .. newCode:sub(9, 11)
     end
-    if (debug)then print ("newcode is " .. newCode) end
+    if (debugShift)then print ("newcode is " .. newCode) end
 
     --do Y shift
     if (yShift ~= 0) then
-        if (debug)then print ("shifting Y " .. yShift) end
+        if (debugShift)then print ("shifting Y " .. yShift) end
         --get last digit, move it 1 notch higher on the list
         currentDigit = plusCode:sub(7, 7)
         digitIndex = CODE_ALPHABET_:find(currentDigit)
@@ -168,21 +168,21 @@ function ShiftWholeBlock(plusCode, xShift, yShift)
         currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
         newCode = newCode:sub(1, 6) .. currentDigit .. newCode:sub(8,11)
     end
-    if (debug)then print ("newcode is " .. newCode) end
+    if (dedebugShiftbug)then print ("newcode is " .. newCode) end
     return newCode
 end
 
 --quick hack to avoid errors on an 8 digit code
 function Shift8Block(plusCode, xShift, yShift)
     --this function is set to shift positions 7 and 8 in a plus code.
-    if (debug) then print("shifting 8 block") end
+    if (debugShift) then print("shifting 8 block") end
     local newCode = plusCode
     local currentDigit = ""
     local digitIndex = 0
-    if (debug)then print ("shifting 8block " .. plusCode) end
+    if (debugShift)then print ("shifting 8block " .. plusCode) end
     --do X shift
     if (xShift ~= 0) then
-        if (debug)then print ("Shifting X " .. xShift) end
+        if (debugShift)then print ("Shifting X " .. xShift) end
         currentDigit = plusCode:sub(8, 8)
         digitIndex = CODE_ALPHABET_:find(currentDigit)
         digitIndex = digitIndex + xShift
@@ -196,11 +196,11 @@ function Shift8Block(plusCode, xShift, yShift)
         currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
         newCode = newCode:sub(1, 7) .. currentDigit
     end
-    if (debug)then print ("newcode is " .. newCode) end
+    if (debugShift)then print ("newcode is " .. newCode) end
 
     --do Y shift
     if (yShift ~= 0) then
-        if (debug)then print ("shifting Y " .. yShift) end
+        if (debugShift)then print ("shifting Y " .. yShift) end
         --get last digit, move it 1 notch higher on the list
         currentDigit = plusCode:sub(7, 7)
         digitIndex = CODE_ALPHABET_:find(currentDigit)
@@ -215,6 +215,6 @@ function Shift8Block(plusCode, xShift, yShift)
         currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
         newCode = newCode:sub(1, 6) .. currentDigit .. newCode:sub(8,8)
     end
-    if (debug)then print ("newcode is " .. newCode) end
+    if (debugShift)then print ("newcode is " .. newCode) end
     return newCode
 end
