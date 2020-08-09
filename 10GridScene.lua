@@ -38,6 +38,14 @@ local function UpdateLocal()
     if (debugGPS) then print("start UpdateLocal") end
     if (debugGPS) then print(currentPlusCode) end
 
+    if (currentPlusCode == "") then
+        if timerResults == nil then
+            timerResults = timer.performWithDelay(500, UpdateLocal, -1)  
+        end
+        if (debugGPS) then print("skipping, no location.") end
+        return
+    end
+
     if (currentPlusCode ~= previousPlusCode or firstRun) then
         firstRun = false
         previousPlusCode = currentPlusCode
@@ -54,7 +62,7 @@ local function UpdateLocal()
 
     if (debugGPS) then print("grid done or skipped") end
     if (debugGPS) then print(locationText.text) end
-    locationText.text = "Current location:" .. currentPlusCode
+    locationText.text = "Current location:" .. currentPlusCode 
     countText.text = "Total Explored Cells: " .. TotalExploredCells()
     pointText.text = "Score: " .. Score()
     timeText.text = "Current time:" .. os.date("%X")
@@ -173,7 +181,8 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen 
-        UpdateLocal()
+        --UpdateLocal()
+        timer.performWithDelay(50, UpdateLocal, 1)  
     end
 end
  

@@ -1,12 +1,9 @@
 --TODO
---add game tables
---track more data
+--track more data for leaderboards?
 --ponder converting between S2, PlusCodes, and GPS coords. if not, remove from table.
---enable smooth updates as i change the DB.
 --cache data in a table, so i can just ping memory instead of disk for all (23 * 23) cells twice a second. Possibly.
 --encrypt database to stop people from just opening the file and editing as they want.
 --possible optimization: store 8cell and 10cell both in the table, to avoid using substr() in queries
---possible optimization: add indexes to DB. I need to see where it slows down first.
 require("helpers")
 
 local sqlite3 = require("sqlite3")
@@ -34,6 +31,7 @@ function startDatabase()
         CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS trophysBought(id INTEGER PRIMARY KEY, itemCode, boughtOn);
+        CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
         ]]
         --CREATE TABLE IF NOT EXISTS ConversionLinks(id INTEGER PRIMARY KEY, pluscode, s2Cell, lat, long); --not sure yet if this is a thing i want to bother with.
         --INSERT INTO systemData(dbVersionID) values (]] .. dbVersionID .. [[);
@@ -107,7 +105,7 @@ function ResetDatabase()
 end
 
 function Query(sql)
-    --if (debug) then print("sql command:" .. sql) end
+    if (debug) then print("sql command:" .. sql) end
     results = {}
     --local path = system.pathForFile("data.db", system.DocumentsDirectory)
     --local db = sqlite3.open(path)
@@ -155,6 +153,8 @@ function createBaselineContent()
             cmd = "INSERT INTO systemData(dbVersionID, isGoodPerson, coffeesBought, deviceID) values (" .. dbVersionID .. ", 0, 0, " .. system.getInfo("deviceID") .. ")";
             Exec(cmd)
             cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed) values (0, 0, 0, 0)";
+            Exec(cmd)
+            cmd = "INSERT INTO trophysBought(itemCode, boughtOn) VALUES (0, 0)";
             Exec(cmd)
         end
     end
@@ -205,7 +205,7 @@ end
 
 --should probably be a gamelogic method
 function TotalExploredCells()
-    --if (debug) then print("opening total explored cells ") end
+    if (debug) then print("opening total explored cells ") end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited"
     --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
@@ -214,7 +214,7 @@ function TotalExploredCells()
 end
 
 function TotalExplored8Cells()
-    --if (debug) then print("opening total explored 8 cells ") end
+    if (debug) then print("opening total explored 8 cells ") end
     local query = "SELECT COUNT(DISTINCT substr(pluscode, 1, 8)) as c FROM plusCodesVisited"
     --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do

@@ -1,8 +1,9 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
 
+require("helpers")
 require("gameLogic")
-require("database")
+local db = require("database")
 
 --TODO
 --create baseline background image for trophy room.
@@ -16,7 +17,10 @@ require("database")
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
-local nextUnlockAt
+local nextUnlockAt = "" --displayText object
+local lastTrophyBought = 0
+
+local picturesToDisplay = {} --similar to the grid on 10cell and 8cell
  
  
 local function SwitchToSmallGrid()
@@ -35,9 +39,52 @@ local function SwitchToBigGrid()
     composer.gotoScene("8GridScene", options)
 end
 
-local function BuyTrophy()
+local function FindNextTrophy()
+    if (debug) then print("finding next trophy") end
     local query = "SELECT MAX(itemCode) FROM trophysBought"
-    local id = Query(query)[1]
+    lastTrophyBought = Query(query)[1][1] --not sure why the double index is needed here.
+
+    --if (debug) then print(dump(trophyUnlocks)) end
+    --if (debug) then print(dump(lastTrophyBought)) end
+    local dataindex = lastTrophyBought + 1
+    if (dataindex > #trophyUnlocks) then
+        nextUnlockAt.text = "You unlocked them all! Impressive!"
+        return
+    end
+
+    local nextData = trophyUnlocks[dataindex]
+
+    nextUnlockAt.text = "Next Trophy At " .. nextData[1] .. " Score, " .. nextData[2] .. " City Blocks, " .. nextData[3] .. " Routine Cells"
+end
+
+local function BuyTrophy()
+     local dataindex = lastTrophyBought + 1
+     if (dataindex > #trophyUnlocks) then
+        return
+    end
+    
+     local nextData = trophyUnlocks[dataindex]
+    --get score and cell count, compare to indexed data
+
+    if (debug) then print(dump(nextData)) end
+
+     local query = "SELECT totalScore FROM playerData"
+    local totalScore = Score()
+    if (debug) then print("checking explored cells") end
+    local CellCount10 = TotalExploredCells()
+    local CellCount8 = TotalExplored8Cells()
+    if (debug) then print(totalScore .. " " .. CellCount10 .. " " .. CellCount8) end
+    if (debug) then print(nextData[1] .. " " .. nextData[2] .. " " .. nextData[3]) end
+
+     if (totalScore >= nextData[1] and CellCount8 >= nextData[2] and CellCount10 >= nextData[3]) then
+         --buy this trophy in the DB
+         --display this trophy in the room.
+         if (debug) then print("buying trophy") end
+
+     else
+        if (debug) then print("can't afford this next trophy") end
+     end
+
 end
 
  
@@ -76,6 +123,7 @@ function scene:create( event )
     unlockTrophy.y = 1110
 
     unlockTrophy:addEventListener("tap", BuyTrophy)
+    if (debug) then print("trophy event listener added") end
 
     local bg = display.newImageRect(sceneGroup, "TrophyRoomBG.png", 720, 750 )
     bg.anchorX = 0
@@ -90,7 +138,7 @@ function scene:create( event )
 
     local textOptions = {}
     textOptions.parent =  sceneGroup
-    textOptions.text = "Next Unlock at (TODO MATH AND UPDATES HERE)"
+    textOptions.text = "Next Unlock at "
     textOptions.x = display.contentCenterX
     textOptions.y = 160
     textOptions.width = 500
@@ -99,7 +147,6 @@ function scene:create( event )
     textOptions.fontSize = 20
 
     nextUnlockAt = display.newText(textOptions)
-    --nextUnlockAt.anchorX = 0
     nextUnlockAt.anchorY = 0
     
     if (debug) then print("created TrophyScene") end
@@ -110,22 +157,23 @@ end
 -- show()
 function scene:show( event )
  
+    if (debug) then print("showing trophy scene") end
     local sceneGroup = self.view
     local phase = event.phase
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
+        FindNextTrophy()
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
- 
     end
 end
  
  
 -- hide()
 function scene:hide( event )
- 
+    if (debug) then print("hiding trophy scene") end
     local sceneGroup = self.view
     local phase = event.phase
  
@@ -141,7 +189,7 @@ end
  
 -- destroy()
 function scene:destroy( event )
- 
+    if (debug) then print("destroyed trophy scene") end
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view
  

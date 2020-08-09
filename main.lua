@@ -4,9 +4,7 @@
 --this function sets up a few global variables and baseline config.
 --remember, lua requires code to be in order to reference (cant call a function that's lower in the file than the current one)
 
-
 --TODO:
---CRITICAL: game does not start up if database does not exist. Fix the DB Creation scripts.
 --refactor and clean up code. move stuff and split into multiple files
 ----consider re-scoping variables, since calling a variable local in a file means other files can't see it. Not declaring it local makes it global, which is apparently slower.
 ----figure out how to make the scene change functions reusable. It doesn't look like dropping them into UIParts worked the first time?
@@ -18,22 +16,20 @@
 ----EX: put colors in DB query so that i can just look up which color to draw a cell instead of checking after reading cellinfo?
 ----EX: maybe move score values to DB? could theoretically make a more complicated query that automatically updates scores that way
 --Do i want to protect the DB at all to stop players from directly editing data?
---Confirm that daily bonuses occur when walking into an explored cell for the first time.
 --make a screen that draws the whole explored map you have, scaled to screen? requires drawing directly to a bitmap
---look into using timer.performwithdelay() as a method for updating objects repeatedly instead of only on events.
 --calculate distance between location events, track distance travelled in db?
 --change colors to be more visible outdoors (I have a lot of dark colors, probably want light colors instead)
 --create project with cutting-edge MS tech for server side
 ---whatever cheapest windows server AWS has, IIS latest, SQL Server (developer) latest, .NET 5 and API stuff
 ----or some other stuff? DOcker? but I also kinda want to show off specific familiar tools.
---may want to have that initial timer for UpdateLocal run on a tiny (10ms?) delay so that it doesn't impede the draw on switching scenes.
+--ponder using compass heading for arrow instead of GPS heading.
 system.setIdleTimer(false) --disables screen auto-off.
 
 require("store")
 require("helpers")
 require("gameLogic")
-
 require("database")
+
 debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugShift = false --display math for shifting PlusCodes
 debugGPS = false --display data for the GPS event and timer loop
@@ -72,7 +68,7 @@ local function gpsListener(event)
 
     currentHeading = event.direction
 
-    local pluscode = tryMyEncode(event.latitude, event.longitude, 10); --only goes to 10 right now. TODO expand if I want to for fun.
+    local pluscode = tryMyEncode(event.latitude, event.longitude, 10); --only goes to 10 right now.
     if (debugGPS)then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode   
     if (lastPlusCode == currentPlusCode) then

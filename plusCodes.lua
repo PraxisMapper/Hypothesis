@@ -77,6 +77,16 @@ function shiftCell(pluscode, xShift, yShift)
     --take the current cell, move it some number of cells in both directions (positive or negative)
     --will probably only work for values between -39 and 39. Shifting by 20 means you've move up 1 higher level cell entirely,
 
+    --temp hijack
+     local newCode2 = ""
+     if (debugShift) then print(plusCode) end
+     newCode2 = shiftCellV3(pluscode, xShift, 10)
+     if (debugShift) then print(newCode2) end
+     newCode2 = shiftCellV3(newCode2, yShift, 9)
+     if (debugShift) then print(newCode2) end
+     --return newCode2
+
+
     --debug = false
     local newCode = pluscode
     local currentDigit = ""
@@ -129,6 +139,14 @@ end
 
 function ShiftWholeBlock(plusCode, xShift, yShift)
     --this function is set to shift positions 7 and 8 in a plus code.
+
+    -- local newCode2 = ""
+    -- newCode2 = shiftCellV3(pluscode, xShift, 8)
+    -- newCode2 = shiftCellV3(newCode2, yShift, 7)
+    -- return newCode2
+
+
+
     local newCode = plusCode
     local currentDigit = ""
     local digitIndex = 0
@@ -175,6 +193,13 @@ end
 --quick hack to avoid errors on an 8 digit code
 function Shift8Block(plusCode, xShift, yShift)
     --this function is set to shift positions 7 and 8 in a plus code.
+
+    -- local newCode2 = ""
+    -- newCode2 = shiftCellV3(pluscode, xShift, 8)
+    -- newCode2 = shiftCellV3(newCode2, yShift, 7)
+    -- return newCode2
+
+
     if (debugShift) then print("shifting 8 block") end
     local newCode = plusCode
     local currentDigit = ""
@@ -216,5 +241,48 @@ function Shift8Block(plusCode, xShift, yShift)
         newCode = newCode:sub(1, 6) .. currentDigit .. newCode:sub(8,8)
     end
     if (debugShift)then print ("newcode is " .. newCode) end
+    return newCode
+end
+
+
+--the attempt at having 1 function handle all boundary levels
+function shiftCellV3(pluscode, Shift, position)
+    --take the current cell, move it some number of cells in both directions (positive or negative)
+    --Shift should be under 20
+    --position is which cell we're looking to shift, from 1 to 10. This function handles the plus sign by skipping it.
+    if (debugShift) then print("ShiftV3: " .. pluscode .. " "  .. Shift .. " " .. position) end
+
+    local charPos = position
+    if (position > 8) then --shift this over 1, to avoid the + in the plus code
+        charPos = position + 1
+    end
+
+    local newCode = pluscode
+    local currentDigit = ""
+    local digitIndex = 0
+    if (debugShift)then print ("V3shifting cell " .. pluscode) end
+    --do X shift
+    if (Shift ~= 0) then
+        if (debugShift)then print ("V3Shifting " .. Shift .. " spots in pos " .. charPos) end
+
+        currentDigit = pluscode:sub(charPos, charPos)
+        if (debugShift)then print ("V3 curDigit is " .. currentDigit) end
+        digitIndex = CODE_ALPHABET_:find(currentDigit)
+        digitIndex = digitIndex + Shift
+        --i probably also need to adjust position 8 in the string if this happens in either direction
+        if (digitIndex <= 0) then
+            digitIndex = 20 + digitIndex
+            newCode = shiftCellV3(newCode, -1, position - 2)
+        end
+        if (digitIndex > 20) then
+            digitIndex = digitIndex - 20
+            newCode = shiftCellV3(newCode, 1, position - 2)
+        end
+        currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
+    if (debugShift) then print("new character in pos " .. charPos .. " is ".. currentDigit) end
+        newCode = newCode:sub(1, charPos - 1) .. currentDigit .. newCode:sub(charPos + 1, 11)
+    end
+    if (debugShift)then print ("V3newcode is " .. newCode) end
+
     return newCode
 end

@@ -87,6 +87,12 @@ end
 --images are 25x25px for now, for testing purposes
 trophyUnlocks = {
     {1, 1, 1, "The first Trophy", "TrophyImgs/1.png", 1, 1},
-    {2, 2, 21, "The first Trophy", "TrophyImgs/1.png", 26, 26},
+    {117, 2, 21, "The second Trophy", "TrophyImgs/2.png", 26, 26}, -- at 117/2/2 this should not be unlockable on the simulator
+
+}
+
+local sampleExampleTable = {
+    ["namedindex"] = 1,
+    ["namedIndexAgain"] = "Asdf"
 
 }

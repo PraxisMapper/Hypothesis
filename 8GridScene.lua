@@ -82,6 +82,8 @@ local function SwitchToTrophy()
         time = 125,
     }
     composer.gotoScene("trophyScene", options)
+    --hijacking this for perf testing
+    --composer.gotoScene("performanceTest", options)
 end
 
 local function GoToStoreScene()
@@ -172,7 +174,8 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen 
-        UpdateLocal8()
+        --UpdateLocal8()
+        timer.performWithDelay(50, UpdateLocal8, 1)  
     end
 end
  
