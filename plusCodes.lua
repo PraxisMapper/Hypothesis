@@ -1,7 +1,5 @@
 --TODO: 
---enhance precision to 11 or more characters if I wanted to.
---make a more universal function for adjusting plus codes. I have the logic right, i just need to apply it to each pair instead of one at a time.
---using current pluscode  level (10), each cell is approximately passing by one house. Could drop the last 2 digits, and then it's more like City Block size.
+--nothing right now.
 
 -- oh right, the +3 level is a 5x4 ordered grid. so...
 --'23456789CFGHJMPQRVWX'
@@ -14,10 +12,10 @@
 --alter the last digit of the current cell to check neighbors, or 2nd to last cell if it overflows
 --that only matters if I use 11-digit or more codes. At the 10 digit level its still 20x20. So, same idea, but one is X and one is Y
 
--- 14x14 precision
+-- 14x14 meter precision
 --CODE_PRECISION_NORMAL = 10
 
--- 2x3 precision
+-- 2x3 meter precision
 --CODE_PRECISION_EXTRA = 11
 
 -- A separator used to break the code into two parts to aid memorability.
@@ -28,17 +26,6 @@ local SEPARATOR_ = '+'
 
 -- The character set used to encode the values.
 CODE_ALPHABET_ = '23456789CFGHJMPQRVWX' --no longer local, so we can use it in other files
-
--- The base to use to convert numbers to/from.
-local ENCODING_BASE_ = string.len(CODE_ALPHABET_)
-
--- The max number of digits to process in a plus code.
-local MAX_DIGIT_COUNT_ = 15
-
--- Maximum code length using lat/lng pair encoding. The area of such a
--- code is approximately 13x13 meters (at the equator), and should be suitable
--- for identifying buildings. This excludes prefix and separator characters.
-local PAIR_CODE_LENGTH_ = 10
 
 -- The resolution values in degrees for each position in the lat/lng pair
 -- encoding. These give the place value of each position, and therefore the
@@ -73,185 +60,11 @@ function tryMyEncode(latitude, longitude, codeLength)
     return code:sub(1,8) .. SEPARATOR_ .. code:sub(9, 10);
 end
 
-function shiftCell(pluscode, xShift, yShift)
-    --take the current cell, move it some number of cells in both directions (positive or negative)
-    --will probably only work for values between -39 and 39. Shifting by 20 means you've move up 1 higher level cell entirely,
-
-    --temp hijack
-     local newCode2 = ""
-     if (debugShift) then print(plusCode) end
-     newCode2 = shiftCellV3(pluscode, xShift, 10)
-     if (debugShift) then print(newCode2) end
-     newCode2 = shiftCellV3(newCode2, yShift, 9)
-     if (debugShift) then print(newCode2) end
-     --return newCode2
-
-
-    --debug = false
-    local newCode = pluscode
-    local currentDigit = ""
-    local digitIndex = 0
-    if (debugShift)then print ("shifting cell " .. pluscode) end
-    --do X shift
-    if (xShift ~= 0) then
-        if (debugShift)then print ("Shifting X " .. xShift) end
-        currentDigit = pluscode:sub(11, 11)
-        digitIndex = CODE_ALPHABET_:find(currentDigit)
-        digitIndex = digitIndex + xShift
-        --i probably also need to adjust position 8 in the string if this happens in either direction
-        if (digitIndex <= 0) then
-            digitIndex = 20 + digitIndex
-            newCode = ShiftWholeBlock(newCode, -1, 0)
-        end
-        if (digitIndex > 20) then
-            digitIndex = digitIndex - 20
-            newCode = ShiftWholeBlock(newCode, 1, 0)
-        end
-        currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
-        newCode = newCode:sub(1, 10) .. currentDigit
-    end
-    if (debugShift)then print ("newcode is " .. newCode) end
-
-    --do Y shift
-    if (yShift ~= 0) then
-        if (debugShift)then print ("shifting Y " .. yShift) end
-        --get last digit, move it 1 notch higher on the list
-        currentDigit = pluscode:sub(10, 10)
-        digitIndex = CODE_ALPHABET_:find(currentDigit)
-        digitIndex = digitIndex + yShift
-        --i probably also need to adjust position 7 in the string if this happens in either direction
-        if (digitIndex <= 0) then
-            digitIndex = 20 + digitIndex
-            newCode = ShiftWholeBlock(newCode, 0, -1)
-        end
-        if (digitIndex > 20) then
-            digitIndex = digitIndex - 20
-            newCode = ShiftWholeBlock(newCode, 0, 1)
-        end
-        currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
-        newCode = newCode:sub(1, 9) .. currentDigit .. newCode:sub(11,11)
-    end
-    if (debugShift)then print ("newcode is " .. newCode) end
-
-    --debug = true
-    return newCode
-end
-
-function ShiftWholeBlock(plusCode, xShift, yShift)
-    --this function is set to shift positions 7 and 8 in a plus code.
-
-    -- local newCode2 = ""
-    -- newCode2 = shiftCellV3(pluscode, xShift, 8)
-    -- newCode2 = shiftCellV3(newCode2, yShift, 7)
-    -- return newCode2
-
-
-
-    local newCode = plusCode
-    local currentDigit = ""
-    local digitIndex = 0
-    if (debugShift)then print ("shifting cell " .. plusCode) end
-    --do X shift
-    if (xShift ~= 0) then
-        if (debugShift)then print ("Shifting X " .. xShift) end
-        currentDigit = plusCode:sub(8, 8)
-        digitIndex = CODE_ALPHABET_:find(currentDigit)
-        digitIndex = digitIndex + xShift
-        --i probably also need to adjust position 6 in the string if this happens in either direction
-        if (digitIndex <= 0) then
-            digitIndex = 20 + digitIndex
-        end
-        if (digitIndex > 20) then
-            digitIndex = digitIndex - 20
-        end
-        currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
-        newCode = newCode:sub(1, 7) .. currentDigit .. newCode:sub(9, 11)
-    end
-    if (debugShift)then print ("newcode is " .. newCode) end
-
-    --do Y shift
-    if (yShift ~= 0) then
-        if (debugShift)then print ("shifting Y " .. yShift) end
-        --get last digit, move it 1 notch higher on the list
-        currentDigit = plusCode:sub(7, 7)
-        digitIndex = CODE_ALPHABET_:find(currentDigit)
-        digitIndex = digitIndex + yShift
-        --i probably also need to adjust position 5 in the string if this happens in either direction
-        if (digitIndex <= 0) then
-            digitIndex = 20 + digitIndex
-        end
-        if (digitIndex > 20) then
-            digitIndex = digitIndex - 20
-        end
-        currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
-        newCode = newCode:sub(1, 6) .. currentDigit .. newCode:sub(8,11)
-    end
-    if (dedebugShiftbug)then print ("newcode is " .. newCode) end
-    return newCode
-end
-
---quick hack to avoid errors on an 8 digit code
-function Shift8Block(plusCode, xShift, yShift)
-    --this function is set to shift positions 7 and 8 in a plus code.
-
-    -- local newCode2 = ""
-    -- newCode2 = shiftCellV3(pluscode, xShift, 8)
-    -- newCode2 = shiftCellV3(newCode2, yShift, 7)
-    -- return newCode2
-
-
-    if (debugShift) then print("shifting 8 block") end
-    local newCode = plusCode
-    local currentDigit = ""
-    local digitIndex = 0
-    if (debugShift)then print ("shifting 8block " .. plusCode) end
-    --do X shift
-    if (xShift ~= 0) then
-        if (debugShift)then print ("Shifting X " .. xShift) end
-        currentDigit = plusCode:sub(8, 8)
-        digitIndex = CODE_ALPHABET_:find(currentDigit)
-        digitIndex = digitIndex + xShift
-        --i probably also need to adjust position 6 in the string if this happens in either direction
-        if (digitIndex <= 0) then
-            digitIndex = 20 + digitIndex
-        end
-        if (digitIndex > 20) then
-            digitIndex = digitIndex - 20
-        end
-        currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
-        newCode = newCode:sub(1, 7) .. currentDigit
-    end
-    if (debugShift)then print ("newcode is " .. newCode) end
-
-    --do Y shift
-    if (yShift ~= 0) then
-        if (debugShift)then print ("shifting Y " .. yShift) end
-        --get last digit, move it 1 notch higher on the list
-        currentDigit = plusCode:sub(7, 7)
-        digitIndex = CODE_ALPHABET_:find(currentDigit)
-        digitIndex = digitIndex + yShift
-        --i probably also need to adjust position 5 in the string if this happens in either direction
-        if (digitIndex <= 0) then
-            digitIndex = 20 + digitIndex
-        end
-        if (digitIndex > 20) then
-            digitIndex = digitIndex - 20
-        end
-        currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
-        newCode = newCode:sub(1, 6) .. currentDigit .. newCode:sub(8,8)
-    end
-    if (debugShift)then print ("newcode is " .. newCode) end
-    return newCode
-end
-
-
---the attempt at having 1 function handle all boundary levels
-function shiftCellV3(pluscode, Shift, position, forceDebug)
-    --take the current cell, move it some number of cells in both directions (positive or negative)
+function shiftCellV3(pluscode, Shift, position)
+    --take the current cell, move it some number of cells at some position. (Call this twice to do X and Y)
     --Shift should be under 20
     --position is which cell we're looking to shift, from 1 to 10. This function handles the plus sign by skipping it.
     if (debugShift) then print("ShiftV3: " .. pluscode .. " "  .. Shift .. " " .. position) end
-    if (forceDebug) then print("ShiftV3: " .. pluscode .. " "  .. Shift .. " " .. position) end
 
     local charPos = position
     if (position > 8) then --shift this over 1, to avoid the + in the plus code
@@ -262,8 +75,7 @@ function shiftCellV3(pluscode, Shift, position, forceDebug)
     local currentDigit = ""
     local digitIndex = 0
     if (debugShift)then print ("V3shifting cell " .. pluscode) end
-    if (forceDebug) then print ("V3shifting cell " .. pluscode) end
-    --do X shift
+    --do the shift
     if (Shift ~= 0) then
         if (debugShift)then print ("V3Shifting " .. Shift .. " spots in pos " .. charPos) end
 
@@ -272,16 +84,16 @@ function shiftCellV3(pluscode, Shift, position, forceDebug)
         digitIndex = CODE_ALPHABET_:find(currentDigit)
         digitIndex = digitIndex + Shift
         if (debugShift)then print ("V3 digitIndex is " .. digitIndex) end
-        --i probably also need to adjust position 8 in the string if this happens in either direction
+
         if (digitIndex <= 0) then
             digitIndex = 20 + digitIndex
             if (debugShift) then print ("SUBSHIFT") end
-            newCode = shiftCellV3(newCode, -1, position - 2, forceDebug) -- was -1
+            newCode = shiftCellV3(newCode, -1, position - 2) 
         end
         if (digitIndex > 20) then
             digitIndex = digitIndex - 20
             if (debugShift) then print ("SUBSHIFT") end
-            newCode = shiftCellV3(newCode, 1, position - 2, forceDebug) --was +1
+            newCode = shiftCellV3(newCode, 1, position - 2) 
         end
         currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
     if (debugShift) then print("new character in pos " .. charPos .. " is ".. currentDigit) end

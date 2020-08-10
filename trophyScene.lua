@@ -11,7 +11,6 @@ local db = require("database")
 --actually display things user has bought.
 --Display data for the next trophy to unlock (score, 10Cell, 8Cell)
 
-
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
@@ -42,10 +41,8 @@ end
 local function FindNextTrophy()
     if (debug) then print("finding next trophy") end
     local query = "SELECT MAX(itemCode) FROM trophysBought"
-    lastTrophyBought = Query(query)[1][1] --not sure why the double index is needed here.
+    lastTrophyBought = Query(query)[1][1] --not sure why the double index is needed here, possibly because not ipairs() or iterating or anything.
 
-    --if (debug) then print(dump(trophyUnlocks)) end
-    --if (debug) then print(dump(lastTrophyBought)) end
     local dataindex = lastTrophyBought + 1
     if (dataindex > #trophyUnlocks) then
         nextUnlockAt.text = "You unlocked them all! Impressive!"
@@ -80,6 +77,7 @@ local function BuyTrophy()
          --buy this trophy in the DB
          --display this trophy in the room.
          if (debug) then print("buying trophy") end
+         --TODO actually buy the trophy
 
      else
         if (debug) then print("can't afford this next trophy") end

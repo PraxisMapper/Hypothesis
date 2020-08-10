@@ -1,7 +1,6 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
 
---require("timer")
 require("UIParts")
 require("database")
  
@@ -13,7 +12,7 @@ if (debug) then print("10GridScene loading") end
 
 --TODO
 --additional colors, to indicate when a cell has a bonus waiting to be collected. (colors here are visited/notYetVisited. recurring bonuses are on the other grid)
---add a bounce-and-fall popup for when you gain score, add a sound effect to that too.
+--add a bounce-and-fall popup for when you gain score, add a sound effect to that too?
 
 local cellCollection = {}
 --color codes
@@ -29,10 +28,7 @@ local pointText = ""
 local timeText = ""
 local directionArrow = ""
 
---This is sufficiently fast with debug=false ot not be real concerned about performance issues.
 local function UpdateLocal8()
-    --at size 23, this takes .04 seconds with debug = false
-    --at size 23, this takes .55 seconds with debug = true. Lots of console writes take a while, huh
     if (debugGPS) then print("start UpdateLocal8") end
     local currentPlusCode8 = currentPlusCode:sub(1,8)
     local previousPlusCode8 =  previousPlusCode:sub(1,8)
@@ -42,8 +38,7 @@ local function UpdateLocal8()
         firstRun8 = false
         previousPlusCode8 = currentPlusCode8
         if (debugGPS) then print("in 8 grid loop " ..previousPlusCode8 .. " " .. currentPlusCode8) end
-        for square = 1, #cellCollection do --this is supposed to be faster than ipairs
-            --if (debug) then print("displaycell " .. cellCollection[square].gridX .. "," .. cellCollection[square].gridY) end
+        for square = 1, #cellCollection do --this is slightly faster than ipairs
             --check each spot based on current cell, modified by gridX and gridY
             local thisSquaresPluscode= currentPlusCode8
              thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 8)
@@ -178,7 +173,6 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen 
-        --UpdateLocal8()
         timer.performWithDelay(50, UpdateLocal8, 1)  
     end
 end

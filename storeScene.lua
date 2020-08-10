@@ -8,13 +8,9 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
  
 --TODO:
---Create 2 items.
 --Buy items separately per platform
  --track count of coffees bought?
  --don't attempt to let user buy GoodPerson if they already own it
---icon/button to enter this scene.
-
-
 
 local function SwitchToSmallGrid()
     local options = {

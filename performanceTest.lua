@@ -1,4 +1,5 @@
 --performance testing scene.
+--TODO: if it matters, update this perftest setup to use shiftCellV3() instead of the old one.
 local composer = require( "composer" )
  
 local scene = composer.newScene()

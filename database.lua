@@ -1,9 +1,9 @@
 --TODO
 --track more data for leaderboards?
 --ponder converting between S2, PlusCodes, and GPS coords. if not, remove from table.
---cache data in a table, so i can just ping memory instead of disk for all (23 * 23) cells twice a second. Possibly.
+--cache data in a table, so i can just ping memory instead of disk for all (23 * 23) cells twice a second. Possibly. Indexing seems fast enough.
 --encrypt database to stop people from just opening the file and editing as they want.
---possible optimization: store 8cell and 10cell both in the table, to avoid using substr() in queries
+--possible optimization: store 8cell and 10cell both in the table, to avoid using substr() in queries, if that becomes too slow
 require("helpers")
 
 local sqlite3 = require("sqlite3")
@@ -34,10 +34,8 @@ function startDatabase()
         CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
         ]]
         --CREATE TABLE IF NOT EXISTS ConversionLinks(id INTEGER PRIMARY KEY, pluscode, s2Cell, lat, long); --not sure yet if this is a thing i want to bother with.
-        --INSERT INTO systemData(dbVersionID) values (]] .. dbVersionID .. [[);
 
     if (debug) then 
-        --print(tablesetup) 
         print("SQLite version " .. sqlite3.version())
     end
     Exec(tablesetup)
@@ -47,8 +45,6 @@ function startDatabase()
 
     -- Setup the event listener to catch "applicationExit"
     Runtime:addEventListener("system", onSystemEvent)
-
-    --db:close();
 end
 
 function upgradeDatabaseVersion()
@@ -85,6 +81,7 @@ function upgradeDatabaseVersion()
     if (dbVersionID < 4) then
          --do any scripting to match upgrade to version 4
          --might need to move ADD lastVisitedOn here
+         --index will be created without this step, no other table edits yet.
     end
 end
 
@@ -107,12 +104,9 @@ end
 function Query(sql)
     if (debugDB) then print("sql command:" .. sql) end
     results = {}
-    --local path = system.pathForFile("data.db", system.DocumentsDirectory)
-    --local db = sqlite3.open(path)
     for row in db:rows(sql) do
         table.insert(results, row) --todo potential optimization? especially if I just iPairs this table.
     end
-    --db:close()
     if (debugDB) then dump(results) end
     return results 
 end
@@ -120,26 +114,18 @@ end
 function Exec(sql)
     if (debugDB) then print("exec sql command:" .. sql) end
     results = {}
-    --local path = system.pathForFile("data.db", system.DocumentsDirectory)
-    --local db = sqlite3.open(path) 
     local resultCode = db:exec(sql);
     
     if (resultCode == 0) then
-        --db:close()
         return
     end
 
     --now its all error tracking.
     local errormsg = db:errmsg()
     if (debugDB) then print("sql exec error: " .. errormsg) end
-    --db:close()
 end
 
 function createBaselineContent()
-     -- Open "data.db". If the file doesn't exist, it will be created (should have been done above.)
-     --local path = system.pathForFile("data.db", system.DocumentsDirectory)
-     --local db = sqlite3.open(path)
-
      --insert system data row
      local query = "SELECT COUNT(*) FROM playerData"
      local dataPresent = Query(query)
@@ -159,16 +145,14 @@ function createBaselineContent()
         end
     end
 
-     --create acheivement data.
+     --create acheivement data. TODO
      local acheivementRows = { "INSERT INTO acheivements VALUES ()", "", ""}
      --foreach these strings.
-
-    --db:close()
 end
 
 function ResetDailyWeekly()
     --checks for daily and weekly reset times.
-    --if oldest date in daily/weekly table is over 24/(24 * 7) hours old, delete everything in the table. (actually , do 22 hour reset)
+    --if oldest date in daily/weekly table is over 22/(24 * 6.9) hours old, delete everything in the table. (actually, do 22 hour reset)
     local timeDiffDaily = os.time() - (60 * 60 * 22) --22 hours, converted to seconds.
     local cmd = "DELETE FROM dailyVisited WHERE VisitedOn < " .. timeDiffDaily
     Exec(cmd)
@@ -180,7 +164,6 @@ end
 function VisitedCell(pluscode)
     if (debugDB) then print("Checking if visited current cell " .. pluscode) end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE pluscode = '" .. pluscode .. "'"
-    --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
         if (row[1] == 1) then
             return true
@@ -193,7 +176,6 @@ end
 function Visited8Cell(pluscode)
     if (debugDB) then print("Checking if visited current 8 cell " .. pluscode) end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE substr(pluscode, 1, 8) = '" .. pluscode .. "'"
-    --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
         if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
             return true
@@ -207,7 +189,6 @@ end
 function TotalExploredCells()
     if (debugDB) then print("opening total explored cells ") end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited"
-    --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
         return row[1]
     end
@@ -216,16 +197,13 @@ end
 function TotalExplored8Cells()
     if (debugDB) then print("opening total explored 8 cells ") end
     local query = "SELECT COUNT(DISTINCT substr(pluscode, 1, 8)) as c FROM plusCodesVisited"
-    --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
         return row[1]
     end
 end
 
 function Score()
-    --if (debug) then print("opening score ") end
     local query = "SELECT totalPoints as p from playerData"
-    --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
         return row[1]
     end

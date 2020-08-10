@@ -1,7 +1,6 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
 
---require("timer")
 require("UIParts")
 require("database")
  
@@ -13,8 +12,7 @@ if (debug) then print("10GridScene loading") end
 
 --TODO
 --additional colors, to indicate when a cell has a bonus waiting to be collected. (colors here are none/daily/weekly. FirstTime is on the other grid now)
---add a bounce-and-fall popup for when you gain score, add a sound effect to that too.
---add score line to bottom of screen
+--add a bounce-and-fall popup for when you gain score, add a sound effect to that too?
 
 local cellCollection = {}
 --color codes
@@ -31,10 +29,7 @@ local timeText = ""
 local directionArrow = ""
 local scoreLog = ""
 
---This is sufficiently fast with debug=false ot not be real concerned about performance issues.
 local function UpdateLocal()
-    --at size 23, this takes .04 seconds with debug = false
-    --at size 23, this takes .55 seconds with debug = true. Lots of console writes take a while, huh
     if (debugGPS) then print("start UpdateLocal") end
     if (debugGPS) then print(currentPlusCode) end
 
@@ -49,8 +44,7 @@ local function UpdateLocal()
     if (currentPlusCode ~= previousPlusCode or firstRun) then
         firstRun = false
         previousPlusCode = currentPlusCode
-        for square = 1, #cellCollection do --this is supposed to be faster than ipairs
-            --if (debug) then print("displaycell " .. cellCollection[square].gridX .. "," .. cellCollection[square].gridY) end
+        for square = 1, #cellCollection do --this is slightly faster than ipairs
             --check each spot based on current cell, modified by gridX and gridY
              local thisSquaresPluscode= currentPlusCode
              thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 10)
@@ -116,7 +110,6 @@ end
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
  
--- create()
 function scene:create( event )
  
     if (debug) then print("creating 10GridScene") end
@@ -134,7 +127,6 @@ function scene:create( event )
     directionArrow = display.newImageRect(sceneGroup, "arrow1.png", 25, 25)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
-
 
     local changeGrid = display.newImageRect(sceneGroup, "BigGridButton.png", 300, 100)
     changeGrid.anchorX = 0
@@ -185,7 +177,6 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen 
-        --UpdateLocal()
         timer.performWithDelay(50, UpdateLocal, 1)  
     end
 end
