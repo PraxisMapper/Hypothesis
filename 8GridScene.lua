@@ -45,7 +45,11 @@ local function UpdateLocal8()
         for square = 1, #cellCollection do --this is supposed to be faster than ipairs
             --if (debug) then print("displaycell " .. cellCollection[square].gridX .. "," .. cellCollection[square].gridY) end
             --check each spot based on current cell, modified by gridX and gridY
-            if Visited8Cell(Shift8Block(currentPlusCode8, cellCollection[square].gridX, cellCollection[square].gridY)) then
+            local thisSquaresPluscode= currentPlusCode8
+             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 8)
+             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 7)
+            cellCollection[square].pluscode = thisSquaresPluscode
+            if Visited8Cell(thisSquaresPluscode) then
                 cellCollection[square].fill = visitedCell
             else
                 cellCollection[square].fill = unvisitedCell

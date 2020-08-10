@@ -105,7 +105,7 @@ function ResetDatabase()
 end
 
 function Query(sql)
-    if (debug) then print("sql command:" .. sql) end
+    if (debugDB) then print("sql command:" .. sql) end
     results = {}
     --local path = system.pathForFile("data.db", system.DocumentsDirectory)
     --local db = sqlite3.open(path)
@@ -113,12 +113,12 @@ function Query(sql)
         table.insert(results, row) --todo potential optimization? especially if I just iPairs this table.
     end
     --db:close()
-    if (debug) then dump(results) end
+    if (debugDB) then dump(results) end
     return results 
 end
 
 function Exec(sql)
-    if (debug) then print("exec sql command:" .. sql) end
+    if (debugDB) then print("exec sql command:" .. sql) end
     results = {}
     --local path = system.pathForFile("data.db", system.DocumentsDirectory)
     --local db = sqlite3.open(path) 
@@ -131,7 +131,7 @@ function Exec(sql)
 
     --now its all error tracking.
     local errormsg = db:errmsg()
-    if (debug) then print("sql exec error: " .. errormsg) end
+    if (debugDB) then print("sql exec error: " .. errormsg) end
     --db:close()
 end
 
@@ -178,7 +178,7 @@ function ResetDailyWeekly()
 end
 
 function VisitedCell(pluscode)
-    if (debug) then print("Checking if visited current cell " .. pluscode) end
+    if (debugDB) then print("Checking if visited current cell " .. pluscode) end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE pluscode = '" .. pluscode .. "'"
     --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
@@ -191,7 +191,7 @@ function VisitedCell(pluscode)
 end
 
 function Visited8Cell(pluscode)
-    if (debug) then print("Checking if visited current 8 cell " .. pluscode) end
+    if (debugDB) then print("Checking if visited current 8 cell " .. pluscode) end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE substr(pluscode, 1, 8) = '" .. pluscode .. "'"
     --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
@@ -205,7 +205,7 @@ end
 
 --should probably be a gamelogic method
 function TotalExploredCells()
-    if (debug) then print("opening total explored cells ") end
+    if (debugDB) then print("opening total explored cells ") end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited"
     --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
@@ -214,7 +214,7 @@ function TotalExploredCells()
 end
 
 function TotalExplored8Cells()
-    if (debug) then print("opening total explored 8 cells ") end
+    if (debugDB) then print("opening total explored 8 cells ") end
     local query = "SELECT COUNT(DISTINCT substr(pluscode, 1, 8)) as c FROM plusCodesVisited"
     --if Query(query)[1] == 1 then
     for i,row in ipairs(Query(query)) do
@@ -232,20 +232,20 @@ function Score()
 end
 
 function AddDistance(meters)
-    if (debug) then print("adding distance ") end
+    if (debugDB) then print("adding distance ") end
     local cmd = "UPDATE playerData SET distanceWalked = distanceWalked + " .. meters 
     Exec(cmd)
 end
 
 function AddSeconds(time)
-    if (debug) then print("adding time ") end
+    if (debugDB) then print("adding time ") end
     local cmd = "UPDATE playerData SET totalSecondsPlayed = totalSecondsPlayed + " .. time
     Exec(cmd)
 end
 
 function GetClientData()
     --stuff to send up to leaderboards API
-    if (debug) then print("loading client data ") end
+    if (debugDB) then print("loading client data ") end
     local query = "SELECT * from playerData P LEFT JOIN systemData S" --this gets everything, just has 2 columns named ID that should both be 1.
     local results = Query(query) --or just return this?
     for i,row in ipairs(results) do

@@ -12,11 +12,16 @@ function CreateSquareGrid(gridSize, cellSize, gridGroup, cellCollection)
             local newSquare = display.newRect(gridGroup, display.contentCenterX + (cellSize * x) + x , display.contentCenterY + (cellSize * y) + y , cellSize, cellSize) --x y w h
             newSquare.gridX = x
             newSquare.gridY = -y --invert this so cells get identified top-to-bottom, rather than bottom-to-top
+            newSquare:addEventListener("tap", debuggerHelperSquare)
             cellCollection[#cellCollection + 1] = newSquare
         end
     end
 
     if (debug) then print("Done CreateSquareGrid") end
+end
+
+function debuggerHelperSquare(event)
+    native.showAlert("Cell", event.target.pluscode)
 end
 
 function GoToStoreScene()

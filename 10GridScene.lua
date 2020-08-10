@@ -52,7 +52,11 @@ local function UpdateLocal()
         for square = 1, #cellCollection do --this is supposed to be faster than ipairs
             --if (debug) then print("displaycell " .. cellCollection[square].gridX .. "," .. cellCollection[square].gridY) end
             --check each spot based on current cell, modified by gridX and gridY
-            if VisitedCell(shiftCell(currentPlusCode, cellCollection[square].gridX, cellCollection[square].gridY)) then
+             local thisSquaresPluscode= currentPlusCode
+             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 10)
+             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 9)
+            cellCollection[square].pluscode = thisSquaresPluscode
+            if VisitedCell(thisSquaresPluscode) then
                 cellCollection[square].fill = visitedCell
             else
                 cellCollection[square].fill = unvisitedCell

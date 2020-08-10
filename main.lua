@@ -31,8 +31,9 @@ require("gameLogic")
 require("database")
 
 debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
-debugShift = false --display math for shifting PlusCodes
+debugShift = true --display math for shifting PlusCodes
 debugGPS = false --display data for the GPS event and timer loop
+debugDB = false
 --uncomment when testing to clear local data.
 --ResetDatabase()
 startDatabase()
@@ -51,6 +52,23 @@ previousPlusCode = ""  --the previous DIFFERENT pluscode value we visited.
 currentHeading = 0
 lastTime = 0
 lastScoreLog = ""
+
+--testing boundary fix, part 2
+--grantPoints("86HWHG2X+4V") --center cell
+--one offs
+--grantPoints("86HWHG2X+5V") 
+--grantPoints("86HWHG2X+3V")
+--grantPoints("86HWHG2X+4X")
+--grantPoints("86HWHG2X+4R")
+-- in neighboring 8cell on screen.
+--grantPoints("86HWHH22+43")
+--grantPoints("86HWGGXX+XW")
+--grantPoints("86HWHG2X+4V")
+--grantPoints("86HWGHX2+W4")
+--grantPoints("86HWGH22+23")
+
+--shiftCellV3("86HWHG2X+4X", 1, 10, true) --X looks correct
+--shiftCellV3("86HWHG2X+2X", -1, 9, true) --y, going down 1
 
 local composer = require("composer")
 composer.gotoScene("10GridScene")
@@ -71,6 +89,14 @@ local function gpsListener(event)
     local pluscode = tryMyEncode(event.latitude, event.longitude, 10); --only goes to 10 right now.
     if (debugGPS)then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode   
+
+    --Testing boundary fix here, part 1.
+    currentPlusCode = "86HWHG2X+2X" 
+    --X coords are 6WGHV, Y coords are 8HH24
+    --this should put 4 different 6-grids on screen at once.
+
+
+
     if (lastPlusCode == currentPlusCode) then
         --dont update stuff, we're still standing in the same spot.
         return

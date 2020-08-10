@@ -246,11 +246,12 @@ end
 
 
 --the attempt at having 1 function handle all boundary levels
-function shiftCellV3(pluscode, Shift, position)
+function shiftCellV3(pluscode, Shift, position, forceDebug)
     --take the current cell, move it some number of cells in both directions (positive or negative)
     --Shift should be under 20
     --position is which cell we're looking to shift, from 1 to 10. This function handles the plus sign by skipping it.
     if (debugShift) then print("ShiftV3: " .. pluscode .. " "  .. Shift .. " " .. position) end
+    if (forceDebug) then print("ShiftV3: " .. pluscode .. " "  .. Shift .. " " .. position) end
 
     local charPos = position
     if (position > 8) then --shift this over 1, to avoid the + in the plus code
@@ -261,6 +262,7 @@ function shiftCellV3(pluscode, Shift, position)
     local currentDigit = ""
     local digitIndex = 0
     if (debugShift)then print ("V3shifting cell " .. pluscode) end
+    if (forceDebug) then print ("V3shifting cell " .. pluscode) end
     --do X shift
     if (Shift ~= 0) then
         if (debugShift)then print ("V3Shifting " .. Shift .. " spots in pos " .. charPos) end
@@ -269,20 +271,23 @@ function shiftCellV3(pluscode, Shift, position)
         if (debugShift)then print ("V3 curDigit is " .. currentDigit) end
         digitIndex = CODE_ALPHABET_:find(currentDigit)
         digitIndex = digitIndex + Shift
+        if (debugShift)then print ("V3 digitIndex is " .. digitIndex) end
         --i probably also need to adjust position 8 in the string if this happens in either direction
         if (digitIndex <= 0) then
             digitIndex = 20 + digitIndex
-            newCode = shiftCellV3(newCode, -1, position - 2)
+            if (debugShift) then print ("SUBSHIFT") end
+            newCode = shiftCellV3(newCode, -1, position - 2, forceDebug) -- was -1
         end
         if (digitIndex > 20) then
             digitIndex = digitIndex - 20
-            newCode = shiftCellV3(newCode, 1, position - 2)
+            if (debugShift) then print ("SUBSHIFT") end
+            newCode = shiftCellV3(newCode, 1, position - 2, forceDebug) --was +1
         end
         currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
     if (debugShift) then print("new character in pos " .. charPos .. " is ".. currentDigit) end
         newCode = newCode:sub(1, charPos - 1) .. currentDigit .. newCode:sub(charPos + 1, 11)
     end
-    if (debugShift)then print ("V3newcode is " .. newCode) end
+    if (debugShift) then print ("V3newcode final is " .. newCode) end
 
     return newCode
 end
