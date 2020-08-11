@@ -3,9 +3,9 @@ local scene = composer.newScene()
 
 require("helpers")
 require("gameLogic")
-local db = require("database")
+require("database")
 
---TODO
+--TODO 
 --create baseline background image for trophy room.
 --draw pictures for all the things user can by
 --actually display things user has bought.
@@ -20,6 +20,7 @@ local nextUnlockAt = "" --displayText object
 local lastTrophyBought = 0
 
 local picturesToDisplay = {} --similar to the grid on 10cell and 8cell
+local sceneGroupCopy = {} -- for DrawTrophy, possibly?
  
  
 local function SwitchToSmallGrid()
@@ -38,10 +39,30 @@ local function SwitchToBigGrid()
     composer.gotoScene("8GridScene", options)
 end
 
+local function DrawTrophy(index)
+    if (index > #trophyUnlocks) then
+        return
+    end
+
+    local trophyItem = trophyUnlocks[index]
+    print(dump(trophyItem))
+    local trophyRect = display.newImageRect(sceneGroupCopy, trophyItem[5], 25, 25)
+    print ("got trophy rect")
+    trophyRect.anchorX = 0
+    trophyRect.anchorY = 0
+    trophyRect.x = trophyItem[6]
+    trophyRect.y = 200 + trophyItem[7] --offset to start inside the background image
+    print ("rect done")
+
+    table.insert(picturesToDisplay, trophyItem)
+    print("item displayed")
+end
+
 local function FindNextTrophy()
     if (debug) then print("finding next trophy") end
     local query = "SELECT MAX(itemCode) FROM trophysBought"
     lastTrophyBought = Query(query)[1][1] --not sure why the double index is needed here, possibly because not ipairs() or iterating or anything.
+    
 
     local dataindex = lastTrophyBought + 1
     if (dataindex > #trophyUnlocks) then
@@ -52,6 +73,10 @@ local function FindNextTrophy()
     local nextData = trophyUnlocks[dataindex]
 
     nextUnlockAt.text = "Next Trophy At " .. nextData[1] .. " Score, " .. nextData[2] .. " City Blocks, " .. nextData[3] .. " Routine Cells"
+
+    for i = 1, lastTrophyBought, 1 do 
+        DrawTrophy(i)
+    end
 end
 
 local function BuyTrophy()
@@ -65,7 +90,6 @@ local function BuyTrophy()
 
     if (debug) then print(dump(nextData)) end
 
-     local query = "SELECT totalScore FROM playerData"
     local totalScore = Score()
     if (debug) then print("checking explored cells") end
     local CellCount10 = TotalExploredCells()
@@ -78,6 +102,11 @@ local function BuyTrophy()
          --display this trophy in the room.
          if (debug) then print("buying trophy") end
          --TODO actually buy the trophy
+         local sql = "INSERT INTO trophysBought (itemCode, boughtOn) VALUES (" .. dataindex ..  ", " .. os.time() ..")"
+         Exec(sql)
+         lastTrophyBought = dataindex
+         --DrawTrophy(dataindex)
+         FindNextTrophy()
 
      else
         if (debug) then print("can't afford this next trophy") end
@@ -96,6 +125,7 @@ function scene:create( event )
  
     if (debug) then print("creating trophy scene") end
     local sceneGroup = self.view
+    sceneGroupCopy = sceneGroup
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
     local changeGrid = display.newImageRect(sceneGroup, "SmallGridButton.png", 300, 100)
@@ -139,7 +169,7 @@ function scene:create( event )
     textOptions.text = "Next Unlock at "
     textOptions.x = display.contentCenterX
     textOptions.y = 160
-    textOptions.width = 500
+    textOptions.width = 550
     textOptions.height = 0
     textOptions.font = native.systemFont
     textOptions.fontSize = 20
@@ -161,7 +191,7 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
-        FindNextTrophy()
+        FindNextTrophy(sceneGroup)
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
@@ -186,7 +216,7 @@ end
  
  
 -- destroy()
-function scene:destroy( event )
+function scene:destroy( event ) 
     if (debug) then print("destroyed trophy scene") end
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view

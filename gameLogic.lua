@@ -71,9 +71,20 @@ end
 --x and y are inside the trophy room image bounds, not the screen itself, and upper-left anchor.
 --images are 25x25px for now, for testing purposes
 trophyUnlocks = {
-    {1, 1, 1, "The first Trophy", "TrophyImgs/1.png", 1, 1},
-    {117, 2, 21, "The second Trophy", "TrophyImgs/2.png", 26, 26}, -- at 117/2/2 this should not be unlockable on the simulator
-
+    {100,      1,    1,   "The first Trophy", "TrophyImgs/1.png", 1, 1},
+    {500,      2,    21,  "The second Trophy", "TrophyImgs/2.png", 26, 26}, -- this should not be unlockable on the simulator
+    {1000,     3,    50,  "The third Trophy", "TrophyImgs/3.png", 51, 51},
+    {2000,     5,    100, "The fourth Trophy", "TrophyImgs/4.png", 76, 76},
+    {5000,     8,    250, "The fifth Trophy", "TrophyImgs/5.png", 101, 101},
+    {10000,    13,   500, "The sixth Trophy", "TrophyImgs/6.png", 126, 126},
+    {20000,    21,   1000, "The seventh Trophy", "TrophyImgs/7.png", 126, 26},
+    {36000,    34,   2000, "The eight Trophy", "TrophyImgs/8.png", 126, 51},
+    {70000,    55,   4000, "The nineth Trophy", "TrophyImgs/9.png", 176, 76},
+    {140000,   89,   8000, "The tenth Trophy", "TrophyImgs/10.png", 276, 276},
+    {300000,   144,  16000, "The eleventh Trophy", "TrophyImgs/11.png", 126, 326},
+    {550000,   233,  32000, "The twelfth Trophy", "TrophyImgs/12.png", 226, 226},
+    {1100000,  377,  64000, "The thirteenth Trophy", "TrophyImgs/13.png", 326, 26},
+    {2500000,  610,  128000, "The last Trophy", "TrophyImgs/14.png", 426, 426}
 }
 
 local sampleExampleTable = {
