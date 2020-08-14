@@ -35,6 +35,7 @@ debugShift = false --display math for shifting PlusCodes
 debugGPS = false --display data for the GPS event and timer loop
 debugDB = false
 debugLocal = false
+debugNetwork = true
 --uncomment when testing to clear local data.
 --ResetDatabase()
 startDatabase()
