@@ -28,12 +28,13 @@ system.setIdleTimer(false) --disables screen auto-off.
 require("store")
 require("helpers")
 require("gameLogic")
-require("database")
+require("database") 
 
-debug = false --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
+debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugShift = false --display math for shifting PlusCodes
 debugGPS = false --display data for the GPS event and timer loop
 debugDB = false
+debugLocal = false
 --uncomment when testing to clear local data.
 --ResetDatabase()
 startDatabase()
@@ -45,6 +46,10 @@ previousPlusCode = ""  --the previous DIFFERENT pluscode value we visited.
 currentHeading = 0
 lastTime = 0
 lastScoreLog = ""
+  
+print("starting network")
+require("localNetwork")
+UploadData()
 
 local composer = require("composer")
 composer.gotoScene("10GridScene")
@@ -60,10 +65,12 @@ local function gpsListener(event)
         print("Coords " .. event.latitude .. " " ..event.longitude)
     end
 
-    currentHeading = event.direction
+    if (event.distance ~= nil) then 
+        currentHeading = event.direction
+    end
 
     local pluscode = tryMyEncode(event.latitude, event.longitude, 10); --only goes to 10 right now.
-    if (debugGPS)then print ("Plus Code: " .. pluscode) end
+    if (debugGPS) then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode   
 
     if (lastPlusCode == currentPlusCode) then
@@ -91,6 +98,8 @@ local function gpsListener(event)
     local metersTravelled = speed * duration
     AddDistance(metersTravelled)
     AddSeconds(event.time)
+    AddSpeed(speed)
+    SetMaxAltitude(event.altitude)
     lastTime = event.time --will never be less than 1 second, since this is seconds since epoch
     if(debugGPS) then print("Finished location event") end
 

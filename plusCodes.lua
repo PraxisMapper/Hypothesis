@@ -40,6 +40,7 @@ CODE_ALPHABET_ = '23456789CFGHJMPQRVWX' --no longer local, so we can use it in o
 
 --my own pass at the algorithm. shorter, less thorough.
 function tryMyEncode(latitude, longitude, codeLength)
+    if (debug) then print("encoding latlong") end
     local code = ""
     local lat = math.floor((latitude + 90) * 8000)
     local long = math.floor((longitude + 180) * 8000)

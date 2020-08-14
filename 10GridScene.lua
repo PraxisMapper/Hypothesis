@@ -30,14 +30,14 @@ local directionArrow = ""
 local scoreLog = ""
 
 local function UpdateLocal()
-    if (debugGPS) then print("start UpdateLocal") end
-    if (debugGPS) then print(currentPlusCode) end
+    if (debugLocal) then print("start UpdateLocal") end
+    if (debugLocal) then print(currentPlusCode) end
 
     if (currentPlusCode == "") then
         if timerResults == nil then
             timerResults = timer.performWithDelay(500, UpdateLocal, -1)  
         end
-        if (debugGPS) then print("skipping, no location.") end
+        if (debugLocal) then print("skipping, no location.") end
         return
     end
 

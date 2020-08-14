@@ -6,9 +6,9 @@
 --possible optimization: store 8cell and 10cell both in the table, to avoid using substr() in queries, if that becomes too slow
 require("helpers")
 
-local sqlite3 = require("sqlite3")
+local sqlite3 = require("sqlite3") 
 local db
-local dbVersionID = 3
+local dbVersionID = 4
 
 function startDatabase()
     -- Open "data.db". If the file doesn't exist, it will be created
@@ -26,7 +26,7 @@ function startDatabase()
     local tablesetup =
         [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits);
         CREATE TABLE IF NOT EXISTS acheivements(id INTEGER PRIMARY KEY, name, acheived, acheivedOn);
-        CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed);
+        CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude);
         CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID, isGoodPerson, coffeesBought, deviceID);
         CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
@@ -82,6 +82,12 @@ function upgradeDatabaseVersion()
          --do any scripting to match upgrade to version 4
          --might need to move ADD lastVisitedOn here
          --index will be created without this step, no other table edits yet.
+         local v3Command = 
+        [[ALTER TABLE playerData ADD COLUMN maximumSpeed;
+        ALTER TABLE playerData ADD COLUMN totalSpeed;
+        ALTER TABLE playerData ADD COLUMN maxAltitude;
+          ]]
+          Exec(v3Command)
     end
 end
 
@@ -138,7 +144,7 @@ function createBaselineContent()
             local cmd = ""
             cmd = "INSERT INTO systemData(dbVersionID, isGoodPerson, coffeesBought, deviceID) values (" .. dbVersionID .. ", 0, 0, " .. system.getInfo("deviceID") .. ")";
             Exec(cmd)
-            cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed) values (0, 0, 0, 0)";
+            cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude) values (0, 0, 0, 0, 0, 0, 0)";
             Exec(cmd)
             cmd = "INSERT INTO trophysBought(itemCode, boughtOn) VALUES (0, 0)";
             Exec(cmd)
@@ -221,14 +227,36 @@ function AddSeconds(time)
     Exec(cmd)
 end
 
+function AddSpeed(speed)
+    if (debugDB) then print("adding speed ") end
+    local cmd = "UPDATE playerData SET totalSpeed = totalSpeed + " .. speed
+    Exec(cmd)
+    local currentMaxSpeed = Query("SELECT maximumSpeed from playerData")[1][1]
+    if (currentMaxSpeed < speed) then
+        cmd = "UPDATE playerData SET maximumSpeed = " .. speed
+        Exec(cmd)
+    end
+end
+
+function SetMaxAltitude(alt)
+    if (debugDB) then print("checking altitude ") end
+    local currentMaxAlt = Query("SELECT maxAltitude from playerData")[1][1]
+    if (currentMaxAlt < alt) then
+        local cmd = "UPDATE playerData SET maxAltitude = " .. alt
+        Exec(cmd)
+    end
+end
+
 function GetClientData()
     --stuff to send up to leaderboards API
     if (debugDB) then print("loading client data ") end
     local query = "SELECT * from playerData P LEFT JOIN systemData S" --this gets everything, just has 2 columns named ID that should both be 1.
     local results = Query(query) --or just return this?
     for i,row in ipairs(results) do
+        if (debugDB) then print(dump(row)) end
+        
         --1 row, several columns. Map it to a table and send that over? 
-        --return row[1] --this is only the first value.
+        return row --this is only the first value?
     end 
 end
 
