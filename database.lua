@@ -142,7 +142,7 @@ function createBaselineContent()
         else
             --Database is empty, time to create the baseline data.
             local cmd = ""
-            cmd = "INSERT INTO systemData(dbVersionID, isGoodPerson, coffeesBought, deviceID) values (" .. dbVersionID .. ", 0, 0, " .. system.getInfo("deviceID") .. ")";
+            cmd = "INSERT INTO systemData(dbVersionID, isGoodPerson, coffeesBought, deviceID) values (" .. dbVersionID .. ", 0, 0, '" .. system.getInfo("deviceID") .. "')";
             Exec(cmd)
             cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude) values (0, 0, 0, 0, 0, 0, 0)";
             Exec(cmd)

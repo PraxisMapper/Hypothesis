@@ -15,3 +15,11 @@ function dump(o)
  function CenterButton(button, X, Y)
    --TODO: take in button (ImageRect) size, adjust coordinates to center on screen horizontally (if X is true) or vertically (if Y is true)
  end
+
+ function Split(s, delimiter)
+   result = {};
+   for match in (s..delimiter):gmatch("(.-)"..delimiter) do
+       table.insert(result, match);
+   end
+   return result;
+end

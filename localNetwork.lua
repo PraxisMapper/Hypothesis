@@ -5,11 +5,14 @@
 -- OpenStreetMaps stuff (future idea, separate game? should test here anyways)
 require("database")
 
-local serverURL = "https://localhost:44384/GPSExplore/" -- in my house, on the local network for testing.
+serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
+--local serverURL = "https://192.168.1.92:44384/GPSExplore/" -- local network, doesnt work due to self-signed certs
 
 function uploadListener(event)
     if (debugNetwork) then
-        print("listener fired " .. event.isError .. event.status)
+        print("listener fired ")
+        print(event.isError)
+        print(event.status)
     end
     print("response: " .. event.response)
     print("listener ending")
@@ -26,7 +29,7 @@ function UploadData()
     -- print(bodyString)
     -- cell visits
     local centerData = GetClientData()
-    local trophyDate = ""
+    local trophyDate = ""  
     local query = "SELECT boughtOn FROM trophysBought WHERE itemcode = 14"
     local q1Results = Query(query)[1]
     print(q1Results)
@@ -45,7 +48,21 @@ function UploadData()
     params.body = bodyString
     if (debugNetwork) then print("sending request") end
     network.request(uploadURL, "POST", uploadListener, params)
-    if (debugNetwork) then print("sending request") end
+    if (debugNetwork) then print("sent") end
+end
+
+function leaderboardListener()
+
+end
+
+function GetLeaderboard(id)
+    --need to ID leaderboards somewhere.
+    if (id == 1) then
+        --Most 10cells.
+        network.request(serverURL .. "10CellLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+
+    end
+
 
 end
 

@@ -1,6 +1,8 @@
 local composer = require( "composer" )
- 
 local scene = composer.newScene()
+
+require("localNetwork")
+require("helpers")
 
 --TODO:
 --display options for various leaderboards
@@ -29,6 +31,40 @@ local function SwitchToBigGrid()
     composer.gotoScene("8GridScene", options)
 end
  
+local scoresText = {}
+local lastScoreboardID = 0
+
+local function networkHandler(event)
+    --this function updates the screen regardless of the leaderboard call
+    if (debug) then print("handler called") end
+    --local splitString = event.response:Split(" ")
+    local splitString = Split(event.response, "|")
+    if (debug) then print(dump(splitString)) end
+    local displayText = ""
+    for i =1, #splitString do
+        if (i < #splitString) then
+            displayText = displayText .. i .. ": " .. splitString[i] .. "\n"
+        else
+            displayText = displayText .. "Your Rank: " .. splitString[i]
+        end
+    end
+
+    if(lastScoreboardID == 1) then
+        displayText = "Most Routine Cells: \n\n" .. displayText
+    end
+
+    scoresText.text = displayText
+end
+
+local function GetLeaderboardText(id)
+    if (debug) then print("getting LBtext") end
+    if (id == 1) then
+        local url = serverURL .. '10CellLeaderboard/' .. system.getInfo("deviceID")
+        if(debugNetwork) then print(url) end
+        lastScoreboardID = 1
+        network.request(url, "GET", networkHandler)
+    end
+end
  
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -36,7 +72,7 @@ end
  
 -- create()
 function scene:create( event )
- 
+    if (debug) then print("Creating LeaderboardScene") end
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
     local header = display.newImageRect(sceneGroup, "LeaderboardHeader.png", 300, 100)
@@ -57,13 +93,29 @@ function scene:create( event )
 
     changeGrid:addEventListener("tap", SwitchToBigGrid)
     changegrid2:addEventListener("tap", SwitchToSmallGrid)
- 
+
+    if (debug) then print("buttons done") end
+    local textOptions = {}
+    textOptions.parent =  sceneGroup
+    textOptions.text = "Loading..."
+    textOptions.x = display.contentCenterX
+    textOptions.y = 160
+    textOptions.width = 550
+    textOptions.height = 0
+    textOptions.font = native.systemFont
+    textOptions.fontSize = 28
+
+    scoresText = display.newText(textOptions)
+    scoresText.anchorY = 0
+    if (debug) then print("text made") end
+    GetLeaderboardText(1)
+    if (debug) then print("created LeaderboardScene") end
 end
  
  
 -- show()
 function scene:show( event )
- 
+    if (debug) then print("showing LeaderboardScene") end
     local sceneGroup = self.view
     local phase = event.phase
  
@@ -79,7 +131,7 @@ end
  
 -- hide()
 function scene:hide( event )
- 
+    if (debug) then print("hiding leaderboardScene") end
     local sceneGroup = self.view
     local phase = event.phase
  

@@ -50,7 +50,7 @@ lastScoreLog = ""
   
 print("starting network")
 require("localNetwork")
-UploadData()
+UploadData()    
 
 local composer = require("composer")
 composer.gotoScene("10GridScene")
