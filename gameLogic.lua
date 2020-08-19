@@ -11,7 +11,7 @@ function grantPoints(code)
     if(debug) then print("granting points for cell " .. code) end
 
     --check 1: is this the first time we've entered this 8code?
-    query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE substr(pluscode, 0, 9) = '" .. code:sub(1,8) .. "'"
+    query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE eightCode = '" .. code:sub(1,8) .. "'"
     for i,row in ipairs(Query(query)) do --todo: find better parsing method
         if (row[1] == 0) then --we have not yet visited this cell
             --new visit to this 8cell
@@ -24,7 +24,7 @@ function grantPoints(code)
     for i,row in ipairs(Query(query)) do --todo: find better parsing method
         if (row[1] == 0) then
             if (debug) then print("inserting new row") end
-            local insert = "INSERT INTO plusCodesVisited (pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits) VALUES ('" .. code .. "', 0,0, " .. os.time() .. ", " .. os.time() .. ", 1)"
+            local insert = "INSERT INTO plusCodesVisited (pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits, eightCode) VALUES ('" .. code .. "', 0,0, " .. os.time() .. ", " .. os.time() .. ", 1, '" .. code:sub(1,8) .. "')"
             Exec(insert)
             addPoints = addPoints + 10
         else

@@ -5,8 +5,8 @@
 -- OpenStreetMaps stuff (future idea, separate game? should test here anyways)
 require("database")
 
-serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
---local serverURL = "https://192.168.1.92:44384/GPSExplore/" -- local network, doesnt work due to self-signed certs
+--serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
+serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network, doesnt work due to self-signed certs
 
 function uploadListener(event)
     if (debugNetwork) then
@@ -15,6 +15,7 @@ function uploadListener(event)
         print(event.status)
     end
     print("response: " .. event.response)
+    networkResults = event.response
     print("listener ending")
 end
 

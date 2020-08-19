@@ -28,6 +28,7 @@ local pointText = ""
 local timeText = ""
 local directionArrow = ""
 local scoreLog = ""
+local debugText = {}
 
 local function UpdateLocal()
     if (debugLocal) then print("start UpdateLocal") end
@@ -39,6 +40,10 @@ local function UpdateLocal()
         end
         if (debugLocal) then print("skipping, no location.") end
         return
+    end
+
+    if (debug) then
+        debugText.text = dump(lastLocationEvent)
     end
 
     if (currentPlusCode ~= previousPlusCode or firstRun) then
@@ -60,7 +65,7 @@ local function UpdateLocal()
 
     if (debugGPS) then print("grid done or skipped") end
     if (debugGPS) then print(locationText.text) end
-    locationText.text = "Current location:" .. currentPlusCode 
+    locationText.text = "Current location:" .. currentPlusCode
     countText.text = "Total Explored Cells: " .. TotalExploredCells()
     pointText.text = "Score: " .. Score()
     timeText.text = "Current time:" .. os.date("%X")
@@ -160,6 +165,12 @@ function scene:create( event )
     leaderboard.x = 580
     leaderboard.y = 100
     leaderboard:addEventListener("tap", GoToLeaderboardScene)
+
+    if (debug) then
+        print("Creating debugText")
+        debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
+        print("Created debugText")
+    end
 
     if (debug) then print("created 10GridScene") end
 

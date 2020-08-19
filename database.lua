@@ -24,7 +24,7 @@ function startDatabase()
     --plusCodesVisited will be permanent first-time visits plus most recent data.
     --I shouldn't use Inserts in this block, since they'll still be run each startup. PUt those in createBaselineContent
     local tablesetup =
-        [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits);
+        [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits, eightCode);
         CREATE TABLE IF NOT EXISTS acheivements(id INTEGER PRIMARY KEY, name, acheived, acheivedOn);
         CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude);
         CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID, isGoodPerson, coffeesBought, deviceID);
@@ -32,6 +32,7 @@ function startDatabase()
         CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS trophysBought(id INTEGER PRIMARY KEY, itemCode, boughtOn);
         CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
+        CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
         ]]
         --CREATE TABLE IF NOT EXISTS ConversionLinks(id INTEGER PRIMARY KEY, pluscode, s2Cell, lat, long); --not sure yet if this is a thing i want to bother with.
 
@@ -39,21 +40,24 @@ function startDatabase()
         print("SQLite version " .. sqlite3.version())
     end
     Exec(tablesetup)
-    upgradeDatabaseVersion()
+    local previousDBVersion = Query("SELECT dbVersionID from systemData")[1][1]
+    if (debugDB) then print(previousDBVersion) end
     createBaselineContent()
+    upgradeDatabaseVersion(previousDBVersion)
     ResetDailyWeekly()
 
     -- Setup the event listener to catch "applicationExit"
     Runtime:addEventListener("system", onSystemEvent)
 end
 
-function upgradeDatabaseVersion()
-    --query DB for current version
-    if (dbVersionID < 1) then
+function upgradeDatabaseVersion(oldDBversion)
+    if (oldDBversion == dbVersionID) then return end
+
+    if (oldDBversion < 1) then
         --do any scripting to match upgrade to version 1
         --which should be none, since that's the baseline for this feature.
     end
-    if (dbVersionID < 2) then
+    if (oldDBversion < 2) then
         -- add isGoodPerson, coffeesBought to systemData
         --also add trophysbought table.
         local v2Command = 
@@ -64,7 +68,7 @@ function upgradeDatabaseVersion()
           ]]
           Exec(v2Command)
     end
-    if (dbVersionID < 3) then
+    if (oldDBversion < 3) then
         --do any scripting to match upgrade to version 3
         --might need to add separate scores? Or just a cumulative running total instead?
         --add totalSecondsPlayed to DB. Add deviceID to systemData
@@ -78,17 +82,28 @@ function upgradeDatabaseVersion()
           ]]
           Exec(v3Command)
     end
-    if (dbVersionID < 4) then
+    if (oldDBversion < 4) then
          --do any scripting to match upgrade to version 4
          --might need to move ADD lastVisitedOn here
          --index will be created without this step, no other table edits yet.
-         local v3Command = 
+         local v4Command = 
         [[ALTER TABLE playerData ADD COLUMN maximumSpeed;
         ALTER TABLE playerData ADD COLUMN totalSpeed;
         ALTER TABLE playerData ADD COLUMN maxAltitude;
           ]]
-          Exec(v3Command)
+          Exec(v4Command)
     end
+    if (oldDBversion < 4) then
+        --do any scripting to match upgrade to version 5
+        --Add the eightcode column and index to boost performance on the cityBlock screen.
+        local v5Command = 
+       [[ALTER TABLE plusCodesVisited ADD COLUMN eightCode;
+       CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
+         ]]
+         Exec(v5Command)
+   end
+
+   Exec("UPDATE systemData SET dbVersionID = " .. dbVersionID)
 end
 
 function ResetDatabase()
@@ -108,7 +123,7 @@ function ResetDatabase()
 end
 
 function Query(sql)
-    if (debugDB) then print("sql command:" .. sql) end
+    --if (debugDB) then print("sql command:" .. sql) end
     results = {}
     for row in db:rows(sql) do
         table.insert(results, row) --todo potential optimization? especially if I just iPairs this table.
@@ -181,7 +196,7 @@ end
 
 function Visited8Cell(pluscode)
     if (debugDB) then print("Checking if visited current 8 cell " .. pluscode) end
-    local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE substr(pluscode, 1, 8) = '" .. pluscode .. "'"
+    local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE eightCode = '" .. pluscode .. "'"
     for i,row in ipairs(Query(query)) do
         if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
             return true
@@ -202,7 +217,7 @@ end
 
 function TotalExplored8Cells()
     if (debugDB) then print("opening total explored 8 cells ") end
-    local query = "SELECT COUNT(DISTINCT substr(pluscode, 1, 8)) as c FROM plusCodesVisited"
+    local query = "SELECT COUNT(distinct eightCode) as c FROM plusCodesVisited"
     for i,row in ipairs(Query(query)) do
         return row[1]
     end
@@ -216,22 +231,25 @@ function Score()
 end
 
 function AddDistance(meters)
+    if (meters == nil) then return end
     if (debugDB) then print("adding distance ") end
     local cmd = "UPDATE playerData SET distanceWalked = distanceWalked + " .. meters 
     Exec(cmd)
 end
 
 function AddSeconds(time)
-    if (debugDB) then print("adding time ") end
+    if (debugDB) then print("adding time :" .. time) end
     local cmd = "UPDATE playerData SET totalSecondsPlayed = totalSecondsPlayed + " .. time
     Exec(cmd)
 end
 
 function AddSpeed(speed)
-    if (debugDB) then print("adding speed ") end
+    if (speed == nil) then return end
+    if (debugDB) then print("adding speed:" .. speed) end
     local cmd = "UPDATE playerData SET totalSpeed = totalSpeed + " .. speed
     Exec(cmd)
-    local currentMaxSpeed = Query("SELECT maximumSpeed from playerData")[1][1]
+    local currentMaxSpeed = Query("SELECT maximumSpeed from playerData")[1]
+    if (debugDB) then print(currentMaxSpeed) end
     if (currentMaxSpeed < speed) then
         cmd = "UPDATE playerData SET maximumSpeed = " .. speed
         Exec(cmd)

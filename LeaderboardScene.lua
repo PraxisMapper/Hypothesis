@@ -6,6 +6,7 @@ require("helpers")
 
 --TODO:
 --display options for various leaderboards
+----make temp icons for these leaderboards, make imageRects and eventHandlers for them.
 --set local nickname (or assign it randomly)
 --display current rank in each category along with leaders.
 --Icons for leaderboards? (use images as tabs?)
