@@ -111,6 +111,14 @@ local function GoToLeaderboardScene()
     }
     composer.gotoScene("LeaderboardScene", options)
 end
+
+local function SwitchToDebugScene()
+    local options = {
+        effect = "flip",
+        time = 125,
+    }
+    composer.gotoScene("performanceTest", options)
+end
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -170,6 +178,8 @@ function scene:create( event )
         print("Creating debugText")
         debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
         print("Created debugText")
+
+        header:addEventListener("tap", SwitchToDebugScene)
     end
 
     if (debug) then print("created 10GridScene") end

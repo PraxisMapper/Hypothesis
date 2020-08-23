@@ -2,11 +2,11 @@
 -- NOTE: naming this 'network' overrides the internal library with the same name and breaks everything.
 -- TODO:
 -- leaderboards connection
--- OpenStreetMaps stuff (future idea, separate game? should test here anyways)
+-- OpenStreetMaps stuff (pending a more-final schema)
 require("database")
 
 --serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
-serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network, doesnt work due to self-signed certs
+serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network, doesnt work on https due to self-signed certs.
 
 function uploadListener(event)
     if (debugNetwork) then
@@ -29,20 +29,23 @@ function UploadData()
     -- bodyString = bodyString .. system.getInfo("deviceID") .. "|"
     -- print(bodyString)
     -- cell visits
-    local centerData = GetClientData()
+    --local centerData = GetClientData() --all of this looked right, but it doesnt give the right data out sooooo.....
     local trophyDate = ""  
     local query = "SELECT boughtOn FROM trophysBought WHERE itemcode = 14"
     local q1Results = Query(query)[1]
     print(q1Results)
     if (q1Results == nil) then q1Results = "0" end
-    if (debugNetwork) then print(dump(centerData)) end
+    --if (debugNetwork) then print(dump(centerData)) end
+
+    local q = Query("SELECT * FROM playerData")[1]
+    --dbInfo.text = "distance:" .. q[2] .." points:" .. q[3]  .. " cells:" ..q[4] .. " playtime:" ..q[5] .. " maxSpeed:" ..q[6] .. " totalSpeed:" .. q[7] .. " alt:" ..q[8]
 
     -- 1           2             3                 4         5     6       7      8       9           10          11
     -- DeviceID|cellVisits|DateFinalTrophyBought|distance|Maxspeed|score|10cells|8cells|timeplayed|totalSpeed|maxAltitude
     -- max speed is next, not yet present until i run and update the db schema.
-    bodyString = system.getInfo("deviceID") .. "|" .. centerData[4] .. "|" ..  q1Results .. "|" .. centerData[2] .. "|" .. centerData[6] .. "|"-- ends with maxspeed
-    bodyString = bodyString .. centerData[3] .. "|" .. TotalExploredCells() .. "|" .. TotalExplored8Cells() .. "|"
-    bodyString = bodyString .. centerData[5] .. "|" .. centerData[7] .. "|" .. centerData[8]
+    bodyString = system.getInfo("deviceID") .. "|" .. q[4] .. "|" ..  q1Results .. "|" .. q[2] .. "|" .. q[6] .. "|"-- ends with maxspeed
+    bodyString = bodyString .. q[3] .. "|" .. TotalExploredCells() .. "|" .. TotalExplored8Cells() .. "|"
+    bodyString = bodyString .. q[5] .. "|" .. q[7] .. "|" .. q[8]
 
     -- get data to match backend setup.
     if (debugNetwork) then print(bodyString) end
@@ -53,6 +56,7 @@ function UploadData()
 end
 
 function leaderboardListener()
+    --Update the screen.
 
 end
 
@@ -61,7 +65,30 @@ function GetLeaderboard(id)
     if (id == 1) then
         --Most 10cells.
         network.request(serverURL .. "10CellLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
-
+    end
+    if (id == 2) then
+        --Most 8cells.
+        network.request(serverURL .. "8CellLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+    end
+    if (id == 3) then
+        --Hightest score
+        network.request(serverURL .. "ScoreLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+    end
+    if (id == 4) then
+        --Most distance 
+        network.request(serverURL .. "DistanceLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+    end
+    if (id == 5) then
+        --Most play time
+        network.request(serverURL .. "TimeLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+    end
+    if (id == 6) then
+        --Highest avg speed
+        network.request(serverURL .. "AvgSpeedLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+    end
+    if (id == 7) then
+        --final Trophy 
+        network.request(serverURL .. "TrophiesLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
     end
 
 

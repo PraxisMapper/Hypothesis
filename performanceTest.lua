@@ -17,6 +17,7 @@ require("plusCodes")
  local slowestTime = 0 --duration of slowest run
 
  local perfText = "" --displaytext object on screen.
+ local dbInfo = "" --displaytext value too.
  
  local function SwitchToBigGrid()
     local options = {
@@ -72,6 +73,14 @@ function scene:show( event )
     perfText = display.newText(textOptions)
     perfText:addEventListener("tap", SwitchToBigGrid)
 
+    textOptions.x = 0
+    textOptions.y = 0
+    textOptions.text = "dbData: "
+    dbInfo = display.newText(textOptions)
+    dbInfo.anchorX = 0
+    dbInfo.anchorY = 0
+
+
 
     local totalLog = ""
     --if (debug) then print("") end
@@ -92,43 +101,46 @@ function scene:show( event )
     print("func1 " .. lastRunTime)
 
     --check the updateLocal loops
-    if (currentPlusCode == "") then currentPlusCode = "849VCRXR+9C" end
-    startTime = os.clock()
-    for square = 1, #cellCollection do --this is supposed to be faster than ipairs
-        if VisitedCell(shiftCell(currentPlusCode, cellCollection[square].gridX, cellCollection[square].gridY)) then
-            cellCollection[square].fill = visitedCell
-        else
-            cellCollection[square].fill = unvisitedCell
-        end
-    end
-    endtime = os.clock()
-    lastRunTime = endtime - startTime
-    if (lastRunTime > slowestTime) then
-        slowestTime = lastRunTime
-        slowestFunc = "updateLocal-#cellCollection"
-    end
+    -- if (currentPlusCode == "") then currentPlusCode = "849VCRXR+9C" end
+    -- startTime = os.clock()
+    -- for square = 1, #cellCollection do --this is supposed to be faster than ipairs
+    --     if VisitedCell(shiftCell(currentPlusCode, cellCollection[square].gridX, cellCollection[square].gridY)) then
+    --         cellCollection[square].fill = visitedCell
+    --     else
+    --         cellCollection[square].fill = unvisitedCell
+    --     end
+    -- end
+    -- endtime = os.clock()
+    -- lastRunTime = endtime - startTime
+    -- if (lastRunTime > slowestTime) then
+    --     slowestTime = lastRunTime
+    --     slowestFunc = "updateLocal-#cellCollection"
+    -- end
 
-    totalLog = totalLog .. "updateLocal-#cellCollection" .. lastRunTime .. "|\n"
-    print("func2 " .. lastRunTime)
+    -- totalLog = totalLog .. "updateLocal-#cellCollection" .. lastRunTime .. "|\n"
+    -- print("func2 " .. lastRunTime)
 
-    startTime = os.clock()
-    for a, i in ipairs(cellCollection) do 
-        if VisitedCell(shiftCell(currentPlusCode, i.gridX, i.gridY)) then
-            i.fill = visitedCell
-        else
-            i.fill = unvisitedCell
-        end
-    end
-    endtime = os.clock()
-    lastRunTime = endtime - startTime
-    if (lastRunTime > slowestTime) then
-        slowestTime = lastRunTime
-        slowestFunc = "updateLocal-ipairs"
-    end
-    totalLog = totalLog .. "updateLocal-ipairs" .. lastRunTime .. "|\n"
-    print("func3 " .. lastRunTime)
+    -- startTime = os.clock()
+    -- for a, i in ipairs(cellCollection) do 
+    --     if VisitedCell(shiftCell(currentPlusCode, i.gridX, i.gridY)) then
+    --         i.fill = visitedCell
+    --     else
+    --         i.fill = unvisitedCell
+    --     end
+    -- end
+    -- endtime = os.clock()
+    -- lastRunTime = endtime - startTime
+    -- if (lastRunTime > slowestTime) then
+    --     slowestTime = lastRunTime
+    --     slowestFunc = "updateLocal-ipairs"
+    -- end
+    -- totalLog = totalLog .. "updateLocal-ipairs" .. lastRunTime .. "|\n"
+    -- print("func3 " .. lastRunTime)
 
     perfText.text = perfText.text .. totalLog
+
+    local q = Query("SELECT * FROM playerData")[1]
+    dbInfo.text = "distance:" .. q[2] .." points:" .. q[3]  .. " cells:" ..q[4] .. " playtime:" ..q[5] .. " maxSpeed:" ..q[6] .. " totalSpeed:" .. q[7] .. " alt:" ..q[8]
  
     end
 end

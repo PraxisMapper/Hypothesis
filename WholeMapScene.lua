@@ -7,7 +7,8 @@ local scene = composer.newScene()
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
  
- 
+--I will want to look at this function for this page:
+--graphics.newTexture( { type="canvas", width=128, height=128 } )
  
  
 -- -----------------------------------------------------------------------------------

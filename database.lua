@@ -8,7 +8,7 @@ require("helpers")
 
 local sqlite3 = require("sqlite3") 
 local db
-local dbVersionID = 4
+local dbVersionID = 5
 
 function startDatabase()
     -- Open "data.db". If the file doesn't exist, it will be created
@@ -23,10 +23,11 @@ function startDatabase()
     -- Set up the table if it doesn't exist 
     --plusCodesVisited will be permanent first-time visits plus most recent data.
     --I shouldn't use Inserts in this block, since they'll still be run each startup. PUt those in createBaselineContent
+    --TODO: might need to mark some of these as REAL typed. Or make the first insert 0.0 to set that up?
     local tablesetup =
         [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits, eightCode);
         CREATE TABLE IF NOT EXISTS acheivements(id INTEGER PRIMARY KEY, name, acheived, acheivedOn);
-        CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude);
+        CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked REAL, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude);
         CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID, isGoodPerson, coffeesBought, deviceID);
         CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
@@ -40,18 +41,27 @@ function startDatabase()
         print("SQLite version " .. sqlite3.version())
     end
     Exec(tablesetup)
-    local previousDBVersion = Query("SELECT dbVersionID from systemData")[1][1]
-    if (debugDB) then print(previousDBVersion) end
-    createBaselineContent()
-    upgradeDatabaseVersion(previousDBVersion)
-    ResetDailyWeekly()
+
+    --create content on first run, upgrade if necessary on later runs.
+    local currentDataExists = Query("SELECT COUNT(*) from systemData")[1][1] --this has different depths on firstRun that later runs
+    --native.showAlert("", dump(currentDataExists))
+    if (currentDataExists == 0) then
+        --Database is empty.
+        createBaselineContent()
+    else
+        --database exists.
+        local previousDBVersion = Query("SELECT dbVersionID from systemData")[1][1] --this errors out on first run, hence the split.
+        upgradeDatabaseVersion(previousDBVersion)
+        ResetDailyWeekly()
+    end
 
     -- Setup the event listener to catch "applicationExit"
     Runtime:addEventListener("system", onSystemEvent)
 end
 
 function upgradeDatabaseVersion(oldDBversion)
-    if (oldDBversion == dbVersionID) then return end
+    --if oldDbVersion is nil, that should mean we're making the DB for the first time and can skip this step
+    if (oldDBversion == nil or oldDBversion == dbVersionID) then return end
 
     if (oldDBversion < 1) then
         --do any scripting to match upgrade to version 1
@@ -93,14 +103,17 @@ function upgradeDatabaseVersion(oldDBversion)
           ]]
           Exec(v4Command)
     end
-    if (oldDBversion < 4) then
+    if (oldDBversion < 5) then
         --do any scripting to match upgrade to version 5
         --Add the eightcode column and index to boost performance on the cityBlock screen.
         local v5Command = 
        [[ALTER TABLE plusCodesVisited ADD COLUMN eightCode;
+       UPDATE plusCodesVisited SET eightCode = SUBSTR(plusCode, 0, 8);
        CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
          ]]
          Exec(v5Command)
+   end
+   if (oldDBversion < 6) then
    end
 
    Exec("UPDATE systemData SET dbVersionID = " .. dbVersionID)
@@ -159,7 +172,7 @@ function createBaselineContent()
             local cmd = ""
             cmd = "INSERT INTO systemData(dbVersionID, isGoodPerson, coffeesBought, deviceID) values (" .. dbVersionID .. ", 0, 0, '" .. system.getInfo("deviceID") .. "')";
             Exec(cmd)
-            cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude) values (0, 0, 0, 0, 0, 0, 0)";
+            cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude) values (0.0, 0, 0, 0, 0.0, 0.0, 0)";
             Exec(cmd)
             cmd = "INSERT INTO trophysBought(itemCode, boughtOn) VALUES (0, 0)";
             Exec(cmd)
@@ -243,17 +256,19 @@ function AddSeconds(time)
     Exec(cmd)
 end
 
-function AddSpeed(speed)
+function AddSpeed(speed)    
+    --native.showAlert("", "adding Speed of " .. speed)
     if (speed == nil) then return end
     if (debugDB) then print("adding speed:" .. speed) end
     local cmd = "UPDATE playerData SET totalSpeed = totalSpeed + " .. speed
     Exec(cmd)
-    local currentMaxSpeed = Query("SELECT maximumSpeed from playerData")[1]
+    local currentMaxSpeed = Query("SELECT maximumSpeed from playerData")[1][1]
     if (debugDB) then print(currentMaxSpeed) end
     if (currentMaxSpeed < speed) then
         cmd = "UPDATE playerData SET maximumSpeed = " .. speed
         Exec(cmd)
     end
+    --native.showAlert("", "speed added")
 end
 
 function SetMaxAltitude(alt)

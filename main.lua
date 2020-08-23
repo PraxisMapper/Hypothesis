@@ -33,7 +33,7 @@ require("database")
 debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugShift = false --display math for shifting PlusCodes
 debugGPS = false --display data for the GPS event and timer loop
-debugDB = true
+debugDB = false
 debugLocal = false
 debugNetwork = true
 --uncomment when testing to clear local data.
@@ -49,7 +49,7 @@ lastTime = 0
 lastScoreLog = ""
 lastHeadingTime = 0
 
-lastLocationEvent = {}
+lastLocationEvent = ""
   
 print("starting network")
 require("localNetwork")
@@ -61,64 +61,64 @@ local composer = require("composer")
 composer.gotoScene("10GridScene")
 
 local function gpsListener(event)
+    
+    local eventL = event
+    --native.showAlert("", 'pre-assign ' .. eventL.name)
+
     if (debugGPS) then
         print("got GPS event")
-        if (event.errorCode ~= nil) then
-            print("GPS Error " .. event.errorCode)
+        if (eventL.errorCode ~= nil) then
+            print("GPS Error " .. eventL.errorCode)
             return
         end
 
-        print("Coords " .. event.latitude .. " " ..event.longitude)
+        print("Coords " .. eventL.latitude .. " " ..eventL.longitude)
     end
 
-    lastLocationEvent = event
-
-    -- if (event.distance ~= nil) then 
-    if (event.direction ~= 0) then
-         currentHeading = event.direction
+    if (eventL.direction ~= 0) then
+         currentHeading = eventL.direction
      end
 
-    local pluscode = tryMyEncode(event.latitude, event.longitude, 10); --only goes to 10 right now.
+    local pluscode = tryMyEncode(eventL.latitude, eventL.longitude, 10); --only goes to 10 right now.
     if (debugGPS) then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode   
 
-    if (lastPlusCode == currentPlusCode) then
-        --dont update stuff, we're still standing in the same spot.
-        return
+    if (lastPlusCode ~= currentPlusCode) then
+        --update score stuff, we moved a cell.  Other stuff needs to process as usual.
+        if(debugGPS) then print("calculating score") end
+        lastScoreLog = "Earned " .. grantPoints(currentPlusCode) .. " points from cell " .. currentPlusCode
+        lastPlusCode = currentPlusCode
+    end
+    --Update data that should be handled every event.
+    
+    --native.showAlert("",  'pre-check ' ..#lastLocationEvent)
+    --reducing this to one query
+    if (lastLocationEvent == "" ) then
+        --native.showAlert("", "no calc!")
+    else
+        local timeDiff = eventL.time - lastLocationEvent.time
+        local currentMaxAlt = Query("SELECT maxAltitude from playerData")[1][1]
+        if (eventL.altitude > currentMaxAlt) then
+            currentMaxAlt = eventL.altitude
+        end
+
+        --distance is not an event property!
+        --", distanceWalked = distanceWalked + " .. eventL.distance ..
+        --native.showAlert("", "distance calcing")
+        local distance = CalcDistance(eventL, lastLocationEvent)
+        --native.showAlert("", "distance is " .. distance)
+
+        local cmd = "UPDATE playerData SET totalSecondsPlayed = totalSecondsPlayed + " .. timeDiff .. ", totalSpeed = totalSpeed + " .. eventL.speed
+        cmd = cmd ..  ", maxAltitude = " .. currentMaxAlt .. ", distanceWalked = distanceWalked + " .. distance
+        Exec(cmd)
     end
 
-    --now update stuff that only needs processed on entering a new cell
-    lastPlusCode = currentPlusCode
-
-    --do DB processing on plus codes.
-    --this should be a gameLogic function
-    if(debugGPS) then print("calculating score") end
-    lastScoreLog = "Earned " .. grantPoints(currentPlusCode) .. " points from cell " .. currentPlusCode
-
-    if(debugGPS) then print("calculating distance") end
-    --easy-calc distance travelled
-    -- local speed = event.speed
-    -- if (lastTime == 0) then
-    --     if(debugGPS) then print("Didn't move, no distance to add.") end
-    --     lastTime = event.time --will never be less than 1 second, since this is seconds since epoch.
-    --     return
-    -- end
-
-    --local duration = event.time - lastTime
-    --local metersTravelled = speed * duration
-    --if(debugGPS) then print("manual distance done") end
-    --AddDistance(metersTravelled)
-    AddDistance(event.distance)
-    if(debugGPS) then print("added event.distance") end
-    --lastDistance = event.distance .. "~" .. metersTravelled
-    AddSeconds(event.time - lastLocationEvent.time)
-    --lastTime = event.time
-    AddSpeed(speed)
-    --lastSpeed = event.speed
-    SetMaxAltitude(event.altitude)
-    --lastAltitude = event.altitude
-    lastTime = event.time --will never be less than 1 second, since this is seconds since epoch?
+    lastTime = eventL.time --will never be less than 1 second, since this is seconds since epoch?
     if(debugGPS) then print("Finished location event") end
+
+    --native.showAlert("", 'pre-assign ' .. eventL.time)
+    lastLocationEvent = eventL
+    --native.showAlert("", 'post-assign ' .. lastLocationEvent.time)
 end
 
 -- function compassListener(event)
@@ -130,5 +130,5 @@ end
 --will need to remove this manually on exit?
 Runtime:addEventListener("location", gpsListener) 
 --Runtime:addEventListener("heading", compassListener)
-timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)  --TODO test this
+timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)  --TODO confirm this
 
