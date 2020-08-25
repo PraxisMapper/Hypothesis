@@ -37,18 +37,25 @@ function CalcDistance(event1, event2)
    --end
 
    local dlon = ToRadians(event2.longitude) - ToRadians(event1.longitude)
-   local dlat = ToRadians(event2.latitude) - ToRadians(event1.latitude)
+   local dlat = ToRadians(event2.latitude) - ToRadians(event1.latitude)--Haversine formula
+   local dlat2 = ToRadians(event2.latitude) + ToRadians(event1.latitude) --equirectangluar formula
    --native.showAlert("dlat", dlat)
 
+
+   --this is the Haversine formula, more accurate, but I dont think people are correctly documenting Order of Operations
    local p1 = (math.sin(dlat / 2) ^ 2) 
-   --native.showAlert("p1", p1)
    local p2 = math.cos(ToRadians(event1.latitude)) * math.cos(ToRadians(event2.latitude)) 
-   --native.showAlert("p2", p2)
    local p3 = (math.sin(dlon / 2) ^ 2)
 
-   --native.showAlert("p3", p3)
+   --this is the equirectangluar formula. Sufficiently accurate at tiny distance.
+    local x = (dlon ^ 2) * math.cos(dlat2 * .5)
+    local y = dlat
+    local radiusEarth = 6371000 --meters, remove 0s for km.
+    local distance = radiusEarth * math.sqrt((x*2) + (y^2))
+
    local ansRadians = math.asin(math.sqrt(p1 + p2 * p3))
-   local ansMeters = ansRadians * 6.371
+   local ansMeters = ansRadians * radiusEarth
 
    return ansMeters
+   --return distance
 end

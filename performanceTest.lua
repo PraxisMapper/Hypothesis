@@ -140,7 +140,8 @@ function scene:show( event )
     perfText.text = perfText.text .. totalLog
 
     local q = Query("SELECT * FROM playerData")[1]
-    dbInfo.text = "distance:" .. q[2] .." points:" .. q[3]  .. " cells:" ..q[4] .. " playtime:" ..q[5] .. " maxSpeed:" ..q[6] .. " totalSpeed:" .. q[7] .. " alt:" ..q[8]
+    dbInfo.text = "distance:" .. q[2] .." points:" .. q[3]  .. " cells:" ..q[4] .. " playtime:" ..q[5] .. " maxSpeed:" ..q[6] .. " totalSpeed:" .. q[7] .. " maxalt:" ..q[8]
+    dbInfo.text = dbInfo.text .. " minalt:" ..q[9]
  
     end
 end

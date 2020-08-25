@@ -8,7 +8,7 @@ require("helpers")
 
 local sqlite3 = require("sqlite3") 
 local db
-local dbVersionID = 5
+local dbVersionID = 6
 
 function startDatabase()
     -- Open "data.db". If the file doesn't exist, it will be created
@@ -27,7 +27,7 @@ function startDatabase()
     local tablesetup =
         [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits, eightCode);
         CREATE TABLE IF NOT EXISTS acheivements(id INTEGER PRIMARY KEY, name, acheived, acheivedOn);
-        CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked REAL, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude);
+        CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked REAL, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude, minAltitude);
         CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID, isGoodPerson, coffeesBought, deviceID);
         CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
@@ -114,6 +114,13 @@ function upgradeDatabaseVersion(oldDBversion)
          Exec(v5Command)
    end
    if (oldDBversion < 6) then
+    --do any scripting to match upgrade to version 5
+        --Add the eightcode column and index to boost performance on the cityBlock screen.
+        local v6Command = 
+       [[ALTER TABLE playerData ADD COLUMN minAltitude;
+       UPDATE playerData SET minAltitude = 20000;
+         ]]
+         Exec(v6Command)
    end
 
    Exec("UPDATE systemData SET dbVersionID = " .. dbVersionID)
@@ -172,7 +179,7 @@ function createBaselineContent()
             local cmd = ""
             cmd = "INSERT INTO systemData(dbVersionID, isGoodPerson, coffeesBought, deviceID) values (" .. dbVersionID .. ", 0, 0, '" .. system.getInfo("deviceID") .. "')";
             Exec(cmd)
-            cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude) values (0.0, 0, 0, 0, 0.0, 0.0, 0)";
+            cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude, minAltitude) values (0.0, 0, 0, 0, 0.0, 0.0, 0, 20000)";
             Exec(cmd)
             cmd = "INSERT INTO trophysBought(itemCode, boughtOn) VALUES (0, 0)";
             Exec(cmd)
@@ -242,6 +249,9 @@ function Score()
         return row[1]
     end
 end
+
+
+--some/all of these are no longer used, merged into a single query in main right now.
 
 function AddDistance(meters)
     if (meters == nil) then return end

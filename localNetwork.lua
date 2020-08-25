@@ -6,7 +6,9 @@
 require("database")
 
 --serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
-serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network, doesnt work on https due to self-signed certs.
+--serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
+--serverURL = "http://localhost/GPSExploreServerAPI/GpsExplore/" -- local network IIS. works on the simulator
+serverURL = "http://192.168.1.92/GPSExploreServerAPI/GpsExplore/" -- local network, doesnt work on https due to self-signed certs.
 
 function uploadListener(event)
     if (debugNetwork) then
@@ -38,14 +40,16 @@ function UploadData()
     --if (debugNetwork) then print(dump(centerData)) end
 
     local q = Query("SELECT * FROM playerData")[1]
-    --dbInfo.text = "distance:" .. q[2] .." points:" .. q[3]  .. " cells:" ..q[4] .. " playtime:" ..q[5] .. " maxSpeed:" ..q[6] .. " totalSpeed:" .. q[7] .. " alt:" ..q[8]
+    --dbInfo.text = "distance:" .. q[2] .." points:" .. q[3]  .. " cells:" ..q[4] .. " playtime:" ..q[5] .. " maxSpeed:" ..q[6] .. " totalSpeed:" .. q[7] .. " maxalt:" ..q[8]
+    --minalt: [q9]
+    local altSpread = q[8] - q[9]
 
     -- 1           2             3                 4         5     6       7      8       9           10          11
     -- DeviceID|cellVisits|DateFinalTrophyBought|distance|Maxspeed|score|10cells|8cells|timeplayed|totalSpeed|maxAltitude
     -- max speed is next, not yet present until i run and update the db schema.
     bodyString = system.getInfo("deviceID") .. "|" .. q[4] .. "|" ..  q1Results .. "|" .. q[2] .. "|" .. q[6] .. "|"-- ends with maxspeed
     bodyString = bodyString .. q[3] .. "|" .. TotalExploredCells() .. "|" .. TotalExplored8Cells() .. "|"
-    bodyString = bodyString .. q[5] .. "|" .. q[7] .. "|" .. q[8]
+    bodyString = bodyString .. q[5] .. "|" .. q[7] .. "|" .. altSpread
 
     -- get data to match backend setup.
     if (debugNetwork) then print(bodyString) end
@@ -56,7 +60,7 @@ function UploadData()
 end
 
 function leaderboardListener()
-    --Update the screen.
+    --Update the screen. Might need moved to the scene file.
 
 end
 
@@ -89,6 +93,10 @@ function GetLeaderboard(id)
     if (id == 7) then
         --final Trophy 
         network.request(serverURL .. "TrophiesLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+    end
+    if (id == 8) then
+        --Altitude spread Trophy 
+        network.request(serverURL .. "AltitudeLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
     end
 
 
