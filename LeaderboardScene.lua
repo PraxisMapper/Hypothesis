@@ -152,7 +152,7 @@ function scene:create( event )
 
 
     --now making different leaderboard icons.
-    local lb1 = display.newImageRect(sceneGroup, "leaderboardIcons/8cellLb.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
+    local lb1 = display.newImageRect(sceneGroup, "leaderboardIcons/8cellLB.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
     lb1.lb = 1
     lb1.anchorX = 0
     lb1.anchorY = 0
@@ -161,7 +161,7 @@ function scene:create( event )
     lb1.tap = ChangeLeaderboardListener --NOTE: these 2 lines are the right way to hook up a shared tap listener
     lb1:addEventListener("tap", lb1)
 
-    local lb2 = display.newImageRect(sceneGroup, "leaderboardIcons/10cellLb.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
+    local lb2 = display.newImageRect(sceneGroup, "leaderboardIcons/10cellLB.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
     lb2.lb = 2
     lb2.anchorX = 0
     lb2.anchorY = 0
@@ -170,7 +170,7 @@ function scene:create( event )
     lb2.tap = ChangeLeaderboardListener
     lb2:addEventListener("tap", lb2)
 
-    local lb3 = display.newImageRect(sceneGroup, "leaderboardIcons/AltitudeLb.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
+    local lb3 = display.newImageRect(sceneGroup, "leaderboardIcons/AltitudeLB.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
     lb3.lb = 3
     lb3.anchorX = 0
     lb3.anchorY = 0
@@ -179,7 +179,7 @@ function scene:create( event )
     lb3.tap = ChangeLeaderboardListener
     lb3:addEventListener("tap", lb3)
 
-    local lb4 = display.newImageRect(sceneGroup, "leaderboardIcons/DistanceLb.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
+    local lb4 = display.newImageRect(sceneGroup, "leaderboardIcons/DistanceLB.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
     lb4.lb = 4
     lb4.anchorX = 0
     lb4.anchorY = 0
@@ -188,7 +188,7 @@ function scene:create( event )
     lb4.tap = ChangeLeaderboardListener
     lb4:addEventListener("tap", lb4)
 
-    local lb5 = display.newImageRect(sceneGroup, "leaderboardIcons/ScoreLb.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
+    local lb5 = display.newImageRect(sceneGroup, "leaderboardIcons/ScoreLB.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
     lb5.lb = 5
     lb5.anchorX = 0
     lb5.anchorY = 0
@@ -197,7 +197,7 @@ function scene:create( event )
     lb5.tap = ChangeLeaderboardListener
     lb5:addEventListener("tap", lb5)
 
-    local lb6 = display.newImageRect(sceneGroup, "leaderboardIcons/SpeedLb.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
+    local lb6 = display.newImageRect(sceneGroup, "leaderboardIcons/SpeedLB.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
     lb6.lb = 6
     lb6.anchorX = 0
     lb6.anchorY = 0
@@ -206,7 +206,7 @@ function scene:create( event )
     lb6.tap = ChangeLeaderboardListener
     lb6:addEventListener("tap", lb6)
 
-    local lb7 = display.newImageRect(sceneGroup, "leaderboardIcons/TimeLb.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
+    local lb7 = display.newImageRect(sceneGroup, "leaderboardIcons/TimeLB.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
     lb7.lb = 7
     lb7.anchorX = 0
     lb7.anchorY = 0
@@ -215,7 +215,7 @@ function scene:create( event )
     lb7.tap = ChangeLeaderboardListener
     lb7:addEventListener("tap", lb7)
 
-    local lb8 = display.newImageRect(sceneGroup, "leaderboardIcons/TrophyLb.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
+    local lb8 = display.newImageRect(sceneGroup, "leaderboardIcons/TrophyLB.png", 100, 100) --icons are 50x50, i'll scale them up here for now.
     lb8.lb = 8
     lb8.anchorX = 0
     lb8.anchorY = 0
@@ -252,10 +252,11 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
-        UploadData()
+        
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
+        UploadData()
         lastScoreboardID = 1
         GetLeaderboardText(1)
  
