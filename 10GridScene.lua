@@ -34,6 +34,7 @@ local function UpdateLocal()
     if (debugLocal) then print("start UpdateLocal") end
     if (debugLocal) then print(currentPlusCode) end
 
+    --native.showAlert("", "Updating local")
     if (currentPlusCode == "") then
         if timerResults == nil then
             timerResults = timer.performWithDelay(500, UpdateLocal, -1)  
@@ -62,6 +63,8 @@ local function UpdateLocal()
             end
         end
     end
+
+    --native.showAlert("", "past cell checks")
 
     if (debugGPS) then print("grid done or skipped") end
     if (debugGPS) then print(locationText.text) end
@@ -198,6 +201,7 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen 
+        --native.showAlert("", "creating update timer")
         timer.performWithDelay(50, UpdateLocal, 1)  
     end
 end

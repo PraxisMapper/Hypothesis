@@ -53,11 +53,13 @@ lastLocationEvent = ""
 print("starting network")
 require("localNetwork")
 networkResults = "blank"
-UploadData()    
+--UploadData()    --moved to loading screen.
 
 
+print("shifting to loading scene")
 local composer = require("composer")
-composer.gotoScene("10GridScene")
+--composer.gotoScene("10GridScene")
+composer.gotoScene("loadingScene")
 
 local function gpsListener(event)
     

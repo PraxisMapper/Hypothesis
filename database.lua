@@ -1,13 +1,14 @@
 --TODO
---track more data for leaderboards?
 --ponder converting between S2, PlusCodes, and GPS coords. if not, remove from table.
 --cache data in a table, so i can just ping memory instead of disk for all (23 * 23) cells twice a second. Possibly. Indexing seems fast enough.
 --encrypt database to stop people from just opening the file and editing as they want.
---possible optimization: store 8cell and 10cell both in the table, to avoid using substr() in queries, if that becomes too slow
+--NOTE: rows returns rows with numbered results, nrows returns values with named results.
+
+--NOTE: on android, clearing app data doesnt' delete the database, just contents of it, apparently.
 require("helpers")
 
 local sqlite3 = require("sqlite3") 
-local db
+db = "" --tODO: make this local again?
 local dbVersionID = 6
 
 function startDatabase()
@@ -20,44 +21,47 @@ function startDatabase()
         if (event.type == "applicationExit" and db:isopen()) then db:close() end
     end
 
+    Runtime:addEventListener("system", onSystemEvent)
+end
+
     -- Set up the table if it doesn't exist 
     --plusCodesVisited will be permanent first-time visits plus most recent data.
     --I shouldn't use Inserts in this block, since they'll still be run each startup. PUt those in createBaselineContent
     --TODO: might need to mark some of these as REAL typed. Or make the first insert 0.0 to set that up?
-    local tablesetup =
-        [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits, eightCode);
-        CREATE TABLE IF NOT EXISTS acheivements(id INTEGER PRIMARY KEY, name, acheived, acheivedOn);
-        CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked REAL, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude, minAltitude);
-        CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID, isGoodPerson, coffeesBought, deviceID);
-        CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
-        CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
-        CREATE TABLE IF NOT EXISTS trophysBought(id INTEGER PRIMARY KEY, itemCode, boughtOn);
-        CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
-        CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
-        ]]
-        --CREATE TABLE IF NOT EXISTS ConversionLinks(id INTEGER PRIMARY KEY, pluscode, s2Cell, lat, long); --not sure yet if this is a thing i want to bother with.
+    -- local tablesetup =
+    --     [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits, eightCode);
+    --     CREATE TABLE IF NOT EXISTS acheivements(id INTEGER PRIMARY KEY, name, acheived, acheivedOn);
+    --     CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked REAL, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude, minAltitude);
+    --     CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID, isGoodPerson, coffeesBought, deviceID);
+    --     CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
+    --     CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
+    --     CREATE TABLE IF NOT EXISTS trophysBought(id INTEGER PRIMARY KEY, itemCode, boughtOn);
+    --     CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
+    --     CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
+    --     ]]
+    --     --CREATE TABLE IF NOT EXISTS ConversionLinks(id INTEGER PRIMARY KEY, pluscode, s2Cell, lat, long); --not sure yet if this is a thing i want to bother with.
 
-    if (debug) then 
-        print("SQLite version " .. sqlite3.version())
-    end
-    Exec(tablesetup)
+    -- if (debug) then 
+    --     print("SQLite version " .. sqlite3.version())
+    -- end
+    -- Exec(tablesetup)
 
-    --create content on first run, upgrade if necessary on later runs.
-    local currentDataExists = Query("SELECT COUNT(*) from systemData")[1][1] --this has different depths on firstRun that later runs
-    --native.showAlert("", dump(currentDataExists))
-    if (currentDataExists == 0) then
-        --Database is empty.
-        createBaselineContent()
-    else
-        --database exists.
-        local previousDBVersion = Query("SELECT dbVersionID from systemData")[1][1] --this errors out on first run, hence the split.
-        upgradeDatabaseVersion(previousDBVersion)
-        ResetDailyWeekly()
-    end
+    -- --create content on first run, upgrade if necessary on later runs.
+    -- local currentDataExists = Query("SELECT COUNT(*) from systemData")[1][1] --this has different depths on firstRun that later runs
+    -- --native.showAlert("", dump(currentDataExists))
+    -- if (currentDataExists == 0) then
+    --     --Database is empty.
+    --     createBaselineContent()
+    -- else
+    --     --database exists.
+    --     local previousDBVersion = Query("SELECT dbVersionID from systemData")[1][1] --this errors out on first run, hence the split.
+    --     upgradeDatabaseVersion(previousDBVersion)
+    --     ResetDailyWeekly()
+    -- end
 
     -- Setup the event listener to catch "applicationExit"
-    Runtime:addEventListener("system", onSystemEvent)
-end
+    
+--end
 
 function upgradeDatabaseVersion(oldDBversion)
     --if oldDbVersion is nil, that should mean we're making the DB for the first time and can skip this step
@@ -144,12 +148,18 @@ end
 
 function Query(sql)
     --if (debugDB) then print("sql command:" .. sql) end
+
+    --I have an issue with Query, where i seem to get 2 or 3 different result types.
+    --This needs to get boiled down to one, or some documented behavior.
+    --native.showAlert("", "sql passed:" .. sql)
     results = {}
+    local tempResults = db:rows(sql)    
+
     for row in db:rows(sql) do
         table.insert(results, row) --todo potential optimization? especially if I just iPairs this table.
     end
     if (debugDB) then dump(results) end
-    return results 
+    return results --results is a table of tables EX {[1] : {[1] : 1}} for count(*) when there are results.
 end
 
 function Exec(sql)
@@ -157,40 +167,19 @@ function Exec(sql)
     results = {}
     local resultCode = db:exec(sql);
     
-    if (resultCode == 0) then
-        return
-    end
+    --return resultCode
+
+     if (resultCode == 0) then
+         return 0
+     end
 
     --now its all error tracking.
-    local errormsg = db:errmsg()
-    if (debugDB) then print("sql exec error: " .. errormsg) end
+     local errormsg = db:errmsg()
+     native.showAlert("dbExec error", errormsg)
+     return resultCode
+    -- if (debugDB) then print("sql exec error: " .. errormsg) end
 end
-
-function createBaselineContent()
-     --insert system data row
-     local query = "SELECT COUNT(*) FROM playerData"
-     local dataPresent = Query(query)
-     for i,row in ipairs(Query(query)) do
-        if (row[1] == 1) then
-            --data exists, bail out.
-            return
-        else
-            --Database is empty, time to create the baseline data.
-            local cmd = ""
-            cmd = "INSERT INTO systemData(dbVersionID, isGoodPerson, coffeesBought, deviceID) values (" .. dbVersionID .. ", 0, 0, '" .. system.getInfo("deviceID") .. "')";
-            Exec(cmd)
-            cmd = "INSERT INTO playerData(distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude, minAltitude) values (0.0, 0, 0, 0, 0.0, 0.0, 0, 20000)";
-            Exec(cmd)
-            cmd = "INSERT INTO trophysBought(itemCode, boughtOn) VALUES (0, 0)";
-            Exec(cmd)
-        end
-    end
-
-     --create acheivement data. TODO
-     local acheivementRows = { "INSERT INTO acheivements VALUES ()", "", ""}
-     --foreach these strings.
-end
-
+--createbaselinecontent merged into the tablesetup commands
 function ResetDailyWeekly()
     --checks for daily and weekly reset times.
     --if oldest date in daily/weekly table is over 22/(24 * 6.9) hours old, delete everything in the table. (actually, do 22 hour reset)
@@ -245,8 +234,16 @@ end
 
 function Score()
     local query = "SELECT totalPoints as p from playerData"
-    for i,row in ipairs(Query(query)) do
-        return row[1]
+    --native.showAlert("", "getting Score")
+    local qResults = Query(query)
+    --native.showAlert("", #qResults)
+    if (#qResults > 0) then
+        for i,row in ipairs(qResults) do
+            --native.showAlert("", dump(row))
+            return row[1]
+        end
+    else
+        return "?"
     end
 end
 
