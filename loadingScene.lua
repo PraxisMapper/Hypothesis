@@ -77,7 +77,10 @@ function scene:show( event )
         CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
         INSERT OR IGNORE INTO systemData(id, dbVersionID, isGoodPerson, coffeesBought, deviceID) values (1, ]] .. 5 .. ", 0, 0, '" .. system.getInfo("deviceID") .. [[') ;
         INSERT OR IGNORE INTO playerData(id, distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude, minAltitude) values (1, 0.0, 0, 0, 0, 0.0, 0.0, 0, 20000);
-        INSERT OR IGNORE INTO trophysBought(id, itemCode, boughtOn) VALUES (1, 0, 0);]]
+        INSERT OR IGNORE INTO trophysBought(id, itemCode, boughtOn) VALUES (1, 0, 0);
+        CREATE TABLE IF NOT EXISTS terrainData (id INTEGER PRIMARY KEY, pluscode UNIQUE, name, areatype, lastUpdated);
+        CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode)
+        ]]
         --CREATE TABLE IF NOT EXISTS ConversionLinks(id INTEGER PRIMARY KEY, pluscode, s2Cell, lat, long); --not sure yet if this is a thing i want to bother with.
         print("tablesetup exists")
         statusText.text = "Database Opened2" .. sqlite3.version() --3.19 on android and simulator.

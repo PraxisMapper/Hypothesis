@@ -10,6 +10,7 @@ require("helpers") --for SPlit
 --serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
 --serverURL = "http://localhost/GPSExploreServerAPI/GpsExplore/" -- local network IIS. works on the simulator
 serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
+--serverURL = "http://somethingsomething:23456/GPSExploreServerAPI/" -- exposed value for dev PC for testing, port forwarding
 --note: GpsExplore/" is now half of it, the other half is MapData/
 
 function uploadListener(event)
@@ -103,30 +104,47 @@ function GetLeaderboard(id)
 end
 
 function plusCodeListener(event)
-    print("plus code event response: " .. event.response)
-    if (str.length(event.response) == 10) then
-        locationList[pluscode] = ""
+    if (debugNetwork) then print("plus code event response: " .. event.response) end
+    if (event.status ~= 200) then return end --dont' save invalid results on an error.
+
+    if (string.len(event.response) == 10) then
+        local emptyResults = {}
+        emptyResults[1] = "" --name
+        emptyResults[2] = "" --type
+        SaveTerrainData(event.response, "", "")
+        --locationList[event.response] = emptyResults
+        --print("added empty data for " .. event.response)
+        --print("returning" .. locationList[event.response])
         return
     end
 
+    --print("plus code has properties!")
     --TODO: move GPS starting point manually to somewhere that isn't boring like the default.
-    --See if this fires off correctly.
     local eventData = Split(event.response, "=")
     --event data should now be
     --1: pluscode
     --2+: name|type
-    --lack of 2+ means its nothing special. 
-    print("plus code has properties!")
-    local areaTypes = #eventData
-    locationList[eventData[1]] = {eventData[2]}
+    --lack of 2+ means its nothing special, and we checked for that earlier and returned already.
+    --print("reponse was split")
+    local areaData = Split(eventData[2], "|")
+
+    SaveTerrainData(eventData[1], areaData[1], areaData[2])
+    --print(dump(areaData))
+    --local key = eventData[1]
+    -- locationList[eventData[1]] = areaData -- this doesn't actually add the key and value to the table
+    --locationList[key] = areaData
+    --table.insert(locationList, areaData) --havent tried, doesnt let me set a key value.
+    --print("added table data for " .. eventData[1] .. dump(areaData) .. #locationList)
+    --print("assigned " .. dump(locationList[eventData[1]]) .. " to " .. eventData[1])
 end
 
 function GetCellData(pluscode)
-    print ("getting cell data via " .. serverURL .. "MapData/CellData/" .. pluscode:sub(1,8) .. pluscode:sub(10,11))
-    if (locationList[pluscode]) == nil then
+    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/CellData/" .. pluscode:sub(1,8) .. pluscode:sub(10,11)) end
+    local existingData = LoadTerrainData(pluscode)
+    if (#existingData == 0) then
         network.request(serverURL .. "MapData/CellData/" .. pluscode:sub(1,8) .. pluscode:sub(10,11), "GET", plusCodeListener)
     end
-    return (locationList[pluscode])
+    return (existingData)
 end
 
  

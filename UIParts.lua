@@ -10,6 +10,8 @@ function CreateSquareGrid(gridSize, cellSize, gridGroup, cellCollection)
             local newSquare = display.newRect(gridGroup, display.contentCenterX + (cellSize * x) + x , display.contentCenterY + (cellSize * y) + y , cellSize, cellSize) --x y w h
             newSquare.gridX = x
             newSquare.gridY = -y --invert this so cells get identified top-to-bottom, rather than bottom-to-top
+            newSquare.name = "" --added for terrain/location support
+            newSquare.type = ""--added for terrain/location support
             --newSquare:addEventListener("tap", debuggerHelperSquare) --for debugging display grid, show the cell's plus code by click/tap
             cellCollection[#cellCollection + 1] = newSquare
         end

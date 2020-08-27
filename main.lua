@@ -5,6 +5,7 @@
 --remember, lua requires code to be in order to reference (cant call a function that's lower in the file than the current one)
 
 --TODO:
+--Figure out how to update
 --refactor and clean up code. move stuff and split into multiple files
 ----consider re-scoping variables, since calling a variable local in a file means other files can't see it. Not declaring it local makes it global, which is apparently slower.
 ----figure out how to make the scene change functions reusable. It doesn't look like dropping them into UIParts worked the first time?
@@ -29,12 +30,16 @@ require("helpers")
 require("gameLogic")
 require("database") 
 
+print("starting network")
+require("localNetwork")
+networkResults = "blank"
+
 debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugShift = false --display math for shifting PlusCodes
 debugGPS = false --display data for the GPS event and timer loop
 debugDB = false
 debugLocal = false
-debugNetwork = true
+debugNetwork = false
 --uncomment when testing to clear local data.
 --ResetDatabase()
 startDatabase()
@@ -50,11 +55,13 @@ lastHeadingTime = 0
 
 lastLocationEvent = ""
 
-locationList = {} --Holds types and names of pluscode cells.
-  
-print("starting network")
-require("localNetwork")
-networkResults = "blank"
+locationList = {} --Holds types and names of pluscode cells. PlusCode should be the key. This isn't populating in localnetowrk though.
+  --locationList doesn't update from localNetwork. Why?
+locationList["testing"] = "asdf|asdf"
+--native.showAlert("", #locationList)
+--this doesn't even update here. What bullshit is this?
+--might need to make this be local DB storage then.
+
 --UploadData()    --moved to loading screen.
 
 
@@ -84,6 +91,9 @@ function gpsListener(event)
     local pluscode = tryMyEncode(eventL.latitude, eventL.longitude, 10); --only goes to 10 right now.
     if (debugGPS) then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode   
+
+    --Debug/testing override location
+    --currentPlusCode = "9C6RVJ85+J8" --random UK location, should have water to the north park north of that
 
     if (lastPlusCode ~= currentPlusCode) then
         --update score stuff, we moved a cell.  Other stuff needs to process as usual.
@@ -146,4 +156,3 @@ end
 --Runtime:addEventListener("location", gpsListener) 
 --Runtime:addEventListener("heading", compassListener)
 timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)  --TODO confirm this fires as expected
-

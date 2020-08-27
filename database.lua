@@ -24,6 +24,9 @@ function startDatabase()
     Runtime:addEventListener("system", onSystemEvent)
 end
 
+
+    --CREATE TABLE IF NOT EXISTS terrainData (id INTEGER PRIMARY KEY, pluscode UNIQUE, name, areatype, lastUpdated);
+    --CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode)
     -- Set up the table if it doesn't exist 
     --plusCodesVisited will be permanent first-time visits plus most recent data.
     --I shouldn't use Inserts in this block, since they'll still be run each startup. PUt those in createBaselineContent
@@ -118,7 +121,7 @@ function upgradeDatabaseVersion(oldDBversion)
          Exec(v5Command)
    end
    if (oldDBversion < 6) then
-    --do any scripting to match upgrade to version 5
+    --do any scripting to match upgrade to version 6
         --Add the eightcode column and index to boost performance on the cityBlock screen.
         local v6Command = 
        [[ALTER TABLE playerData ADD COLUMN minAltitude;
@@ -126,6 +129,16 @@ function upgradeDatabaseVersion(oldDBversion)
          ]]
          Exec(v6Command)
    end
+   if (oldDBversion < 8) then
+    --do any scripting to match upgrade to version 8, i think i missed a number somewhere.
+        --Add the eightcode column and index to boost performance on the cityBlock screen.
+        local v8Command = 
+       [[CREATE TABLE IF NOT EXISTS terrainData (id INTEGER PRIMARY KEY, pluscode UNIQUE, name, areatype, lastUpdated);
+         CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode)
+         ]]
+         Exec(v8Command)
+   end
+   
 
    Exec("UPDATE systemData SET dbVersionID = " .. dbVersionID)
 end
@@ -175,6 +188,7 @@ function Exec(sql)
 
     --now its all error tracking.
      local errormsg = db:errmsg()
+     print(errormsg)
      native.showAlert("dbExec error", errormsg)
      return resultCode
     -- if (debugDB) then print("sql exec error: " .. errormsg) end
@@ -298,6 +312,34 @@ function GetClientData()
         --1 row, several columns. Map it to a table and send that over? 
         return row --this is only the first value?
     end 
+end
+
+function LoadTerrainData(pluscode)
+    --print(pluscode)
+    if (debugDB) then print("loading terrain data ") end
+    local query = "SELECT * from terrainData WHERE plusCode = '" .. pluscode .. "'"
+    local results = Query(query) --or just return this?
+    --print("query done for " .. pluscode)
+    
+    for i,row in ipairs(results) do
+        if (debugDB) then print(dump(row)) end
+        return row
+    end 
+    return {} --empty table means no data found.
+end
+
+function SaveTerrainData(pluscode, name, type)
+    --native.showAlert("test", pluscode)
+    if (debugDB) then print("saving terrain data " .. pluscode .. " " .. name .. " " .. type) end
+    local query = "INSERT INTO terrainData (plusCode, name, areatype, lastUpdated) VALUES('" .. pluscode .. "', '" .. name .. "', '" .. type .. "', " .. os.time() .. ")"
+    Exec(query)
+end
+
+function UpdateTerrainData(pluscode, name, type)
+    --native.showAlert("test", pluscode)
+    if (debugDB) then print("updating terrain data " .. pluscode .. " " .. name .. " " .. type) end
+    local query = "UPDATE terrainData  SET plusCode = '" .. pluscode .. "', name = '" .. name .. "', areatype = '" .. type .. "', lastUpdated = " .. os.time()
+    Exec(query)
 end
 
 
