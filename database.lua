@@ -131,7 +131,7 @@ function upgradeDatabaseVersion(oldDBversion)
 end
 
 function ResetDatabase()
-    --db:close()
+    db:close()
     path = system.pathForFile("data.db", system.DocumentsDirectory)
     db = sqlite3.open(path)
     db:exec("drop table test")

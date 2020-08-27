@@ -3,6 +3,7 @@ local scene = composer.newScene()
 
 require("UIParts")
 require("database")
+require("localNetwork")
  
 if (debug) then print("10GridScene loading") end
 -- -----------------------------------------------------------------------------------
@@ -56,6 +57,18 @@ local function UpdateLocal()
              thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 10)
              thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 9)
             cellCollection[square].pluscode = thisSquaresPluscode
+            --check if we have this square's data, if we do, show it. if not, get it.
+            --TODO: apply this logic to 8cell page too?
+            --or make another server endpoint to see if anything fully covers an 8code by checking .Contains on the corners?
+            if locationList[thisSquaresPluscode] ~= nil then
+                cellCollection[square].type = locationList[thisSquaresPluscode].type
+            else
+                GetCellData(thisSquaresPluscode)
+
+            end
+
+
+
             if VisitedCell(thisSquaresPluscode) then
                 cellCollection[square].fill = visitedCell
             else

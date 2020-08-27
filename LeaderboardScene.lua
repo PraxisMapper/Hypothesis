@@ -95,28 +95,28 @@ function GetLeaderboardText(id)
     if (debug) then print("server URL is" .. serverURL) end
     local url = ""
     if (id == 1) then
-        url = serverURL .. '8CellLeaderboard/' .. system.getInfo("deviceID")
+        url = serverURL .. 'GpsExplore/8CellLeaderboard/' .. system.getInfo("deviceID")
     end
     if (id == 2) then
-        url = serverURL .. '10CellLeaderboard/' .. system.getInfo("deviceID")
+        url = serverURL .. 'GpsExplore/10CellLeaderboard/' .. system.getInfo("deviceID")
     end
     if (id == 3) then
-        url = serverURL .. 'AltitudeLeaderboard/' .. system.getInfo("deviceID")
+        url = serverURL .. 'GpsExplore/AltitudeLeaderboard/' .. system.getInfo("deviceID")
     end
     if (id == 4) then
-        url = serverURL .. 'DistanceLeaderboard/' .. system.getInfo("deviceID")
+        url = serverURL .. 'GpsExplore/DistanceLeaderboard/' .. system.getInfo("deviceID")
     end
     if (id == 5) then
-        url = serverURL .. 'ScoreLeaderboard/' .. system.getInfo("deviceID")
+        url = serverURL .. 'GpsExplore/ScoreLeaderboard/' .. system.getInfo("deviceID")
     end
     if (id == 6) then
-        url = serverURL .. 'AvgSpeedLeaderboard/' .. system.getInfo("deviceID")
+        url = serverURL .. 'GpsExplore/AvgSpeedLeaderboard/' .. system.getInfo("deviceID")
     end
     if (id == 7) then
-        url = serverURL .. 'TimeLeaderboard/' .. system.getInfo("deviceID")
+        url = serverURL .. 'GpsExplore/TimeLeaderboard/' .. system.getInfo("deviceID")
     end
     if (id == 8) then
-        url = serverURL .. 'TrophyLeaderboard/' .. system.getInfo("deviceID")
+        url = serverURL .. 'GpsExplore/TrophiesLeaderboard/' .. system.getInfo("deviceID")
     end
     if(debugNetwork) then print("URL-  " .. url) end
     network.request(url, "GET", networkHandler)

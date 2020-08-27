@@ -49,6 +49,8 @@ lastScoreLog = ""
 lastHeadingTime = 0
 
 lastLocationEvent = ""
+
+locationList = {} --Holds types and names of pluscode cells.
   
 print("starting network")
 require("localNetwork")
@@ -61,7 +63,7 @@ local composer = require("composer")
 --composer.gotoScene("10GridScene")
 composer.gotoScene("loadingScene")
 
-local function gpsListener(event)
+function gpsListener(event)
     
     local eventL = event --assign it locally just in case somethings messing with the parent event object
 
@@ -139,8 +141,9 @@ end
 --     currentHeadingTime = dump(event)
 -- end
 
---will need to remove this manually on exit?
-Runtime:addEventListener("location", gpsListener) 
+--will need to remove this manually on exit? 
+--Trying to add this in after the loading screen
+--Runtime:addEventListener("location", gpsListener) 
 --Runtime:addEventListener("heading", compassListener)
 timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)  --TODO confirm this fires as expected
 

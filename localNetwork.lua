@@ -4,11 +4,13 @@
 -- leaderboards connection
 -- OpenStreetMaps stuff (pending a more-final schema)
 require("database")
+require("helpers") --for SPlit
 
 --serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
 --serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
 --serverURL = "http://localhost/GPSExploreServerAPI/GpsExplore/" -- local network IIS. works on the simulator
-serverURL = "http://192.168.1.92/GPSExploreServerAPI/GpsExplore/" -- local network, doesnt work on https due to self-signed certs.
+serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
+--note: GpsExplore/" is now half of it, the other half is MapData/
 
 function uploadListener(event)
     if (debugNetwork) then
@@ -23,7 +25,7 @@ end
 
 function UploadData()
     print("uploading data")
-    local uploadURL = serverURL .. "UploadData"
+    local uploadURL = serverURL .. "GpsExplore/UploadData"
     local params = {}
     local bodyString = "" -- the | separated values
     print(uploadURL)
@@ -68,38 +70,63 @@ function GetLeaderboard(id)
     --need to ID leaderboards somewhere.
     if (id == 1) then
         --Most 10cells.
-        network.request(serverURL .. "10CellLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+        network.request(serverURL .. "GpsExplore/10CellLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
     end
     if (id == 2) then
         --Most 8cells.
-        network.request(serverURL .. "8CellLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+        network.request(serverURL .. "GpsExplore/8CellLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
     end
     if (id == 3) then
         --Hightest score
-        network.request(serverURL .. "ScoreLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+        network.request(serverURL .. "GpsExplore/ScoreLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
     end
     if (id == 4) then
         --Most distance 
-        network.request(serverURL .. "DistanceLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+        network.request(serverURL .. "GpsExplore/DistanceLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
     end
     if (id == 5) then
         --Most play time
-        network.request(serverURL .. "TimeLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+        network.request(serverURL .. "GpsExplore/TimeLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
     end
     if (id == 6) then
         --Highest avg speed
-        network.request(serverURL .. "AvgSpeedLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+        network.request(serverURL .. "GpsExplore/AvgSpeedLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
     end
     if (id == 7) then
         --final Trophy 
-        network.request(serverURL .. "TrophiesLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+        network.request(serverURL .. "GpsExplore/TrophiesLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
     end
     if (id == 8) then
         --Altitude spread Trophy 
-        network.request(serverURL .. "AltitudeLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+        network.request(serverURL .. "GpsExplore/AltitudeLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
+    end
+end
+
+function plusCodeListener(event)
+    print("plus code event response: " .. event.response)
+    if (str.length(event.response) == 10) then
+        locationList[pluscode] = ""
+        return
     end
 
+    --TODO: move GPS starting point manually to somewhere that isn't boring like the default.
+    --See if this fires off correctly.
+    local eventData = Split(event.response, "=")
+    --event data should now be
+    --1: pluscode
+    --2+: name|type
+    --lack of 2+ means its nothing special. 
+    print("plus code has properties!")
+    local areaTypes = #eventData
+    locationList[eventData[1]] = {eventData[2]}
+end
 
+function GetCellData(pluscode)
+    print ("getting cell data via " .. serverURL .. "MapData/CellData/" .. pluscode:sub(1,8) .. pluscode:sub(10,11))
+    if (locationList[pluscode]) == nil then
+        network.request(serverURL .. "MapData/CellData/" .. pluscode:sub(1,8) .. pluscode:sub(10,11), "GET", plusCodeListener)
+    end
+    return (locationList[pluscode])
 end
 
  

@@ -29,7 +29,12 @@ function scene:create( event )
     --Draw a background image, fullscreen 720x1280
     --will draw text over that.
 
+    local loadingBg = display.newImageRect(sceneGroup, "LoadingScreen.png", 720, 1280)
+    loadingBg.anchorX = 0
+    loadingBg.anchorY = 0
+
     statusText = display.newText(sceneGroup, "Loading....", display.contentCenterX, 260, native.systemFont, 30)
+    statusText:setFillColor(.2, .2, .2)
     print("loading scene created")
 end
  
@@ -54,8 +59,10 @@ function scene:show( event )
         print("database started")
 
 
+        --last ditch effort ehre
+        --ResetDatabase()
         --upgrading database now, clearing data on android apparently doesn't reset table structure.
-        --upgradeDatabaseVersion(5)
+        --upgradeDatabaseVersion(7)
 
 
         local tablesetup =
@@ -89,6 +96,9 @@ function scene:show( event )
         statusText.text = "Database Exists : " .. setupResults
         if (setupResults ~= 0) then return end
         statusText.text = "Database Exists!"
+
+        --upgrading database now, clearing data on android apparently doesn't reset table structure.
+        upgradeDatabaseVersion(7)
 
         --create content on first run, upgrade if necessary on later runs.
         -- local cde = Query("SELECT COUNT(*) from systemData")
@@ -145,6 +155,8 @@ function scene:hide( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
+        Runtime:addEventListener("location", gpsListener) 
+        print("loadingScene hidden, GPS on.")
  
     end
 end
