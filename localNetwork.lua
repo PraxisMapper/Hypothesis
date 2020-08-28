@@ -1,16 +1,17 @@
 -- the class for handling sending data to/from the API server
 -- NOTE: naming this 'network' overrides the internal library with the same name and breaks everything.
 -- TODO:
--- leaderboards connection
--- OpenStreetMaps stuff (pending a more-final schema)
+--Should probably make a network indicator, to tell when I am or am not getting location types updated.
+--also need to work out plan to update saved location type/name data eventually
 require("database")
 require("helpers") --for SPlit
 
 --serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
 --serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
 --serverURL = "http://localhost/GPSExploreServerAPI/GpsExplore/" -- local network IIS. works on the simulator
-serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
---serverURL = "http://somethingsomething:23456/GPSExploreServerAPI/" -- exposed value for dev PC for testing, port forwarding
+--serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
+
+
 --note: GpsExplore/" is now half of it, the other half is MapData/
 
 function uploadListener(event)

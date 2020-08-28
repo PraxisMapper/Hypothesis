@@ -36,7 +36,7 @@ networkResults = "blank"
 
 debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugShift = false --display math for shifting PlusCodes
-debugGPS = false --display data for the GPS event and timer loop
+debugGPS = false --display data for the GPS event and timer loop and auto-move
 debugDB = false
 debugLocal = false
 debugNetwork = false
@@ -93,7 +93,7 @@ function gpsListener(event)
     currentPlusCode = pluscode   
 
     --Debug/testing override location
-    --currentPlusCode = "9C6RVJ85+J8" --random UK location, should have water to the north park north of that
+    --currentPlusCode = "9C6RVJ85+J8" --random UK location, should have water to the north, and a park north of that.
 
     if (lastPlusCode ~= currentPlusCode) then
         --update score stuff, we moved a cell.  Other stuff needs to process as usual.

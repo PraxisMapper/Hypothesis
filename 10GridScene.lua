@@ -5,7 +5,6 @@ require("UIParts")
 require("database")
 require("localNetwork")
 
-if (debug) then print("10GridScene loading") end
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
@@ -36,10 +35,10 @@ local debugText = {}
 local locationName = ""
 
 local function testDrift()
-    if (os.time() %2 == 0 ) then
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 9) --move north
+    if (os.time() % 2 == 0) then
+        currentPlusCode = shiftCellV3(currentPlusCode, 1, 9) -- move north
     else
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 10) --move west
+        currentPlusCode = shiftCellV3(currentPlusCode, 1, 10) -- move west
     end
 end
 
@@ -68,77 +67,60 @@ local function UpdateLocal()
             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 9)
             cellCollection[square].pluscode = thisSquaresPluscode
 
-            --apply type now if we found it.
-            --print("loading terrain info for " .. thisSquaresPluscode:sub(1,8) .. thisSquaresPluscode:sub(10,11))
-            local terrainInfo = LoadTerrainData(thisSquaresPluscode:sub(1,8) .. thisSquaresPluscode:sub(10,11)) --is a whole row from the DB.
-            --print("terrain info pulled: " .. #terrainInfo)
-            --if (#terrainInfo > 0) then print(dump(terrainInfo)) end
+            -- apply type now if we found it.
+            -- print("loading terrain info for " .. thisSquaresPluscode:sub(1,8) .. thisSquaresPluscode:sub(10,11))
+            local terrainInfo = LoadTerrainData(thisSquaresPluscode:sub(1, 8) .. thisSquaresPluscode:sub(10, 11)) -- is a whole row from the DB.
+            -- print("terrain info pulled: " .. #terrainInfo)
+            -- if (#terrainInfo > 0) then print(dump(terrainInfo)) end
 
             if (#terrainInfo == 0) then
-                --we don't have this cell, load it.
-                GetCellData(thisSquaresPluscode) --will show up next pass
-            else if (terrainInfo[4] ~= "") then --4 is areaType
-                --apply info
-                --print("cell with data found!")
-                cellCollection[square].name = terrainInfo[3] 
-                cellCollection[square].type = terrainInfo[4]
+                -- we don't have this cell, load it.
+                GetCellData(thisSquaresPluscode) -- will show up next pass
             else
-                --apply generic colors.
-            end
-        end
-
-            --cellCollection[square].type = ""
-            -- check if we have this square's data, if we do, show it. if not, get it.
-            -- TODO: apply this logic to 8cell page too?
-            -- or make another server endpoint to see if anything fully covers an 8code by checking .Contains on the corners?
-
-            -- if locationList[thisSquaresPluscode] ~= nil then
-            --     local values = locationList[thisSquaresPluscode] -- will be a table with "name|type", which might both be empty.
-            --     --if (string.len(values) == 10) then
-            --     if (values[2] == "") then
-            --         -- this is not a special area of interest.
-            --     else
-            --         print("cell with data found!")
-            --         cellCollection[square].name = values[1] --locationList[thisSquaresPluscode][1] or .name?
-            --         cellCollection[square].type = values[2] --locationList[thisSquaresPluscode][2] or .type?
-            --     end
-            -- else
-            --     print("no data for cell")
-            --     GetCellData(thisSquaresPluscode) -- this will update on screen next refresh (plus code change)
-            -- end
-
-            if (currentPlusCode == thisSquaresPluscode) then
-                -- draw this place's name on screen.
-                --print("drawing this name on screen")
-                locationName.text = cellCollection[square].name
-            end
-
-            --cellCollection is a table of imageRects with a couple extra properties assigned.
-            -- now handle assigning colors
-            --print("pre-colors")
-            --print(#locationList[thisSquaresPluscode])
-            if (cellCollection[square].type == "") then
-                --print("applying default colors")
-                if VisitedCell(thisSquaresPluscode) then
-                    cellCollection[square].fill = visitedCell
+                if (terrainInfo[4] ~= "") then -- 4 is areaType
+                    -- apply info
+                    -- print("cell with data found!")
+                    cellCollection[square].name = terrainInfo[3]
+                    cellCollection[square].type = terrainInfo[4]
                 else
-                    cellCollection[square].fill = unvisitedCell
+                    -- apply generic colors.
+                    cellCollection[square].name = ""
+                    cellCollection[square].type = ""
                 end
-            else
-                --print("applying terrain colors")
-                if (cellCollection[square].type == "water") then
-                    cellCollection[square].fill = waterCell
+
+                if (currentPlusCode == thisSquaresPluscode) then
+                    -- draw this place's name on screen.
+                    -- print("drawing this name on screen")
+                    locationName.text = cellCollection[square].name
+                end
+
+                --TODO: could probably set cell type to 'visited' when its marked visited
+                --as a small optimization 
+
+                -- cellCollection is a table of imageRects with a couple extra properties assigned.
+                -- now handle assigning colors
+                if (cellCollection[square].type == "") then
+                    -- print("applying default colors")
+                    if VisitedCell(thisSquaresPluscode) then
+                        cellCollection[square].fill = visitedCell
+                    else
+                        cellCollection[square].fill = unvisitedCell
+                    end
                 else
-                    if (cellCollection[square].type == "park") then
-                        cellCollection[square].fill = parkCell
+                    -- print("applying terrain colors")
+                    if (cellCollection[square].type == "water") then
+                        cellCollection[square].fill = waterCell
+                    else
+                        if (cellCollection[square].type == "park") then
+                            cellCollection[square].fill = parkCell
+                        end
                     end
                 end
             end
-        end 
+        end
     end
 
     -- native.showAlert("", "past cell checks")
-
     if (debugGPS) then print("grid done or skipped") end
     if (debugGPS) then print(locationText.text) end
     locationText.text = "Current location:" .. currentPlusCode
@@ -190,8 +172,7 @@ function scene:create(event)
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
-    locationText = display.newText(sceneGroup,
-                                   "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
+    locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
     countText = display.newText(sceneGroup, "Total Cells Explored: ?", display.contentCenterX, 240, native.systemFont, 20)
     pointText = display.newText(sceneGroup, "Score: ?", display.contentCenterX, 260, native.systemFont, 20)
@@ -257,6 +238,7 @@ function scene:show(event)
 
     if (phase == "will") then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
+        print("showing")
         firstRun = true
 
     elseif (phase == "did") then
@@ -264,9 +246,7 @@ function scene:show(event)
         -- native.showAlert("", "creating update timer")
         timer.performWithDelay(50, UpdateLocal, 1)
 
-        if (debugGPS) then
-            timer.performWithDelay(3000, testDrift, -1)
-        end
+        if (debugGPS) then timer.performWithDelay(500, testDrift, -1) end
     end
 end
 

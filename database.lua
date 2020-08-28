@@ -331,16 +331,21 @@ end
 function SaveTerrainData(pluscode, name, type)
     --native.showAlert("test", pluscode)
     if (debugDB) then print("saving terrain data " .. pluscode .. " " .. name .. " " .. type) end
-    local query = "INSERT INTO terrainData (plusCode, name, areatype, lastUpdated) VALUES('" .. pluscode .. "', '" .. name .. "', '" .. type .. "', " .. os.time() .. ")"
-    Exec(query)
+    local query = "INSERT OR REPLACE INTO terrainData (plusCode, name, areatype, lastUpdated) VALUES('" .. pluscode .. "', '" .. name .. "', '" .. type .. "', " .. os.time() .. ")"
+    --Doing this locally here for a good reason. Can't upsert in this version of SQLite, so I have to check manually for dupes.
+    local dupe = db:exec(query)
+    print("save success:" .. dupe)
+    if (dupe > 0) then
+        UpdateTerrainData(pluscode, name, type)
+    end
 end
 
-function UpdateTerrainData(pluscode, name, type)
-    --native.showAlert("test", pluscode)
-    if (debugDB) then print("updating terrain data " .. pluscode .. " " .. name .. " " .. type) end
-    local query = "UPDATE terrainData  SET plusCode = '" .. pluscode .. "', name = '" .. name .. "', areatype = '" .. type .. "', lastUpdated = " .. os.time()
-    Exec(query)
-end
+-- function UpdateTerrainData(pluscode, name, type)
+--     --native.showAlert("test", pluscode)
+--     if (debugDB) then print("updating terrain data " .. pluscode .. " " .. name .. " " .. type) end
+--     local query = "UPDATE terrainData  SET plusCode = '" .. pluscode .. "', name = '" .. name .. "', areatype = '" .. type .. "', lastUpdated = " .. os.time()
+--     Exec(query)
+-- end
 
 
 --testing a performance thing

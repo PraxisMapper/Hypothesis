@@ -79,7 +79,7 @@ function scene:show( event )
         INSERT OR IGNORE INTO playerData(id, distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude, minAltitude) values (1, 0.0, 0, 0, 0, 0.0, 0.0, 0, 20000);
         INSERT OR IGNORE INTO trophysBought(id, itemCode, boughtOn) VALUES (1, 0, 0);
         CREATE TABLE IF NOT EXISTS terrainData (id INTEGER PRIMARY KEY, pluscode UNIQUE, name, areatype, lastUpdated);
-        CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode)
+        CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode);
         ]]
         --CREATE TABLE IF NOT EXISTS ConversionLinks(id INTEGER PRIMARY KEY, pluscode, s2Cell, lat, long); --not sure yet if this is a thing i want to bother with.
         print("tablesetup exists")
@@ -102,31 +102,6 @@ function scene:show( event )
 
         --upgrading database now, clearing data on android apparently doesn't reset table structure.
         upgradeDatabaseVersion(7)
-
-        --create content on first run, upgrade if necessary on later runs.
-        -- local cde = Query("SELECT COUNT(*) from systemData")
-        -- statusText.text = "Database Exists : " .. #cde
-        -- --native.showAlert("", dump(cde))
-        -- local currentDataExists = cde[1][1] --Query("SELECT COUNT(*) from systemData")[1][1] --this has different depths on firstRun that later runs
-        -- --native.showAlert("", dump(currentDataExists))
-        -- if (currentDataExists == 0) then
-        --     --Database is empty.
-        --     --native.showAlert("", "creating baesline data")
-        --     statusText.text = "Adding baseline data"
-        --     createBaselineContent()
-        --     --native.showAlert("", "baesline data done")
-        --     statusText.text = "baseline data created "
-        -- else
-        --     --database exists.
-        --     --native.showAlert("", "Have local data, upgrading")
-        --     local previousDBVersion = Query("SELECT dbVersionID from systemData")[1][1] --this errors out on first run, hence the split.
-        --     statusText.text = "Upgrading Database"
-        --     upgradeDatabaseVersion(previousDBVersion)
-        --     statusText.text = "Database Upgraded"
-        --     ResetDailyWeekly()
-        --     statusText.text = "counters reset"
-        -- end
-
         ResetDailyWeekly()
 
         statusText.text = "Database work done!"
@@ -155,6 +130,7 @@ function scene:hide( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
+        print("loadingScene hiding")
  
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen

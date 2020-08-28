@@ -40,6 +40,23 @@ function GoToLeaderboardScene()
     composer.gotoScene("LeaderboardScene", options)
 end
 
+--this makes my app fall over for some reason. Table initializer doesnt like this?
+-- local definedColors = {
+--     {name = "unvisited", color = {.3, .3, .3, 1} },
+--     {name = "visited", color = {.1, .4, .4, 1} },
+--     {name = "water", color = {0, 0, .7, 1} },
+--     {name = "park", color = {0, .7, 0, 1} },
+--     {name = "beach", color = {0, .7, 0, 1} }, --edit to tan
+--     {name = "cemetery", color = {0, .7, 0, 1} }, --edit to grey
+--     {name = "natureReserve", color = {0, .7, 0, 1} }, --edit to darker green than park
+--     {name = "retail", color = {0, .7, 0, 1} }, --edit to pink
+--     {name = "tourism", color = {0, .7, 0, 1} }, --edit to ???
+--     {name = "university", color = {0, .7, 0, 1} }, --edit to..... off-white?
+--     {name = "wetlands", color = {0, .7, 0, 1} } --edit to swampy brown-green?
+--     {name = "historical", color = {0, .7, 0, 1} }, --edit to.... something? currently has 0 results in DB
+--     {name = "mall", color = {0, .7, 0, 1} }, --edit to something? currently has 0 results in DB
+-- }
+
 -- function SwitchToSmallGrid()
 --     local options = {
 --         effect = "flip",
