@@ -8,7 +8,7 @@ require("helpers") --for SPlit
 
 --serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
 --serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
---serverURL = "http://localhost/GPSExploreServerAPI/GpsExplore/" -- local network IIS. works on the simulator
+serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
 --serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
 
 
@@ -21,7 +21,6 @@ function uploadListener(event)
         print(event.status)
     end
     print("response: " .. event.response)
-    networkResults = event.response
     print("listener ending")
 end
 
@@ -104,48 +103,75 @@ function GetLeaderboard(id)
     end
 end
 
-function plusCodeListener(event)
-    if (debugNetwork) then print("plus code event response: " .. event.response) end
+--Replaced by plusCode8Listener
+-- function plusCodeListener(event)
+--     if (debugNetwork) then print("plus code event response: " .. event.response) end
+--     if (event.status ~= 200) then return end --dont' save invalid results on an error.
+
+--     if (string.len(event.response) == 10) then
+--         local emptyResults = {}
+--         emptyResults[1] = "" --name
+--         emptyResults[2] = "" --type
+--         SaveTerrainData(event.response, "", "")
+--         return
+--     end
+
+--     local eventData = Split(event.response, "=")
+--     --event data should now be
+--     --1: pluscode
+--     --2+: name|type
+--     --lack of 2+ means its nothing special, and we checked for that earlier and returned already.
+--     --print("reponse was split")
+--     local areaData = Split(eventData[2], "|")
+
+--     SaveTerrainData(eventData[1], areaData[1], areaData[2])
+-- end
+
+function plusCode8Listener(event)
+    if (debugNetwork) then print("plus code 8 event response: " .. event.response) end
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
 
-    if (string.len(event.response) == 10) then
-        local emptyResults = {}
-        emptyResults[1] = "" --name
-        emptyResults[2] = "" --type
-        SaveTerrainData(event.response, "", "")
-        --locationList[event.response] = emptyResults
-        --print("added empty data for " .. event.response)
-        --print("returning" .. locationList[event.response])
-        return
+    --This one splits each 10cell via newline.
+    local resultsTable = Split(event.response, "\r\n") --windows newlines
+    if (debugNetwork) then print(dump(resultsTable)) end
+    print(#resultsTable)
+    --Format:
+    --line1: the 8cell requested
+    --remaining lines: the last 2 digits for a 10cell=name|type
+    --EX: 48=Local Park|park
+
+    local plusCode8 = resultsTable[1]:sub(1,8)
+    for i = 2, #resultsTable do
+        if (resultsTable[i] ~= nil and resultsTable[i] ~= "") then 
+            local part1 = Split(resultsTable[i], "=") --[1] here is 2 digits to add to pluscode8
+            local part2 = Split(part1[2], "|") --[1] here is cell name, [2] here is cell terrain type.
+            local pluscode10= plusCode8 .. part1[1]
+            local areaName = part2[1]
+            local areaTerrain = part2[2]
+            SaveTerrainData(pluscode10, areaName, areaTerrain)
+        end
     end
+    if(debugNetwork) then print("table done") end
 
-    --print("plus code has properties!")
-    --TODO: move GPS starting point manually to somewhere that isn't boring like the default.
-    local eventData = Split(event.response, "=")
-    --event data should now be
-    --1: pluscode
-    --2+: name|type
-    --lack of 2+ means its nothing special, and we checked for that earlier and returned already.
-    --print("reponse was split")
-    local areaData = Split(eventData[2], "|")
+    --save these results to the DB.
+    local updateCmd = "INSERT INTO dataDownloaded (pluscode8, downloadedOn) VALUES ('" .. plusCode8 .. "', " .. os.time() .. ")"
+    Exec(updateCmd)
 
-    SaveTerrainData(eventData[1], areaData[1], areaData[2])
-    --print(dump(areaData))
-    --local key = eventData[1]
-    -- locationList[eventData[1]] = areaData -- this doesn't actually add the key and value to the table
-    --locationList[key] = areaData
-    --table.insert(locationList, areaData) --havent tried, doesnt let me set a key value.
-    --print("added table data for " .. eventData[1] .. dump(areaData) .. #locationList)
-    --print("assigned " .. dump(locationList[eventData[1]]) .. " to " .. eventData[1])
+    --pendingCellData = ""    
 end
 
-function GetCellData(pluscode)
-    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/CellData/" .. pluscode:sub(1,8) .. pluscode:sub(10,11)) end
-    local existingData = LoadTerrainData(pluscode)
-    if (#existingData == 0) then
-        network.request(serverURL .. "MapData/CellData/" .. pluscode:sub(1,8) .. pluscode:sub(10,11), "GET", plusCodeListener)
-    end
-    return (existingData)
-end
+--this loads terrain data on 10cells 1 by one. Replaced with Get8CellData.
+-- function GetCellData(pluscode)
+--     if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/CellData/" .. pluscode:sub(1,8) .. pluscode:sub(10,11)) end
+--     local existingData = LoadTerrainData(pluscode)
+--     if (#existingData == 0) then
+--         network.request(serverURL .. "MapData/CellData/" .. pluscode:sub(1,8) .. pluscode:sub(10,11), "GET", plusCodeListener)
+--     end
+--     return (existingData)
+-- end
 
- 
+ --this loads terrain data on an 8cell, loads all 10cells inside at once.
+function Get8CellData(lat, lon)
+    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell8Info/" .. lat .. "/" .. lon) end
+    network.request(serverURL .. "MapData/Cell8Info/" .. lat .. "/" .. lon, "GET", plusCode8Listener)
+end

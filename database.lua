@@ -132,9 +132,11 @@ function upgradeDatabaseVersion(oldDBversion)
    if (oldDBversion < 8) then
     --do any scripting to match upgrade to version 8, i think i missed a number somewhere.
         --Add the eightcode column and index to boost performance on the cityBlock screen.
+        --Add a table to track data we've downloaded.
         local v8Command = 
        [[CREATE TABLE IF NOT EXISTS terrainData (id INTEGER PRIMARY KEY, pluscode UNIQUE, name, areatype, lastUpdated);
-         CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode)
+         CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode);
+         CREATE TABLE IF NOT EXISTS dataDownloaded(id INTEGER PRIMARY KEY, pluscode8, downloadedOn);
          ]]
          Exec(v8Command)
    end
@@ -189,7 +191,7 @@ function Exec(sql)
     --now its all error tracking.
      local errormsg = db:errmsg()
      print(errormsg)
-     native.showAlert("dbExec error", errormsg)
+     native.showAlert("dbExec error", errormsg .. "|" .. sql)
      return resultCode
     -- if (debugDB) then print("sql exec error: " .. errormsg) end
 end
@@ -221,6 +223,7 @@ function Visited8Cell(pluscode)
     if (debugDB) then print("Checking if visited current 8 cell " .. pluscode) end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE eightCode = '" .. pluscode .. "'"
     for i,row in ipairs(Query(query)) do
+        print(dump(row))
         if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
             return true
         else
@@ -334,9 +337,36 @@ function SaveTerrainData(pluscode, name, type)
     local query = "INSERT OR REPLACE INTO terrainData (plusCode, name, areatype, lastUpdated) VALUES('" .. pluscode .. "', '" .. name .. "', '" .. type .. "', " .. os.time() .. ")"
     --Doing this locally here for a good reason. Can't upsert in this version of SQLite, so I have to check manually for dupes.
     local dupe = db:exec(query)
-    print("save success:" .. dupe)
+    --print("save success:" .. dupe)
     if (dupe > 0) then
         UpdateTerrainData(pluscode, name, type)
+    end
+end
+
+function SaveDownloadedData(pluscode8)
+     --native.showAlert("test", pluscode)
+     if (debugDB) then print("saving downloaded data  reminder " .. pluscode8) end
+     local query = "DELETE FROM dataDownloaded WHERE plusCode8 = '" .. pluscode8 .. "'; INSERT OR REPLACE INTO dataDownloaded (plusCode8, downloadedOn) VALUES('" .. pluscode8 .. "', " .. os.time() .. ")"
+     --Doing this locally here for a good reason. Can't upsert in this version of SQLite, so I have to check manually for dupes.
+     local dupe = Exec(query)
+     --print("save success:" .. dupe)
+     if (dupe > 0) then
+         --UpdateTerrainData(pluscode, name, type)
+         --dunno what to do here yet, but i do need to occasionally update these saved cells.
+     end
+end
+
+function Downloaded8Cell(pluscode)
+    if (debug) then print("Checking if downloaded current 8 cell " .. pluscode) end
+    local query = "SELECT COUNT(*) as c FROM dataDownloaded WHERE pluscode8 = '" .. pluscode .. "'"
+    print (query)
+    for i,row in ipairs(Query(query)) do
+        print(dump(row))
+        if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
+            return true
+        else
+            return false
+        end
     end
 end
 

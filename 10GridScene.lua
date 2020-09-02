@@ -11,16 +11,23 @@ require("localNetwork")
 -- -----------------------------------------------------------------------------------
 
 -- TODO
--- additional colors, to indicate when a cell has a bonus waiting to be collected. (colors here are none/daily/weekly. FirstTime is on the other grid now)
 -- add a bounce-and-fall popup for when you gain score, add a sound effect to that too?
 
 local cellCollection = {}
 -- color codes
-local unvisitedCell = {.3, .3, .3, 1}
-local visitedCell = {.1, .4, .4, 1}
-local waterCell = {0, 0, .7, 1}
-local parkCell = {0, .7, 0, 1}
--- TODO other colors for other cell types.
+local unvisitedCell = {.3, .3, .3, 1} -- medium grey
+local visitedCell = {.1, .4, .4, 1} --lightish green
+local parkCell = {0, .7, .0, 1} --bold green
+local waterCell = {0, 0, .7, 1} --deep blue
+local beachCell = {.845, .712, .153, 1}  -- yellow
+local cemeteryCell = {.14, .14, .133, 1}  --really dark grey
+local natureReserveCell = {.07, .277, .015, 1}  --darker green than park
+local retailCell = {.922, .391, .992, 1}  --pink
+local tourismCell = {.1, .605, .822, 1}  --sky blue
+local universityCell = {.963, .936, .862, 1}  --off-white, slightly yellow-brown
+local wetlandsCell= {.111, .252, .146, 1}  --swampy green
+local historicalCell = {0, .7, 0, 1}  --edit to.... something? currently has 0 results in DB
+local mallCell = {0, .7, 0, 1}  --edit to something? currently has 0 results in DB
 
 local timerResults = nil
 local firstRun = true
@@ -75,7 +82,13 @@ local function UpdateLocal()
 
             if (#terrainInfo == 0) then
                 -- we don't have this cell, load it.
-                GetCellData(thisSquaresPluscode) -- will show up next pass
+                --GetCellData(thisSquaresPluscode) -- will show up next pass
+                --use default colors.
+                if VisitedCell(thisSquaresPluscode) then
+                    cellCollection[square].fill = visitedCell
+                else
+                    cellCollection[square].fill = unvisitedCell
+                end
             else
                 if (terrainInfo[4] ~= "") then -- 4 is areaType
                     -- apply info
@@ -88,11 +101,11 @@ local function UpdateLocal()
                     cellCollection[square].type = ""
                 end
 
-                if (currentPlusCode == thisSquaresPluscode) then
+                --if (currentPlusCode == thisSquaresPluscode) then
                     -- draw this place's name on screen.
                     -- print("drawing this name on screen")
                     locationName.text = cellCollection[square].name
-                end
+                --end
 
                 --TODO: could probably set cell type to 'visited' when its marked visited
                 --as a small optimization 
@@ -110,10 +123,22 @@ local function UpdateLocal()
                     -- print("applying terrain colors")
                     if (cellCollection[square].type == "water") then
                         cellCollection[square].fill = waterCell
-                    else
-                        if (cellCollection[square].type == "park") then
-                            cellCollection[square].fill = parkCell
-                        end
+                    elseif (cellCollection[square].type == "park") then
+                        cellCollection[square].fill = parkCell
+                    elseif (cellCollection[square].type == "cemetery") then
+                        cellCollection[square].fill = cemeteryCell
+                    elseif (cellCollection[square].type == "wetlands") then
+                        cellCollection[square].fill = wetlandsCell
+                    elseif (cellCollection[square].type == "beach") then
+                        cellCollection[square].fill = beachCell
+                    elseif (cellCollection[square].type == "natureReserve") then
+                        cellCollection[square].fill = natureReserveCell
+                    elseif (cellCollection[square].type == "retail") then
+                        cellCollection[square].fill = retailCell
+                    elseif (cellCollection[square].type == "tourism") then
+                        cellCollection[square].fill = tourismCell
+                    elseif (cellCollection[square].type == "university") then
+                        cellCollection[square].fill = universityCell
                     end
                 end
             end
@@ -128,7 +153,7 @@ local function UpdateLocal()
     pointText.text = "Score: " .. Score()
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading
-    locationName.text = ""
+    --locationName.text = ""
     scoreLog.text = lastScoreLog
 
     if timerResults == nil then

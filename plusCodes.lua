@@ -1,5 +1,12 @@
 --TODO: 
---nothing right now.
+--For a fantasy game, consider obfuscating the plus codes via name-generating tables
+--ex: first 3 characters gives 1 out of 8,000 adjectives (or some divisor thereof)
+--next 3 characters gives 1 out of 8,000 nouns 
+--last 2 give 1 in 400 other things 
+--total makes up a Dwarfy Fortress sort of name
+--EX: the Fancy Peninsula of Beeswax
+--Could have a 2-char pair determine the name format, so X Y of Z, The X of Y, etc.
+--probably pairs these names to 8-blocks, so theres 25.6 billion possible names (though on the 2code level there's not 400 options there)
 
 -- oh right, the +3 level is a 5x4 ordered grid. so...
 --'23456789CFGHJMPQRVWX'

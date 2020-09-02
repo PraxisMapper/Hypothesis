@@ -32,14 +32,14 @@ require("database")
 
 print("starting network")
 require("localNetwork")
-networkResults = "blank"
+networkResults = "down" --indicates if i am getting network data or not.
 
 debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugShift = false --display math for shifting PlusCodes
 debugGPS = false --display data for the GPS event and timer loop and auto-move
 debugDB = false
 debugLocal = false
-debugNetwork = false
+debugNetwork = true
 --uncomment when testing to clear local data.
 --ResetDatabase()
 startDatabase()
@@ -63,6 +63,7 @@ locationList["testing"] = "asdf|asdf"
 --might need to make this be local DB storage then.
 
 --UploadData()    --moved to loading screen.
+--pendingCellData = ""
 
 
 print("shifting to loading scene")
@@ -91,9 +92,26 @@ function gpsListener(event)
     local pluscode = tryMyEncode(eventL.latitude, eventL.longitude, 10); --only goes to 10 right now.
     if (debugGPS) then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode   
+    local plusCode8 = currentPlusCode:sub(0,8)
 
     --Debug/testing override location
     --currentPlusCode = "9C6RVJ85+J8" --random UK location, should have water to the north, and a park north of that.
+
+    --checking here. Checking for this after GrantPoints updates the visited list before this, would never load data.
+    print("checking for terrain data")
+    local hasData = Downloaded8Cell(plusCode8)
+    print(hasData)
+    if (hasData == false) then
+        for i = -1, 1, 1 do
+            for j = -1, 1, 1 do
+                local this8cellIs = tryMyEncode(event.latitude + (.0025 * i), event.longitude + (.0025 * j))
+                local alsoHasData = Downloaded8Cell(this8cellIs)
+                if (alsoHasData == false) then
+                    Get8CellData(event.latitude + (.0025 * i), event.longitude + (.0025 * j) )
+                end
+            end
+        end
+    end
 
     if (lastPlusCode ~= currentPlusCode) then
         --update score stuff, we moved a cell.  Other stuff needs to process as usual.
@@ -143,6 +161,9 @@ function gpsListener(event)
     if(debugGPS) then print("Finished location event") end
 
     lastLocationEvent = eventL
+
+    --now, as our final check, we see if we need to load a set of new data.
+    
 end
 
 -- function compassListener(event)

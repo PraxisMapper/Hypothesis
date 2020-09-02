@@ -59,10 +59,12 @@ function scene:show( event )
         print("database started")
 
 
-        --last ditch effort ehre
+        --last ditch effort here
         --ResetDatabase()
         --upgrading database now, clearing data on android apparently doesn't reset table structure.
         --upgradeDatabaseVersion(7)
+
+        --terrainData holds 10cells.
 
 
         local tablesetup =
@@ -80,6 +82,7 @@ function scene:show( event )
         INSERT OR IGNORE INTO trophysBought(id, itemCode, boughtOn) VALUES (1, 0, 0);
         CREATE TABLE IF NOT EXISTS terrainData (id INTEGER PRIMARY KEY, pluscode UNIQUE, name, areatype, lastUpdated);
         CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode);
+        CREATE TABLE IF NOT EXISTS dataDownloaded(id INTEGER PRIMARY KEY, pluscode8, downloadedOn);
         ]]
         --CREATE TABLE IF NOT EXISTS ConversionLinks(id INTEGER PRIMARY KEY, pluscode, s2Cell, lat, long); --not sure yet if this is a thing i want to bother with.
         print("tablesetup exists")
