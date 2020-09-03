@@ -8,8 +8,9 @@ require("helpers") --for SPlit
 
 --serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
 --serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
-serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
---serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
+--serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
+serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
+
 
 
 --note: GpsExplore/" is now half of it, the other half is MapData/
@@ -21,6 +22,7 @@ function uploadListener(event)
         print(event.status)
     end
     print("response: " .. event.response)
+    if event.status == 200 then netUp() else netDown() end
     print("listener ending")
 end
 
@@ -129,6 +131,7 @@ end
 
 function plusCode8Listener(event)
     if (debugNetwork) then print("plus code 8 event response: " .. event.response) end
+    if event.status == 200 then netUp() else netDown() end
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
 
     --This one splits each 10cell via newline.
@@ -175,3 +178,4 @@ function Get8CellData(lat, lon)
     if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell8Info/" .. lat .. "/" .. lon) end
     network.request(serverURL .. "MapData/Cell8Info/" .. lat .. "/" .. lon, "GET", plusCode8Listener)
 end
+

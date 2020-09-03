@@ -49,6 +49,7 @@ end
 
 local function networkHandler(event)
     --this function updates the screen regardless of the leaderboard call
+    if event.status == 200 then netUp() else netDown() end
     if (debug) then print("handler called") end
     --local splitString = event.response:Split(" ")
     local displayText = ""

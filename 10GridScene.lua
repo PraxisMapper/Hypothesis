@@ -75,22 +75,17 @@ local function UpdateLocal()
             cellCollection[square].pluscode = thisSquaresPluscode
 
             -- apply type now if we found it.
-            -- print("loading terrain info for " .. thisSquaresPluscode:sub(1,8) .. thisSquaresPluscode:sub(10,11))
             local terrainInfo = LoadTerrainData(thisSquaresPluscode:sub(1, 8) .. thisSquaresPluscode:sub(10, 11)) -- is a whole row from the DB.
-            -- print("terrain info pulled: " .. #terrainInfo)
-            -- if (#terrainInfo > 0) then print(dump(terrainInfo)) end
 
             if (#terrainInfo == 0) then
-                -- we don't have this cell, load it.
-                --GetCellData(thisSquaresPluscode) -- will show up next pass
-                --use default colors.
+                -- we don't have this cell, use default colors.
                 if VisitedCell(thisSquaresPluscode) then
                     cellCollection[square].fill = visitedCell
                 else
                     cellCollection[square].fill = unvisitedCell
                 end
             else
-                if (terrainInfo[4] ~= "") then -- 4 is areaType
+                if (terrainInfo[4] ~= "") then -- 4 is areaType. not every area is named, so use type.
                     -- apply info
                     -- print("cell with data found!")
                     cellCollection[square].name = terrainInfo[3]
@@ -101,11 +96,10 @@ local function UpdateLocal()
                     cellCollection[square].type = ""
                 end
 
-                --if (currentPlusCode == thisSquaresPluscode) then
+                if (currentPlusCode == thisSquaresPluscode) then
                     -- draw this place's name on screen.
-                    -- print("drawing this name on screen")
                     locationName.text = cellCollection[square].name
-                --end
+                end
 
                 --TODO: could probably set cell type to 'visited' when its marked visited
                 --as a small optimization 

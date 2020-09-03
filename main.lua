@@ -5,7 +5,6 @@
 --remember, lua requires code to be in order to reference (cant call a function that's lower in the file than the current one)
 
 --TODO:
---Figure out how to update
 --refactor and clean up code. move stuff and split into multiple files
 ----consider re-scoping variables, since calling a variable local in a file means other files can't see it. Not declaring it local makes it global, which is apparently slower.
 ----figure out how to make the scene change functions reusable. It doesn't look like dropping them into UIParts worked the first time?
@@ -22,7 +21,6 @@
 ---whatever cheapest windows server AWS has, IIS latest, SQL Server (developer) latest, .NET 5 and API stuff
 ----or some other stuff? DOcker? but I also kinda want to show off specific familiar tools.
 --ponder using compass heading for arrow instead of GPS heading. --might not be useful? might be reading it wrong?
---Maybe track minimum/maximum altitude, and run the scoreboard off the difference between them? instead of just maxAlt?
 system.setIdleTimer(false) --disables screen auto-off.
 
 require("store")
@@ -64,6 +62,20 @@ locationList["testing"] = "asdf|asdf"
 
 --UploadData()    --moved to loading screen.
 --pendingCellData = ""
+
+--making the network indicator persist through all scenes
+networkDown = display.newImageRect("networkDown.png", 25, 25)
+networkDown.x = 0
+networkDown.y = 0
+networkDown.anchorX = 0
+networkDown.anchorY = 0
+
+networkUp = display.newImageRect("networkUp.png", 25, 25)
+networkUp.x = 0
+networkUp.y = 0
+networkUp.anchorX = 0
+networkUp.anchorY = 0
+networkUp.isVisible = false
 
 
 print("shifting to loading scene")
@@ -160,10 +172,7 @@ function gpsListener(event)
     lastTime = os.time() --more reliable than event.time?
     if(debugGPS) then print("Finished location event") end
 
-    lastLocationEvent = eventL
-
-    --now, as our final check, we see if we need to load a set of new data.
-    
+    lastLocationEvent = eventL    
 end
 
 -- function compassListener(event)
@@ -177,3 +186,17 @@ end
 --Runtime:addEventListener("location", gpsListener) 
 --Runtime:addEventListener("heading", compassListener)
 timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)  --TODO confirm this fires as expected
+
+function netUp()
+    print("network is up")
+    networkResults = "up"
+    networkUp.isVisible = true
+    networkDown.isVisible = false
+end
+
+function netDown()
+    print("network is down")
+    networkResults = "down"
+    networkDown.isVisible = true
+    networkUp.isVisible = false
+end
