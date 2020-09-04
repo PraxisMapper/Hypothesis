@@ -75,10 +75,12 @@ local function UpdateLocal()
             cellCollection[square].pluscode = thisSquaresPluscode
 
             -- apply type now if we found it.
-            local terrainInfo = LoadTerrainData(thisSquaresPluscode:sub(1, 8) .. thisSquaresPluscode:sub(10, 11)) -- is a whole row from the DB.
+            local terrainInfo = LoadTerrainData(thisSquaresPluscode:sub(1, 8) .. thisSquaresPluscode:sub(10, 11)) -- terrainInfo is a whole row from the DB.
 
             if (#terrainInfo == 0) then
-                -- we don't have this cell, use default colors.
+                -- we don't have this cell, use default colors and values.
+                cellCollection[square].name = ""
+                cellCollection[square].type = ""
                 if VisitedCell(thisSquaresPluscode) then
                     cellCollection[square].fill = visitedCell
                 else
@@ -95,12 +97,6 @@ local function UpdateLocal()
                     cellCollection[square].name = ""
                     cellCollection[square].type = ""
                 end
-
-                if (currentPlusCode == thisSquaresPluscode) then
-                    -- draw this place's name on screen.
-                    locationName.text = cellCollection[square].name
-                end
-
                 --TODO: could probably set cell type to 'visited' when its marked visited
                 --as a small optimization 
 
@@ -136,6 +132,12 @@ local function UpdateLocal()
                     end
                 end
             end
+
+            --this needs checked in both cases.
+            if (currentPlusCode == thisSquaresPluscode) then
+                -- draw this place's name on screen, or an empty string if its not a place.
+                locationName.text = cellCollection[square].name
+            end
         end
     end
 
@@ -147,7 +149,6 @@ local function UpdateLocal()
     pointText.text = "Score: " .. Score()
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading
-    --locationName.text = ""
     scoreLog.text = lastScoreLog
 
     if timerResults == nil then
@@ -200,17 +201,17 @@ function scene:create(event)
 
     CreateSquareGrid(23, 25, sceneGroup, cellCollection)
 
-    directionArrow = display.newImageRect(sceneGroup, "arrow1.png", 25, 25)
+    directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 25, 25)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
 
-    local changeGrid = display.newImageRect(sceneGroup, "BigGridButton.png", 300, 100)
+    local changeGrid = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300, 100)
     changeGrid.anchorX = 0
     changeGrid.anchorY = 0
     changeGrid.x = 60
     changeGrid.y = 1000
 
-    local changeTrophy = display.newImageRect(sceneGroup, "TrophyRoom.png", 300, 100)
+    local changeTrophy = display.newImageRect(sceneGroup, "themables/TrophyRoom.png", 300, 100)
     changeTrophy.anchorX = 0
     changeTrophy.anchorY = 0
     changeTrophy.x = 390
@@ -219,18 +220,18 @@ function scene:create(event)
     changeGrid:addEventListener("tap", SwitchToBigGrid)
     changeTrophy:addEventListener("tap", SwitchToTrophy)
 
-    local header = display.newImageRect(sceneGroup, "SmallGridButton.png", 300, 100)
+    local header = display.newImageRect(sceneGroup, "themables/SmallGridButton.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100
 
-    local store = display.newImageRect(sceneGroup, "StoreIcon.png", 100, 100)
+    local store = display.newImageRect(sceneGroup, "themables/StoreIcon.png", 100, 100)
     store.anchorX = 0
     -- store.anchorY = 0
     store.x = 50
     store.y = 100
     store:addEventListener("tap", GoToStoreScene)
 
-    local leaderboard = display.newImageRect(sceneGroup, "LeaderboardIcon.png", 100, 100)
+    local leaderboard = display.newImageRect(sceneGroup, "themables/LeaderboardIcon.png", 100, 100)
     leaderboard.anchorX = 0
     -- leaderboard.anchorY = 0
     leaderboard.x = 580

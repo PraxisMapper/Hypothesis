@@ -29,7 +29,7 @@ function scene:create( event )
     --Draw a background image, fullscreen 720x1280
     --will draw text over that.
 
-    local loadingBg = display.newImageRect(sceneGroup, "LoadingScreen.png", 720, 1280)
+    local loadingBg = display.newImageRect(sceneGroup, "themables/LoadingScreen.png", 720, 1280)
     loadingBg.anchorX = 0
     loadingBg.anchorY = 0
 

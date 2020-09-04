@@ -118,17 +118,17 @@ function scene:create( event )
 
     CreateSquareGrid(9, 65, sceneGroup, cellCollection)
 
-    directionArrow = display.newImageRect(sceneGroup, "arrow1.png", 65, 65)
+    directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 65, 65)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
 
-    local changeGrid = display.newImageRect(sceneGroup, "SmallGridButton.png", 300, 100)
+    local changeGrid = display.newImageRect(sceneGroup, "themables/SmallGridButton.png", 300, 100)
     changeGrid.anchorX = 0
     changeGrid.anchorY = 0
     changeGrid.x = 60
     changeGrid.y = 1000
 
-    local changeTrophy = display.newImageRect(sceneGroup, "TrophyRoom.png", 300, 100)
+    local changeTrophy = display.newImageRect(sceneGroup, "themables/TrophyRoom.png", 300, 100)
     changeTrophy.anchorX = 0
     changeTrophy.anchorY = 0
     changeTrophy.x = 390
@@ -137,18 +137,18 @@ function scene:create( event )
     changeGrid:addEventListener("tap", SwitchToSmallGrid)
     changeTrophy:addEventListener("tap", SwitchToTrophy)
     
-    local header = display.newImageRect(sceneGroup, "BigGridButton.png", 300, 100)
+    local header = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100
 
-    local store = display.newImageRect(sceneGroup, "StoreIcon.png", 100, 100)
+    local store = display.newImageRect(sceneGroup, "themables/StoreIcon.png", 100, 100)
     store.anchorX = 0
     --store.anchorY = 0
     store.x = 50
     store.y = 100
     store:addEventListener("tap", GoToStoreScene)
 
-    local leaderboard = display.newImageRect(sceneGroup, "LeaderboardIcon.png", 100, 100)
+    local leaderboard = display.newImageRect(sceneGroup, "themables/LeaderboardIcon.png", 100, 100)
     leaderboard.anchorX = 0
     --leaderboard.anchorY = 0
     leaderboard.x = 580

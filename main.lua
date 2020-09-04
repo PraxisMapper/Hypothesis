@@ -64,13 +64,13 @@ locationList["testing"] = "asdf|asdf"
 --pendingCellData = ""
 
 --making the network indicator persist through all scenes
-networkDown = display.newImageRect("networkDown.png", 25, 25)
+networkDown = display.newImageRect("themables/networkDown.png", 25, 25)
 networkDown.x = 0
 networkDown.y = 0
 networkDown.anchorX = 0
 networkDown.anchorY = 0
 
-networkUp = display.newImageRect("networkUp.png", 25, 25)
+networkUp = display.newImageRect("themables/networkUp.png", 25, 25)
 networkUp.x = 0
 networkUp.y = 0
 networkUp.anchorX = 0
@@ -113,6 +113,7 @@ function gpsListener(event)
     print("checking for terrain data")
     local hasData = Downloaded8Cell(plusCode8)
     print(hasData)
+    --this loop is important. doing this check every call results in the game hanging.
     if (hasData == false) then
         for i = -1, 1, 1 do
             for j = -1, 1, 1 do

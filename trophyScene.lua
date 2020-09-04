@@ -128,7 +128,7 @@ function scene:create( event )
     sceneGroupCopy = sceneGroup
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
-    local changeGrid = display.newImageRect(sceneGroup, "SmallGridButton.png", 300, 100)
+    local changeGrid = display.newImageRect(sceneGroup, "themables/SmallGridButton.png", 300, 100)
     changeGrid.anchorX = 0
     changeGrid.anchorY = 0
     changeGrid.x = 60
@@ -136,7 +136,7 @@ function scene:create( event )
 
     changeGrid:addEventListener("tap", SwitchToSmallGrid)
 
-    local changeGrid2 = display.newImageRect(sceneGroup, "BigGridButton.png", 300, 100)
+    local changeGrid2 = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300, 100)
     changeGrid2.anchorX = 0
     changeGrid2.anchorY = 0
     changeGrid2.x = 390
@@ -144,7 +144,7 @@ function scene:create( event )
 
     changeGrid2:addEventListener("tap", SwitchToBigGrid)
 
-    local unlockTrophy = display.newImageRect(sceneGroup, "UnlockTrophy.png", 300, 100)
+    local unlockTrophy = display.newImageRect(sceneGroup, "themables/UnlockTrophy.png", 300, 100)
     unlockTrophy.anchorX = 0
     unlockTrophy.anchorY = 0
     unlockTrophy.x = 210
@@ -153,14 +153,14 @@ function scene:create( event )
     unlockTrophy:addEventListener("tap", BuyTrophy)
     if (debug) then print("trophy event listener added") end
 
-    local bg = display.newImageRect(sceneGroup, "TrophyRoomBG.png", 720, 750 )
+    local bg = display.newImageRect(sceneGroup, "themables/TrophyRoomBG.png", 720, 750 )
     bg.anchorX = 0
     bg.anchorY = 0
     bg.x = 0
     bg.y = 200
 
 
-    local header = display.newImageRect(sceneGroup, "TrophyRoom.png", 300, 100)
+    local header = display.newImageRect(sceneGroup, "themables/TrophyRoom.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100
 

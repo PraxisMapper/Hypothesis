@@ -8,8 +8,8 @@ require("helpers") --for SPlit
 
 --serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
 --serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
---serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
-serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
+serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
+--serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
 
 
 

@@ -37,7 +37,7 @@ function scene:create( event )
     if (debug) then print("creating store scene") end
     local sceneGroup = self.view
 
-    local header = display.newImageRect(sceneGroup, "StoreHeader.png", 300, 100)
+    local header = display.newImageRect(sceneGroup, "themables/StoreHeader.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100 
 
@@ -46,13 +46,13 @@ function scene:create( event )
     local CoffeeDesc = "Buy the developer a coffee because you want to actively support this game and future development of the idea. Possibly future games built around the core idea, with more stuff to do."
 
     --make items.
-    local coffeeIcon = display.newImageRect(sceneGroup, "coffeeIcon.png", 100, 100)
+    local coffeeIcon = display.newImageRect(sceneGroup, "themables/coffeeIcon.png", 100, 100)
     coffeeIcon.anchorX = 0
     coffeeIcon.anchorY = 0
     coffeeIcon.x = 50
     coffeeIcon.y = 400
 
-    local goodPersonIcon = display.newImageRect(sceneGroup, "goodPerson.png", 100, 100)
+    local goodPersonIcon = display.newImageRect(sceneGroup, "themables/goodPerson.png", 100, 100)
     goodPersonIcon.anchorX = 0
     goodPersonIcon.anchorY = 0
     goodPersonIcon.x = 50
@@ -84,13 +84,13 @@ function scene:create( event )
     goodPersonText.x = 175
     goodPersonText.y = 700
 
-    local changeGrid = display.newImageRect(sceneGroup, "BigGridButton.png", 300, 100)
+    local changeGrid = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300, 100)
     changeGrid.anchorX = 0
     changeGrid.anchorY = 0
     changeGrid.x = 60
     changeGrid.y = 1000
 
-    local changegrid2 = display.newImageRect(sceneGroup, "SmallGridButton.png", 300, 100)
+    local changegrid2 = display.newImageRect(sceneGroup, "themables/SmallGridButton.png", 300, 100)
     changegrid2.anchorX = 0
     changegrid2.anchorY = 0
     changegrid2.x = 390

@@ -132,17 +132,17 @@ function scene:create( event )
     if (debug) then print("Creating LeaderboardScene") end
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
-    local header = display.newImageRect(sceneGroup, "LeaderboardHeader.png", 300, 100)
+    local header = display.newImageRect(sceneGroup, "themables/LeaderboardHeader.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100 
 
-    local changeGrid = display.newImageRect(sceneGroup, "BigGridButton.png", 300, 100)
+    local changeGrid = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300, 100)
     changeGrid.anchorX = 0
     changeGrid.anchorY = 0
     changeGrid.x = 60
     changeGrid.y = 1000
 
-    local changegrid2 = display.newImageRect(sceneGroup, "SmallGridButton.png", 300, 100)
+    local changegrid2 = display.newImageRect(sceneGroup, "themables/SmallGridButton.png", 300, 100)
     changegrid2.anchorX = 0
     changegrid2.anchorY = 0
     changegrid2.x = 390
