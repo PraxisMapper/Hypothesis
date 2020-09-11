@@ -317,7 +317,7 @@ function GetClientData()
     end 
 end
 
-function LoadTerrainData(pluscode)
+function LoadTerrainData(pluscode) --plus code does not contain a + here
     --print(pluscode)
     if (debugDB) then print("loading terrain data ") end
     local query = "SELECT * from terrainData WHERE plusCode = '" .. pluscode .. "'"
@@ -338,9 +338,9 @@ function SaveTerrainData(pluscode, name, type)
     --Doing this locally here for a good reason. Can't upsert in this version of SQLite, so I have to check manually for dupes.
     local dupe = db:exec(query)
     --print("save success:" .. dupe)
-    if (dupe > 0) then
-        UpdateTerrainData(pluscode, name, type)
-    end
+    -- if (dupe > 0) then
+    --     UpdateTerrainData(pluscode, name, type)
+    -- end
 end
 
 function SaveDownloadedData(pluscode8)

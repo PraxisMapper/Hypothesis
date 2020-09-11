@@ -1,8 +1,8 @@
 -- the class for handling sending data to/from the API server
 -- NOTE: naming this 'network' overrides the internal library with the same name and breaks everything.
 -- TODO:
---Should probably make a network indicator, to tell when I am or am not getting location types updated.
 --also need to work out plan to update saved location type/name data eventually
+--Add a counter so we don't overload Solar2d on network requests waiting for a response (I think 5 or 6 is the right number?)
 require("database")
 require("helpers") --for SPlit
 
@@ -10,10 +10,16 @@ require("helpers") --for SPlit
 --serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
 serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
 --serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
-
+--serverURL = "http://ec2-18-221-31-68.us-east-2.compute.amazonaws.com" --AWS Test server, IP part of address will change each time instance is launched.
 
 
 --note: GpsExplore/" is now half of it, the other half is MapData/
+
+
+--In-process change:
+--network stack now downloads a 6cell at once. Only allows one download at once. Only downloads current 6-cell
+networkReqPending = false
+
 
 function uploadListener(event)
     if (debugNetwork) then
@@ -160,7 +166,62 @@ function plusCode8Listener(event)
     local updateCmd = "INSERT INTO dataDownloaded (pluscode8, downloadedOn) VALUES ('" .. plusCode8 .. "', " .. os.time() .. ")"
     Exec(updateCmd)
 
-    --pendingCellData = ""    
+    networkReqPending = false 
+end
+
+function plusCode6Listener(event)
+    if (debugNetwork) then print("plus code 6 event response status: " .. event.status) end --these are ~300kb usually
+    if event.status == 200 then netUp() else netDown() end
+    if (event.status ~= 200) then return end --dont' save invalid results on an error.
+
+    --This one splits each 10cell via newline.
+    local resultsTable = Split(event.response, "\r\n") --windows newlines
+    --if (debugNetwork) then print(dump(resultsTable)) end
+    print(#resultsTable)
+    --Format:
+    --line1: the 6cell requested
+    --remaining lines: the last 4 digits for a 10cell=name|type
+    --EX: 2248=Local Park|park
+  
+    local insertString = ""
+    local insertCount = 0
+
+    db:exec("BEGIN TRANSACTION") --transactions for multiple inserts are a huge performance boost.
+    local plusCode6 = resultsTable[1] --:sub(1,6)
+    for i = 2, #resultsTable do
+        if (resultsTable[i] ~= nil and resultsTable[i] ~= "") then 
+            --LUA, on the simulator, can do this loop about 100 times per second. This has 32k entries on the simulator's default location. That's 6 minutes of loading data.
+            --spends 2 seconds doing text parsing, so i need more efficient DB writes
+            --local part1 = Split(resultsTable[i], "=") --[1] here is 2 digits to add to pluscode8
+            --local part2 = Split(part1[2], "|") --[1] here is cell name, [2] here is cell terrain type.
+            --local pluscode10= plusCode6 .. part1[1]
+            --local areaName = part2[1]
+            --local areaTerrain = part2[2]
+            --SaveTerrainData(pluscode10, areaName, areaTerrain) --commented temporarily to see if this disk-write is the issue. It is, this adds 6 minutes of time.
+            local data = Split(resultsTable[i], "|") --3 data parts in order
+            insertString = "INSERT INTO terrainData (plusCode, name, areatype) VALUES ('" .. resultsTable[1] .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "');" --insertString .. 
+            db:exec(insertString)
+            insertCount = insertCount + 1
+            --if insertCount >= 50 then
+                --local e1 = db:exec(insertString)
+                --insertCount = 0
+                --insertString = ""
+                --if (e1 > 0) then native.showAlert("Error!", "ERROR " .. e1) end
+            --end
+        end
+        --print("Loop cycle " .. i .. "done")
+    end
+    local e2 = db:exec("END TRANSACTION")
+    --if (e2 > 0) then alert("Error!2", "Error2") end
+    if(debugNetwork) then print("table done") end
+
+    --save these results to the DB.
+    --TODO: fix columsn to indicate these are 6 cells that have been downloaded, not 8 cells.
+    local updateCmd = "INSERT INTO dataDownloaded (pluscode8, downloadedOn) VALUES ('" .. plusCode6 .. "', " .. os.time() .. ")"
+    Exec(updateCmd)
+
+    networkReqPending = false 
+    forceRedraw = true
 end
 
 --this loads terrain data on 10cells 1 by one. Replaced with Get8CellData.
@@ -175,7 +236,16 @@ end
 
  --this loads terrain data on an 8cell, loads all 10cells inside at once.
 function Get8CellData(lat, lon)
+    if networkReqPending == true then return end
+    networkReqPending = true
     if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell8Info/" .. lat .. "/" .. lon) end
     network.request(serverURL .. "MapData/Cell8Info/" .. lat .. "/" .. lon, "GET", plusCode8Listener)
+end
+
+function Get6CellData(lat, lon)
+    if networkReqPending == true then return end
+    networkReqPending = true
+    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell6Info/" .. lat .. "/" .. lon) end
+    network.request(serverURL .. "MapData/Cell6Info/" .. lat .. "/" .. lon, "GET", plusCode6Listener)
 end
 

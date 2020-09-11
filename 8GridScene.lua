@@ -11,11 +11,11 @@ if (debug) then print("10GridScene loading") end
 -- -----------------------------------------------------------------------------------
 
 --TODO
---additional colors, to indicate when a cell has a bonus waiting to be collected. (colors here are visited/notYetVisited. recurring bonuses are on the other grid)
 --add a bounce-and-fall popup for when you gain score, add a sound effect to that too?
 
 local cellCollection = {}
---color codes
+
+--color codes. 8cells dont use type-specific ones.
 local visitedCell = {.8, .3, .3, 1}
 local unvisitedCell = {.1, .7, .7, 1}
 local timerResults8 = nil

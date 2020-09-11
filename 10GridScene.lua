@@ -26,8 +26,8 @@ local retailCell = {.922, .391, .992, 1}  --pink
 local tourismCell = {.1, .605, .822, 1}  --sky blue
 local universityCell = {.963, .936, .862, 1}  --off-white, slightly yellow-brown
 local wetlandsCell= {.111, .252, .146, 1}  --swampy green
-local historicalCell = {0, .7, 0, 1}  --edit to.... something? currently has 0 results in DB
-local mallCell = {0, .7, 0, 1}  --edit to something? currently has 0 results in DB
+local historicalCell = {.7, .7, 7, 1}  --edit to.... something? 
+local mallCell = {1, .7, .2, 1}  --edit to something? 
 
 local timerResults = nil
 local firstRun = true
@@ -64,8 +64,9 @@ local function UpdateLocal()
 
     if (debug) then debugText.text = dump(lastLocationEvent) end
 
-    if (currentPlusCode ~= previousPlusCode or firstRun) then
+    if (currentPlusCode ~= previousPlusCode or firstRun or forceRedraw or debugGPS) then
         firstRun = false
+        forceRedraw = false
         previousPlusCode = currentPlusCode
         for square = 1, #cellCollection do -- this is slightly faster than ipairs
             -- check each spot based on current cell, modified by gridX and gridY

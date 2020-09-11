@@ -9,7 +9,7 @@
 ----consider re-scoping variables, since calling a variable local in a file means other files can't see it. Not declaring it local makes it global, which is apparently slower.
 ----figure out how to make the scene change functions reusable. It doesn't look like dropping them into UIParts worked the first time?
 --name and baseline assets.
---implement store stuff and make scene for it
+--implement store stuff
 --allow user to set display name/nickname (or use Google Games signin? That might be faster/easier/another keyword)
 --move some stuff to database for efficiency purposes
 ----EX: put colors in DB query so that i can just look up which color to draw a cell instead of checking after reading cellinfo?
@@ -17,10 +17,6 @@
 --Do i want to protect the DB at all to stop players from directly editing data?
 --make a screen that draws the whole explored map you have, scaled to screen? requires drawing directly to a bitmap
 --change colors to be more visible outdoors (I have a lot of dark colors, probably want light colors instead)
---create project with cutting-edge MS tech for server side
----whatever cheapest windows server AWS has, IIS latest, SQL Server (developer) latest, .NET 5 and API stuff
-----or some other stuff? DOcker? but I also kinda want to show off specific familiar tools.
---ponder using compass heading for arrow instead of GPS heading. --might not be useful? might be reading it wrong?
 system.setIdleTimer(false) --disables screen auto-off.
 
 require("store")
@@ -31,6 +27,8 @@ require("database")
 print("starting network")
 require("localNetwork")
 networkResults = "down" --indicates if i am getting network data or not.
+
+forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
 debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugShift = false --display math for shifting PlusCodes
@@ -104,26 +102,32 @@ function gpsListener(event)
     local pluscode = tryMyEncode(eventL.latitude, eventL.longitude, 10); --only goes to 10 right now.
     if (debugGPS) then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode   
-    local plusCode8 = currentPlusCode:sub(0,8)
 
     --Debug/testing override location
     --currentPlusCode = "9C6RVJ85+J8" --random UK location, should have water to the north, and a park north of that.
+    
+    
+
+    --local plusCode8 = currentPlusCode:sub(0,8)
+    local plusCode6 = currentPlusCode:sub(0,6)    
 
     --checking here. Checking for this after GrantPoints updates the visited list before this, would never load data.
     print("checking for terrain data")
-    local hasData = Downloaded8Cell(plusCode8)
+    --local hasData = Downloaded8Cell(plusCode8)
+    local hasData = Downloaded8Cell(plusCode6)
     print(hasData)
     --this loop is important. doing this check every call results in the game hanging.
     if (hasData == false) then
-        for i = -1, 1, 1 do
-            for j = -1, 1, 1 do
-                local this8cellIs = tryMyEncode(event.latitude + (.0025 * i), event.longitude + (.0025 * j))
-                local alsoHasData = Downloaded8Cell(this8cellIs)
-                if (alsoHasData == false) then
-                    Get8CellData(event.latitude + (.0025 * i), event.longitude + (.0025 * j) )
-                end
-            end
-        end
+        -- for i = -1, 1, 1 do
+        --     for j = -1, 1, 1 do
+        --         local this8cellIs = tryMyEncode(event.latitude + (.0025 * i), event.longitude + (.0025 * j))
+        --         local alsoHasData = Downloaded8Cell(this8cellIs)
+        --         if (alsoHasData == false) then
+        --             Get8CellData(event.latitude + (.0025 * i), event.longitude + (.0025 * j) )
+        --         end
+        --     end
+        -- end
+        Get6CellData(event.latitude, event.longitude)
     end
 
     if (lastPlusCode ~= currentPlusCode) then

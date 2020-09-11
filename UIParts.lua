@@ -12,7 +12,7 @@ function CreateSquareGrid(gridSize, cellSize, gridGroup, cellCollection)
             newSquare.gridY = -y --invert this so cells get identified top-to-bottom, rather than bottom-to-top
             newSquare.name = "" --added for terrain/location support
             newSquare.type = ""--added for terrain/location support
-            --newSquare:addEventListener("tap", debuggerHelperSquare) --for debugging display grid, show the cell's plus code by click/tap
+            newSquare:addEventListener("tap", debuggerHelperSquare) --for debugging display grid, show the cell's plus code by click/tap
             cellCollection[#cellCollection + 1] = newSquare
         end
     end
@@ -21,7 +21,7 @@ function CreateSquareGrid(gridSize, cellSize, gridGroup, cellCollection)
 end
 
 function debuggerHelperSquare(event)
-    native.showAlert("Cell", event.target.pluscode)
+    native.showAlert("Cell", event.target.pluscode .. " | " .. event.target.name .. " | " .. event.target.type)
 end
 
 function GoToStoreScene()
