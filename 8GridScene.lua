@@ -10,9 +10,6 @@ if (debug) then print("10GridScene loading") end
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
---TODO
---add a bounce-and-fall popup for when you gain score, add a sound effect to that too?
-
 local cellCollection = {}
 
 --color codes. 8cells dont use type-specific ones.

@@ -5,6 +5,7 @@
 --last 2 give 1 in 400 other things 
 --total makes up a Dwarfy Fortress sort of name
 --EX: the Fancy Peninsula of Beeswax
+--Probably have a direction in there as well, using 2 characters to determine that, which would also roughly imply the directions cover a 6-cell or so?
 --Could have a 2-char pair determine the name format, so X Y of Z, The X of Y, etc.
 --probably pairs these names to 8-blocks, so theres 25.6 billion possible names (though on the 2code level there's not 400 options there)
 

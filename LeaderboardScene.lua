@@ -5,11 +5,7 @@ require("localNetwork")
 require("helpers")
 
 --TODO:
---display options for various leaderboards
-----make temp icons for these leaderboards, make imageRects and eventHandlers for them.
 --set local nickname (or assign it randomly)
---display current rank in each category along with leaders.
---Icons for leaderboards? (use images as tabs?)
  
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
@@ -51,7 +47,6 @@ local function networkHandler(event)
     --this function updates the screen regardless of the leaderboard call
     if event.status == 200 then netUp() else netDown() end
     if (debug) then print("handler called") end
-    --local splitString = event.response:Split(" ")
     local displayText = ""
     local splitString = Split(event.response, "|")
     if (debug) then print(dump(splitString)) end

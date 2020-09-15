@@ -58,15 +58,6 @@ function scene:show( event )
         statusText.text = "Database Opened"
         print("database started")
 
-
-        --last ditch effort here
-        --ResetDatabase()
-        --upgrading database now, clearing data on android apparently doesn't reset table structure.
-        --upgradeDatabaseVersion(7)
-
-        --terrainData holds 10cells.
-
-
         local tablesetup =
         [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits, eightCode);
         CREATE TABLE IF NOT EXISTS acheivements(id INTEGER PRIMARY KEY, name, acheived, acheivedOn);
@@ -84,12 +75,11 @@ function scene:show( event )
         CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode);
         CREATE TABLE IF NOT EXISTS dataDownloaded(id INTEGER PRIMARY KEY, pluscode8, downloadedOn);
         ]]
-        --CREATE TABLE IF NOT EXISTS ConversionLinks(id INTEGER PRIMARY KEY, pluscode, s2Cell, lat, long); --not sure yet if this is a thing i want to bother with.
+        
         print("tablesetup exists")
         statusText.text = "Database Opened2" .. sqlite3.version() --3.19 on android and simulator.
         if (debug) then 
             print("SQLite version " .. sqlite3.version())
-            --print(statusText.text = "SQLITE: " .. sqlite3.version())
         end
         local setupResults = Exec(tablesetup)
         print("setup done" .. setupResults)
@@ -104,7 +94,7 @@ function scene:show( event )
         statusText.text = "Database Exists!"
 
         --upgrading database now, clearing data on android apparently doesn't reset table structure.
-        upgradeDatabaseVersion(7)
+        upgradeDatabaseVersion(7) --TODO: make this read form systemData table.
         ResetDailyWeekly()
 
         statusText.text = "Database work done!"
@@ -117,13 +107,13 @@ function scene:show( event )
             statusText.text = "Scores Not Sent"
         end
 
+        
+
         print("loading scene done")
         statusText.text = "Opening Game..."
         timer.performWithDelay(50, startGame, 1)   
     end
 end
- 
-
  
 -- hide()
 function scene:hide( event )

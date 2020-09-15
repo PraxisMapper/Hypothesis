@@ -26,8 +26,9 @@ local retailCell = {.922, .391, .992, 1}  --pink
 local tourismCell = {.1, .605, .822, 1}  --sky blue
 local universityCell = {.963, .936, .862, 1}  --off-white, slightly yellow-brown
 local wetlandsCell= {.111, .252, .146, 1}  --swampy green
-local historicalCell = {.7, .7, 7, 1}  --edit to.... something? 
-local mallCell = {1, .7, .2, 1}  --edit to something? 
+local historicalCell = {.7, .7, 7, 1}  --edit to.... something? Historically interesting area.
+local mallCell = {1, .7, .2, 1}  --edit to something?  Big indoor retail area. Might change to just retail.
+local trailCell = {.47, .18, .02, 1}  --Brown  A footpath or bridleway or cycleway or a path that isn't a sidewalk, in OSM terms
 
 local timerResults = nil
 local firstRun = true
@@ -53,7 +54,6 @@ local function UpdateLocal()
     if (debugLocal) then print("start UpdateLocal") end
     if (debugLocal) then print(currentPlusCode) end
 
-    -- native.showAlert("", "Updating local")
     if (currentPlusCode == "") then
         if timerResults == nil then
             timerResults = timer.performWithDelay(500, UpdateLocal, -1)
@@ -90,7 +90,6 @@ local function UpdateLocal()
             else
                 if (terrainInfo[4] ~= "") then -- 4 is areaType. not every area is named, so use type.
                     -- apply info
-                    -- print("cell with data found!")
                     cellCollection[square].name = terrainInfo[3]
                     cellCollection[square].type = terrainInfo[4]
                 else
@@ -104,14 +103,12 @@ local function UpdateLocal()
                 -- cellCollection is a table of imageRects with a couple extra properties assigned.
                 -- now handle assigning colors
                 if (cellCollection[square].type == "") then
-                    -- print("applying default colors")
                     if VisitedCell(thisSquaresPluscode) then
                         cellCollection[square].fill = visitedCell
                     else
                         cellCollection[square].fill = unvisitedCell
                     end
                 else
-                    -- print("applying terrain colors")
                     if (cellCollection[square].type == "water") then
                         cellCollection[square].fill = waterCell
                     elseif (cellCollection[square].type == "park") then
@@ -130,11 +127,12 @@ local function UpdateLocal()
                         cellCollection[square].fill = tourismCell
                     elseif (cellCollection[square].type == "university") then
                         cellCollection[square].fill = universityCell
+                    elseif (cellCollection[square].type == "trail") then
+                        cellCollection[square].fill = trailCell
                     end
                 end
             end
 
-            --this needs checked in both cases.
             if (currentPlusCode == thisSquaresPluscode) then
                 -- draw this place's name on screen, or an empty string if its not a place.
                 locationName.text = cellCollection[square].name
@@ -142,7 +140,6 @@ local function UpdateLocal()
         end
     end
 
-    -- native.showAlert("", "past cell checks")
     if (debugGPS) then print("grid done or skipped") end
     if (debugGPS) then print(locationText.text) end
     locationText.text = "Current location:" .. currentPlusCode
@@ -259,12 +256,10 @@ function scene:show(event)
 
     if (phase == "will") then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
-        print("showing")
         firstRun = true
 
     elseif (phase == "did") then
         -- Code here runs when the scene is entirely on screen 
-        -- native.showAlert("", "creating update timer")
         timer.performWithDelay(50, UpdateLocal, 1)
 
         if (debugGPS) then timer.performWithDelay(500, testDrift, -1) end

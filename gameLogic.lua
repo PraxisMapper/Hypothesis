@@ -1,6 +1,7 @@
 --todo:
 --Maybe consolidate commands that get run every seconds into a single statement when possible?
---connect to OpenStreetMaps to detect type of cell? This is a lot of server-side work
+--This was a setup before i had a server and area types set up. Now that I do, and have tested the app some,
+--these values need updated. Probably want to grant bonus points for going to interesting areas.
 
 function grantPoints(code)
     --new city block: 100 points!

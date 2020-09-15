@@ -6,10 +6,9 @@ require("gameLogic")
 require("database")
 
 --TODO 
---create baseline background image for trophy room.
---draw pictures for all the things user can by
 --actually display things user has bought.
 --Display data for the next trophy to unlock (score, 10Cell, 8Cell)
+--Change up how trophies are awarded (per game, possibly)
 
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless

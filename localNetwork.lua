@@ -2,9 +2,8 @@
 -- NOTE: naming this 'network' overrides the internal library with the same name and breaks everything.
 -- TODO:
 --also need to work out plan to update saved location type/name data eventually
---Add a counter so we don't overload Solar2d on network requests waiting for a response (I think 5 or 6 is the right number?)
 require("database")
-require("helpers") --for SPlit
+require("helpers") --for Split
 
 --serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
 --serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
@@ -19,7 +18,6 @@ serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works 
 --In-process change:
 --network stack now downloads a 6cell at once. Only allows one download at once. Only downloads current 6-cell
 networkReqPending = false
-
 
 function uploadListener(event)
     if (debugNetwork) then
@@ -39,25 +37,17 @@ function UploadData()
     local bodyString = "" -- the | separated values
     print(uploadURL)
 
-    -- bodyString = bodyString .. system.getInfo("deviceID") .. "|"
-    -- print(bodyString)
-    -- cell visits
-    --local centerData = GetClientData() --all of this looked right, but it doesnt give the right data out sooooo.....
     local trophyDate = ""  
     local query = "SELECT boughtOn FROM trophysBought WHERE itemcode = 14"
     local q1Results = Query(query)[1]
     print(q1Results)
     if (q1Results == nil) then q1Results = "0" end
-    --if (debugNetwork) then print(dump(centerData)) end
 
     local q = Query("SELECT * FROM playerData")[1]
-    --dbInfo.text = "distance:" .. q[2] .." points:" .. q[3]  .. " cells:" ..q[4] .. " playtime:" ..q[5] .. " maxSpeed:" ..q[6] .. " totalSpeed:" .. q[7] .. " maxalt:" ..q[8]
-    --minalt: [q9]
     local altSpread = q[8] - q[9]
 
     -- 1           2             3                 4         5     6       7      8       9           10          11
     -- DeviceID|cellVisits|DateFinalTrophyBought|distance|Maxspeed|score|10cells|8cells|timeplayed|totalSpeed|maxAltitude
-    -- max speed is next, not yet present until i run and update the db schema.
     bodyString = system.getInfo("deviceID") .. "|" .. q[4] .. "|" ..  q1Results .. "|" .. q[2] .. "|" .. q[6] .. "|"-- ends with maxspeed
     bodyString = bodyString .. q[3] .. "|" .. TotalExploredCells() .. "|" .. TotalExplored8Cells() .. "|"
     bodyString = bodyString .. q[5] .. "|" .. q[7] .. "|" .. altSpread
@@ -70,71 +60,7 @@ function UploadData()
     if (debugNetwork) then print("sent") end
 end
 
-function leaderboardListener()
-    --Update the screen. Might need moved to the scene file.
-
-end
-
-function GetLeaderboard(id)
-    --need to ID leaderboards somewhere.
-    if (id == 1) then
-        --Most 10cells.
-        network.request(serverURL .. "GpsExplore/10CellLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
-    end
-    if (id == 2) then
-        --Most 8cells.
-        network.request(serverURL .. "GpsExplore/8CellLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
-    end
-    if (id == 3) then
-        --Hightest score
-        network.request(serverURL .. "GpsExplore/ScoreLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
-    end
-    if (id == 4) then
-        --Most distance 
-        network.request(serverURL .. "GpsExplore/DistanceLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
-    end
-    if (id == 5) then
-        --Most play time
-        network.request(serverURL .. "GpsExplore/TimeLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
-    end
-    if (id == 6) then
-        --Highest avg speed
-        network.request(serverURL .. "GpsExplore/AvgSpeedLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
-    end
-    if (id == 7) then
-        --final Trophy 
-        network.request(serverURL .. "GpsExplore/TrophiesLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
-    end
-    if (id == 8) then
-        --Altitude spread Trophy 
-        network.request(serverURL .. "GpsExplore/AltitudeLeaderboard/" .. system.getInfo("deviceID"), "GET", leaderboardListener)
-    end
-end
-
---Replaced by plusCode8Listener
--- function plusCodeListener(event)
---     if (debugNetwork) then print("plus code event response: " .. event.response) end
---     if (event.status ~= 200) then return end --dont' save invalid results on an error.
-
---     if (string.len(event.response) == 10) then
---         local emptyResults = {}
---         emptyResults[1] = "" --name
---         emptyResults[2] = "" --type
---         SaveTerrainData(event.response, "", "")
---         return
---     end
-
---     local eventData = Split(event.response, "=")
---     --event data should now be
---     --1: pluscode
---     --2+: name|type
---     --lack of 2+ means its nothing special, and we checked for that earlier and returned already.
---     --print("reponse was split")
---     local areaData = Split(eventData[2], "|")
-
---     SaveTerrainData(eventData[1], areaData[1], areaData[2])
--- end
-
+--replaced by plusCode6 listener.
 function plusCode8Listener(event)
     if (debugNetwork) then print("plus code 8 event response: " .. event.response) end
     if event.status == 200 then netUp() else netDown() end
@@ -170,13 +96,12 @@ function plusCode8Listener(event)
 end
 
 function plusCode6Listener(event)
-    if (debugNetwork) then print("plus code 6 event response status: " .. event.status) end --these are ~300kb usually
+    if (debugNetwork) then print("plus code 6 event response status: " .. event.status) end --these are fairly large, 10k entries isnt weird.
     if event.status == 200 then netUp() else netDown() end
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
 
     --This one splits each 10cell via newline.
     local resultsTable = Split(event.response, "\r\n") --windows newlines
-    --if (debugNetwork) then print(dump(resultsTable)) end
     print(#resultsTable)
     --Format:
     --line1: the 6cell requested
@@ -187,32 +112,15 @@ function plusCode6Listener(event)
     local insertCount = 0
 
     db:exec("BEGIN TRANSACTION") --transactions for multiple inserts are a huge performance boost.
-    local plusCode6 = resultsTable[1] --:sub(1,6)
+    local plusCode6 = resultsTable[1] 
     for i = 2, #resultsTable do
         if (resultsTable[i] ~= nil and resultsTable[i] ~= "") then 
-            --LUA, on the simulator, can do this loop about 100 times per second. This has 32k entries on the simulator's default location. That's 6 minutes of loading data.
-            --spends 2 seconds doing text parsing, so i need more efficient DB writes
-            --local part1 = Split(resultsTable[i], "=") --[1] here is 2 digits to add to pluscode8
-            --local part2 = Split(part1[2], "|") --[1] here is cell name, [2] here is cell terrain type.
-            --local pluscode10= plusCode6 .. part1[1]
-            --local areaName = part2[1]
-            --local areaTerrain = part2[2]
-            --SaveTerrainData(pluscode10, areaName, areaTerrain) --commented temporarily to see if this disk-write is the issue. It is, this adds 6 minutes of time.
             local data = Split(resultsTable[i], "|") --3 data parts in order
             insertString = "INSERT INTO terrainData (plusCode, name, areatype) VALUES ('" .. resultsTable[1] .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "');" --insertString .. 
             db:exec(insertString)
-            insertCount = insertCount + 1
-            --if insertCount >= 50 then
-                --local e1 = db:exec(insertString)
-                --insertCount = 0
-                --insertString = ""
-                --if (e1 > 0) then native.showAlert("Error!", "ERROR " .. e1) end
-            --end
         end
-        --print("Loop cycle " .. i .. "done")
     end
     local e2 = db:exec("END TRANSACTION")
-    --if (e2 > 0) then alert("Error!2", "Error2") end
     if(debugNetwork) then print("table done") end
 
     --save these results to the DB.
@@ -223,16 +131,6 @@ function plusCode6Listener(event)
     networkReqPending = false 
     forceRedraw = true
 end
-
---this loads terrain data on 10cells 1 by one. Replaced with Get8CellData.
--- function GetCellData(pluscode)
---     if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/CellData/" .. pluscode:sub(1,8) .. pluscode:sub(10,11)) end
---     local existingData = LoadTerrainData(pluscode)
---     if (#existingData == 0) then
---         network.request(serverURL .. "MapData/CellData/" .. pluscode:sub(1,8) .. pluscode:sub(10,11), "GET", plusCodeListener)
---     end
---     return (existingData)
--- end
 
  --this loads terrain data on an 8cell, loads all 10cells inside at once.
 function Get8CellData(lat, lon)
