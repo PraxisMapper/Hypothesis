@@ -1,5 +1,7 @@
+--This is the scene that appears after the splash screen, and sets up everything the game needs to run correcly
+--overlayDL is the pop-up for downloading new data.
+
 local composer = require( "composer" )
- 
 local scene = composer.newScene()
 
 require("database")

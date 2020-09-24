@@ -62,6 +62,13 @@ networkUp.anchorX = 0
 networkUp.anchorY = 0
 networkUp.isVisible = false
 
+networkTx = display.newImageRect("themables/networkTransfer.png", 25, 25)
+networkTx.x = 0
+networkTx.y = 0
+networkTx.anchorX = 0
+networkTx.anchorY = 0
+networkTx.isVisible = false
+
 
 print("shifting to loading scene")
 local composer = require("composer")
@@ -92,6 +99,12 @@ function gpsListener(event)
     --Debug/testing override location
     --currentPlusCode = "9C6RVJ85+J8" --random UK location, should have water to the north, and a park north of that.
 
+       --More complicated, problematic entries: (Pending fixing lines as boundaries instead of polygons, on server.)
+       --currentPlusCode ="8FW4V75V+8R" --Eiffel Tower. ~60,000 entries.
+       --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
+       --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
+       --currentPlusCode = "85PFF56C+5P" --Old Faithful
+
     local plusCode6 = currentPlusCode:sub(0,6)
 
     --checking here. Checking for this after GrantPoints updates the visited list before this, would never load data.
@@ -99,7 +112,8 @@ function gpsListener(event)
     local hasData = Downloaded6Cell(plusCode6)
     print(hasData)
     if (hasData == false) then
-        Get6CellData(event.latitude, event.longitude)
+        --Get6CellData(event.latitude, event.longitude)
+        Get6CellData(plusCode6)
     end
 
     if (lastPlusCode ~= currentPlusCode) then
@@ -114,7 +128,6 @@ function gpsListener(event)
     if (lastLocationEvent == "" ) then
         --don't do any calculations yet, this is the first location event.
     else
-        --for some reason subtracting these 2 wasn't giving correct values
         local timeDiff = 0
         if (os.time() ~= lastTime) then
             timeDiff = os.time() - lastTime
@@ -151,13 +164,14 @@ function gpsListener(event)
 end
 
 
-timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)  --TODO confirm this fires as expected
+timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)
 
 function netUp()
     print("network is up")
     networkResults = "up"
     networkUp.isVisible = true
     networkDown.isVisible = false
+    networkTx.isVisible = false
 end
 
 function netDown()
@@ -165,4 +179,21 @@ function netDown()
     networkResults = "down"
     networkDown.isVisible = true
     networkUp.isVisible = false
+    networkTx.isVisible = false
+end
+
+function netTransfer()
+    print("network data in process")
+    networkResults = "transfer"
+    networkDown.isVisible = false
+    networkUp.isVisible = false
+    networkTx.isVisible = true
+end
+
+function ShowLoadingPopup()
+    composer.showOverlay("overlayDL")
+end
+
+function HideLoadingPopup()
+    composer.hideOverlay("overlayDL")
 end

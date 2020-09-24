@@ -4,7 +4,7 @@ local scene = composer.newScene()
 require("UIParts")
 require("database")
  
-if (debug) then print("10GridScene loading") end
+if (debug) then print("8GridScene loading") end
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"

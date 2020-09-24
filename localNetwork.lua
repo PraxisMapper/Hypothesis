@@ -7,10 +7,9 @@ require("helpers") --for Split
 
 --serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
 --serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
-serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
+--serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
 --serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
---serverURL = "http://ec2-18-221-31-68.us-east-2.compute.amazonaws.com" --AWS Test server, IP part of address will change each time instance is launched.
-
+serverURL = "http://ec2-18-189-29-204.us-east-2.compute.amazonaws.com/" --AWS Test server, IP part of address will change each time instance is launched.
 
 --note: GpsExplore/" is now half of it, the other half is MapData/
 
@@ -31,6 +30,7 @@ function uploadListener(event)
 end
 
 function UploadData()
+    netTransfer()
     print("uploading data")
     local uploadURL = serverURL .. "GpsExplore/UploadData"
     local params = {}
@@ -92,13 +92,22 @@ function plusCode8Listener(event)
     local updateCmd = "INSERT INTO dataDownloaded (pluscode8, downloadedOn) VALUES ('" .. plusCode8 .. "', " .. os.time() .. ")"
     Exec(updateCmd)
 
+    netUp()
     networkReqPending = false 
 end
 
 function plusCode6Listener(event)
     if (debugNetwork) then print("plus code 6 event response status: " .. event.status) end --these are fairly large, 10k entries isnt weird.
     if event.status == 200 then netUp() else netDown() end
-    if (event.status ~= 200) then return end --dont' save invalid results on an error.
+    if (event.status ~= 200) then 
+        networkReqPending = false --allow the download to retry on the next event.
+        HideLoadingPopup()
+        return --dont' save invalid results on an error.
+    end 
+
+    --tell the user we're working
+    --had to move this earlier for it to appear.
+    --ShowLoadingPopup()
 
     --This one splits each 10cell via newline.
     local resultsTable = Split(event.response, "\r\n") --windows newlines
@@ -130,6 +139,8 @@ function plusCode6Listener(event)
 
     networkReqPending = false 
     forceRedraw = true
+    netUp()
+    HideLoadingPopup()
 end
 
  --this loads terrain data on an 8cell, loads all 10cells inside at once.
@@ -143,7 +154,17 @@ end
 function Get6CellData(lat, lon)
     if networkReqPending == true then return end
     networkReqPending = true
+    netTransfer()
     if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell6Info/" .. lat .. "/" .. lon) end
     network.request(serverURL .. "MapData/Cell6Info/" .. lat .. "/" .. lon, "GET", plusCode6Listener)
+end
+
+function Get6CellData(pluscode6)
+    if networkReqPending == true then return end
+    networkReqPending = true
+    netTransfer()
+    ShowLoadingPopup()
+    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell6Info/" .. pluscode6) end
+    network.request(serverURL .. "MapData/Cell6Info/" .. pluscode6, "GET", plusCode6Listener)
 end
 

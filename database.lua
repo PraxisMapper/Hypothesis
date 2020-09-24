@@ -175,7 +175,7 @@ function Visited8Cell(pluscode)
     if (debugDB) then print("Checking if visited current 8 cell " .. pluscode) end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE eightCode = '" .. pluscode .. "'"
     for i,row in ipairs(Query(query)) do
-        print(dump(row))
+        --print(dump(row))
         if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
             return true
         else
