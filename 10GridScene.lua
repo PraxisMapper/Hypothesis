@@ -29,6 +29,7 @@ local wetlandsCell= {.111, .252, .146, 1}  --swampy green
 local historicalCell = {.7, .7, 7, 1}  --edit to.... something? Historically interesting area.
 local mallCell = {1, .7, .2, 1}  --edit to something?  Big indoor retail area. Might change to just retail.
 local trailCell = {.47, .18, .02, 1}  --Brown  A footpath or bridleway or cycleway or a path that isn't a sidewalk, in OSM terms
+local adminCell = {0,0,0,0} --None. We shouldn't draw admin cells. But the database has started tracking admin boundaries.
 
 local timerResults = nil
 local firstRun = true
@@ -109,26 +110,30 @@ local function UpdateLocal()
                         cellCollection[square].fill = unvisitedCell
                     end
                 else
-                    if (cellCollection[square].type == "water") then
+                    --these are now numbers instead of strings on the server side.
+                    if (cellCollection[square].type ==  "1") then --"water"
                         cellCollection[square].fill = waterCell
-                    elseif (cellCollection[square].type == "park") then
+                    elseif (cellCollection[square].type == "3" ) then --"park"
                         cellCollection[square].fill = parkCell
-                    elseif (cellCollection[square].type == "cemetery") then
+                    elseif (cellCollection[square].type == "7") then --"cemetery"
                         cellCollection[square].fill = cemeteryCell
-                    elseif (cellCollection[square].type == "wetlands") then
+                    elseif (cellCollection[square].type == "2") then --"wetlands"
                         cellCollection[square].fill = wetlandsCell
-                    elseif (cellCollection[square].type == "beach") then
+                    elseif (cellCollection[square].type == "4") then --"beach"
                         cellCollection[square].fill = beachCell
-                    elseif (cellCollection[square].type == "natureReserve") then
+                    elseif (cellCollection[square].type == "6") then --"natureReserve"
                         cellCollection[square].fill = natureReserveCell
-                    elseif (cellCollection[square].type == "retail") then
+                    elseif (cellCollection[square].type ==  "9") then --"retail"
                         cellCollection[square].fill = retailCell
-                    elseif (cellCollection[square].type == "tourism") then
+                    elseif (cellCollection[square].type == "10" ) then --"tourism"
                         cellCollection[square].fill = tourismCell
-                    elseif (cellCollection[square].type == "university") then
+                    elseif (cellCollection[square].type == "5") then --"university"
                         cellCollection[square].fill = universityCell
-                    elseif (cellCollection[square].type == "trail") then
+                    elseif (cellCollection[square].type == "12") then -- "trail"
                         cellCollection[square].fill = trailCell
+                    elseif (cellCollection[square].type == "13") then
+                    --elseif (string.sub(cellCollection[square].type, 1, 5) == "admin") then
+                        --cellCollection[square].fill = adminCell --We don't draw these
                     end
                 end
             end

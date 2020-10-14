@@ -98,8 +98,8 @@ function gpsListener(event)
 
     --Debug/testing override location
     --currentPlusCode = "9C6RVJ85+J8" --random UK location, should have water to the north, and a park north of that.
-
-       --More complicated, problematic entries: (Pending fixing lines as boundaries instead of polygons, on server.)
+    
+       --More complicated, problematic entries: (Pending possible fix for loading data missing from a file)
        --currentPlusCode ="8FW4V75V+8R" --Eiffel Tower. ~60,000 entries.
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
