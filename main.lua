@@ -29,7 +29,7 @@ forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
 debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugShift = false --display math for shifting PlusCodes
-debugGPS = false --display data for the GPS event and timer loop and auto-move
+debugGPS = true --display data for the GPS event and timer loop and auto-move
 debugDB = false
 debugLocal = false
 debugNetwork = true
@@ -99,6 +99,8 @@ function gpsListener(event)
     --Debug/testing override location
     --currentPlusCode = "9C6RVJ85+J8" --random UK location, should have water to the north, and a park north of that.
     
+    currentPlusCode = "86HWHHHH+22"
+    
        --More complicated, problematic entries: (Pending possible fix for loading data missing from a file)
        --currentPlusCode ="8FW4V75V+8R" --Eiffel Tower. ~60,000 entries.
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
@@ -114,6 +116,22 @@ function gpsListener(event)
     if (hasData == false) then
         --Get6CellData(event.latitude, event.longitude)
         Get6CellData(plusCode6)
+    end
+
+    --look for image data. probably a temporary location for this logic.
+    --Should definitely check at the loading screen for this.
+    local imageExists = doesFileExist(plusCode6 .. "-11.png", system.DocumentsDirectory)
+    if (not imageExists) then
+        --pull image from server
+        Get6CellImage11(plusCode6)
+    end
+
+    --These seem more reasonable to use game-wise. much faster and smaller
+    local plusCode8 = currentPlusCode:sub(0,8)
+    imageExists = doesFileExist(plusCode8 .. "-11.png", system.DocumentsDirectory)
+    if (not imageExists) then
+        --pull image from server
+        Get8CellImage11(plusCode8)
     end
 
     if (lastPlusCode ~= currentPlusCode) then

@@ -14,7 +14,9 @@ require("localNetwork")
  local statusText = "" --displayText object for info
 
  local function startGame()
-    composer.gotoScene("10GridScene")
+    --composer.gotoScene("10SceneNavigate")
+    --composer.gotoScene("8GridScene11Image")
+    composer.gotoScene("SceneSelect")
  end
  
  

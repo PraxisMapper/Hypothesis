@@ -7,15 +7,16 @@ require("helpers") --for Split
 
 --serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
 --serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
-serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
---serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
+--serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
+serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
 --serverURL = "http://ec2-18-189-29-204.us-east-2.compute.amazonaws.com/" --AWS Test server, IP part of address will change each time instance is launched.
 
 --note: GpsExplore/" is now half of it, the other half is MapData/
 
 
 --In-process change:
---network stack now downloads a 6cell at once. Only allows one download at once. Only downloads current 6-cell
+--look into changing from downloading a whole 6-cell to pulling areas .01 degree at at time (~4 8-cells at once)
+--and request the data when it scrolls onto screen?
 networkReqPending = false
 
 function uploadListener(event)
@@ -168,3 +169,86 @@ function Get6CellData(pluscode6)
     network.request(serverURL .. "MapData/Cell6Info/" .. pluscode6, "GET", plusCode6Listener)
 end
 
+function Get6CellImage10(plusCode6)
+    if networkReqPending == true then return end
+    networkReqPending = true
+    netTransfer()
+    ShowLoadingPopup()
+    if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/6cellbitmap/" .. pluscode6) end
+    local params = { response = { filename = pluscode6 .. "-10.png", baseDirectory = system.DocumentsDirectory}}
+    network.request(serverURL .. "MapData/6cellbitmap/" .. pluscode6, "GET", image610Listener, params)
+end
+
+function Get6CellImage11(plusCode6)
+    print("trying 6cell11 download")
+    --if networkReqPending == true then return end
+    networkReqPending = true
+    netTransfer()
+    ShowLoadingPopup()
+    print("past loading popup")
+    if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/6cellbitmap11/" .. plusCode6) end
+    --local params = { response = { filename = pluscode6 .. "-11.png", baseDirectory = system.DocumentsDirectory}}
+    local params = {}
+    params.response  = {filename = plusCode6 .. "-11.png", baseDirectory = system.DocumentsDirectory}
+    print("params set")
+    network.request(serverURL .. "MapData/6cellBitmap11/" .. plusCode6, "GET", image611Listener, params)
+    print("request made")
+end
+
+function Get8CellImage10(plusCode8)
+    print("trying 8cell11 download")
+    --if networkReqPending == true then return end
+    networkReqPending = true
+    netTransfer()
+    ShowLoadingPopup()
+    print("past loading popup")
+    if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/8cellbitmap/" .. plusCode8) end
+    local params = { response = { filename = plusCode8 .. "-10.png", baseDirectory = system.DocumentsDirectory}}
+    network.request(serverURL .. "MapData/8cellBitmap/" .. plusCode8, "GET", image810Listener, params)
+end
+
+function Get8CellImage11(plusCode8)
+    print("trying 8cell11 download")
+    print(plusCode8)
+    --if networkReqPending == true then return end
+    networkReqPending = true
+    netTransfer()
+    ShowLoadingPopup()
+    print("past loading popup")
+    --if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/8cellbitmap11/" .. plusCode8) end
+    local params = {}
+    params.response  = {filename = plusCode8 .. "-11.png", baseDirectory = system.DocumentsDirectory}
+    print("params set")
+    network.request(serverURL .. "MapData/8cellBitmap11/" .. plusCode8, "GET", image811Listener, params)
+end
+
+function image610Listener(event)
+    --since we passed in a file to save to, this shouldn't need to do any real processing unless there's an error.
+    -- local path = system.pathForFile("tempFileName.png", system.CachesDirectory)
+    -- local file, errorstring = io.open(path, "w")
+    -- if not file then
+    --     --error occurred, log it.
+    --     print("error loading data from 6-10 listener")
+    -- else
+    --     file.write(event.response)
+    --     io.close(file)
+    -- end
+end
+
+function image611Listener(event)
+    if (debug) then print("6cell11 listener fired") end
+    HideLoadingPopup()
+    if event.status == 200 then netUp() else netDown() end
+end
+
+function image810Listener(event)
+    if (debug) then print("8cell10 listener fired") end
+    HideLoadingPopup()
+    if event.status == 200 then netUp() else netDown() end
+end
+
+function image811Listener(event)
+    if (debug) then print("8cell11 listener fired") end
+    HideLoadingPopup()
+    if event.status == 200 then netUp() else netDown() end
+end

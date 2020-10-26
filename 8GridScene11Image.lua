@@ -1,10 +1,12 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
 
+--TODO: update this to load an image file for each square, request if not found.
 require("UIParts")
 require("database")
+require("localNetwork")
  
-if (debug) then print("8GridScene loading") end
+if (debug) then print("8GridScene11image loading") end
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
@@ -41,11 +43,23 @@ local function UpdateLocal8()
              thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 8)
              thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 7)
             cellCollection[square].pluscode = thisSquaresPluscode
-            if Visited8Cell(thisSquaresPluscode) then
-                cellCollection[square].fill = visitedCell
+            
+            if not cellCollection[square].isFilled then
+            local imageExists = doesFileExist(thisSquaresPluscode .. "-11.png", system.DocumentsDirectory)
+            if (not imageExists) then
+                --pull image from server
+                Get8CellImage11(thisSquaresPluscode)
+                if Visited8Cell(thisSquaresPluscode) then
+                    cellCollection[square].fill = visitedCell
+                else
+                    cellCollection[square].fill = unvisitedCell
+                end
             else
-                cellCollection[square].fill = unvisitedCell
+                local paint = {type  = "image", filename = thisSquaresPluscode .. "-11.png", baseDir = system.DocumentsDirectory}
+                cellCollection[square].fill = paint
+                cellCollection[square].isFilled = true
             end
+        end
         end
     end
 
@@ -118,9 +132,11 @@ function scene:create( event )
     countText = display.newText(sceneGroup, "Total Cells Explored: ?", display.contentCenterX, 240, native.systemFont, 20)
     pointText = display.newText(sceneGroup, "Score: ?", display.contentCenterX, 260, native.systemFont, 20)
 
-    CreateSquareGrid(9, 65, sceneGroup, cellCollection)
+    --NOTE: 11-cell resolution images for 8cells are 100x80, so use the new function
+    --CreateSquareGrid(9, 65, sceneGroup, cellCollection)
+    CreateRectangleGrid(7, 80, 100, sceneGroup, cellCollection) --7 is the max that fits on screen at this image size
 
-    directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 65, 65)
+    directionArrow = display.newImageRect(sceneGroup, "themables/circle1.png", 65, 65)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
 
@@ -159,7 +175,7 @@ function scene:create( event )
     leaderboard:addEventListener("tap", GoToLeaderboardScene)
 
 
-    if (debug) then print("created 8GridScene") end
+    if (debug) then print("created 8GridScene11Image") end
 
 end
  

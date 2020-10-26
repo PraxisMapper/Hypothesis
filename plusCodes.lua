@@ -66,6 +66,8 @@ function tryMyEncode(latitude, longitude, codeLength)
         if (debug) then print("assembled code so far is  " .. code) end
     end
 
+    --11th digit is from a 4x5 grid, starting with 2 in the lower-left corner and ending with X in the upper-right, increasing left-to-right and then bottom-to-top
+
     return code:sub(1,8) .. SEPARATOR_ .. code:sub(9, 10);
 end
 

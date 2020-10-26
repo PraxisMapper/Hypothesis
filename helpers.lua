@@ -49,3 +49,28 @@ function CalcDistance(event1, event2)
 
    return ansMeters
 end
+
+function doesFileExist( fname, path )
+ 
+   local results = false
+
+   -- Path for the file
+   local filePath = system.pathForFile( fname, path )
+
+   if ( filePath ) then
+       local file, errorString = io.open( filePath, "r" )
+
+       if not file then
+           -- Error occurred; output the cause
+           --print( "File error: " .. errorString )
+       else
+           -- File exists!
+           --print( "File found: " .. fname )
+           results = true
+           -- Close the file handle
+           file:close()
+       end
+   end
+
+   return results
+end

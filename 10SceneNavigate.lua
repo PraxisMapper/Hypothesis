@@ -27,9 +27,11 @@ local tourismCell = {.1, .605, .822, 1}  --sky blue
 local universityCell = {.963, .936, .862, 1}  --off-white, slightly yellow-brown
 local wetlandsCell= {.111, .252, .146, 1}  --swampy green
 local historicalCell = {.7, .7, 7, 1}  --edit to.... something? Historically interesting area.
-local mallCell = {1, .7, .2, 1}  --edit to something?  Big indoor retail area. Might change to just retail.
 local trailCell = {.47, .18, .02, 1}  --Brown  A footpath or bridleway or cycleway or a path that isn't a sidewalk, in OSM terms
 local adminCell = {0,0,0,0} --None. We shouldn't draw admin cells. But the database has started tracking admin boundaries.
+local buildingCell = {.5,.5,.5,1} --None. We shouldn't draw admin cells. But the database has started tracking admin boundaries.
+local roadCell = {0.05,0.05,0.05,1} --None. We shouldn't draw admin cells. But the database has started tracking admin boundaries.
+local parkingCell = {0.05,0.05,0.05,1} --None. We shouldn't draw admin cells. But the database has started tracking admin boundaries.
 
 local timerResults = nil
 local firstRun = true
@@ -42,6 +44,12 @@ local directionArrow = ""
 local scoreLog = ""
 local debugText = {}
 local locationName = ""
+
+
+local upButton = ""
+local downButton = ""
+local leftButton = ""
+local rightButton = ""
 
 local function testDrift()
     if (os.time() % 2 == 0) then
@@ -134,6 +142,12 @@ local function UpdateLocal()
                     elseif (cellCollection[square].type == "13") then
                     --elseif (string.sub(cellCollection[square].type, 1, 5) == "admin") then
                         --cellCollection[square].fill = adminCell --We don't draw these
+                    elseif (cellCollection[square].type == "14") then -- "building
+                        cellCollection[square].fill = buildingCell
+                    elseif (cellCollection[square].type == "15") then -- "road"
+                        cellCollection[square].fill = roadCell
+                    elseif (cellCollection[square].type == "16") then -- "parking"
+                        cellCollection[square].fill = parkingCell
                     end
                 end
             end
@@ -184,6 +198,22 @@ end
 local function SwitchToDebugScene()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("performanceTest", options)
+end
+
+local function ShiftUp()
+    currentPlusCode = shiftCellV3(currentPlusCode,  1, 9)
+end
+
+local function ShiftDown()
+    currentPlusCode = shiftCellV3(currentPlusCode,  -1, 9)
+end
+
+local function ShiftLeft()
+    currentPlusCode = shiftCellV3(currentPlusCode,  -1, 10)
+end
+
+local function ShiftRight()
+    currentPlusCode = shiftCellV3(currentPlusCode,  1, 10)
 end
 
 local function GoToSceneSelect()
@@ -247,10 +277,25 @@ function scene:create(event)
     leaderboard.y = 100
     leaderboard:addEventListener("tap", GoToLeaderboardScene)
 
+    local navButtonPaint = {1, .5, .5}
+    upButton = display.newRect(sceneGroup, 350, 1150, 50, 50)
+    upButton.fill = navButtonPaint
+    upButton:addEventListener("tap", ShiftUp)
+    downButton = display.newRect(sceneGroup, 350, 1250, 50, 50)
+    downButton.fill = navButtonPaint
+    downButton:addEventListener("tap", ShiftDown)
+    leftButton = display.newRect(sceneGroup, 300, 1200, 50, 50)
+    leftButton.fill = navButtonPaint
+    leftButton:addEventListener("tap", ShiftLeft)
+    rightButton = display.newRect(sceneGroup, 400, 1200, 50, 50)
+    rightButton.fill = navButtonPaint
+    rightButton:addEventListener("tap", ShiftRight)
+
     if (debug) then
-        print("Creating debugText")
-        debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
-        print("Created debugText")
+        --print("Creating debugText")
+        --debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
+        --print("Created debugText")
+
     end
 
     if (debug) then print("created 10GridScene") end
