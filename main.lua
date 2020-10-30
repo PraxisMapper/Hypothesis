@@ -29,7 +29,7 @@ forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
 debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugShift = false --display math for shifting PlusCodes
-debugGPS = true --display data for the GPS event and timer loop and auto-move
+debugGPS = false --display data for the GPS event and timer loop and auto-move
 debugDB = false
 debugLocal = false
 debugNetwork = true
@@ -99,8 +99,6 @@ function gpsListener(event)
     --Debug/testing override location
     --currentPlusCode = "9C6RVJ85+J8" --random UK location, should have water to the north, and a park north of that.
     
-    currentPlusCode = "86HWHHHH+22"
-    
        --More complicated, problematic entries: (Pending possible fix for loading data missing from a file)
        --currentPlusCode ="8FW4V75V+8R" --Eiffel Tower. ~60,000 entries.
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
@@ -110,20 +108,12 @@ function gpsListener(event)
     local plusCode6 = currentPlusCode:sub(0,6)
 
     --checking here. Checking for this after GrantPoints updates the visited list before this, would never load data.
+    --Note: 6-cell image download takes over a minute most times. dont use it.
     print("checking for terrain data")
     local hasData = Downloaded6Cell(plusCode6)
     print(hasData)
     if (hasData == false) then
-        --Get6CellData(event.latitude, event.longitude)
-        Get6CellData(plusCode6)
-    end
-
-    --look for image data. probably a temporary location for this logic.
-    --Should definitely check at the loading screen for this.
-    local imageExists = doesFileExist(plusCode6 .. "-11.png", system.DocumentsDirectory)
-    if (not imageExists) then
-        --pull image from server
-        Get6CellImage11(plusCode6)
+        Get6CellData(plusCode6) -- we do need terrain info here.
     end
 
     --These seem more reasonable to use game-wise. much faster and smaller

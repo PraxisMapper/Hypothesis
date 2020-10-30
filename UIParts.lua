@@ -29,7 +29,7 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
     for x = -range, range, 1 do
         for y = -range, range, 1 do
             --create cell, tag it with x and y values.
-            local newSquare = display.newRect(gridGroup, display.contentCenterX + (cellSizeX * x) + x , display.contentCenterY + (cellSizeY * y) + y , cellSizeX, cellSizeY) --x y w h
+            local newSquare = display.newRect(gridGroup, display.contentCenterX + (cellSizeX * x), display.contentCenterY + (cellSizeY * y), cellSizeX, cellSizeY) --x y w h
             newSquare.gridX = x
             newSquare.gridY = -y --invert this so cells get identified top-to-bottom, rather than bottom-to-top
             newSquare.name = "" --added for terrain/location support
@@ -43,6 +43,8 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
 end
 
 function debuggerHelperSquare(event)
+    print("displaying data on a cell:" .. event.target.name)
+    print(event.target == null)
     native.showAlert("Cell", event.target.pluscode .. " | " .. event.target.name .. " | " .. event.target.type)
 end
 

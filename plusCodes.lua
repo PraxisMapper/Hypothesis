@@ -1,15 +1,5 @@
---TODO: 
---For a fantasy game, consider obfuscating the plus codes via name-generating tables
---ex: first 3 characters gives 1 out of 8,000 adjectives (or some divisor thereof)
---next 3 characters gives 1 out of 8,000 nouns 
---last 2 give 1 in 400 other things 
---total makes up a Dwarfy Fortress sort of name
---EX: the Fancy Peninsula of Beeswax
---Probably have a direction in there as well, using 2 characters to determine that, which would also roughly imply the directions cover a 6-cell or so?
---Could have a 2-char pair determine the name format, so X Y of Z, The X of Y, etc.
---probably pairs these names to 8-blocks, so theres 25.6 billion possible names (though on the 2code level there's not 400 options there)
 
--- oh right, the +3 level is a 5x4 ordered grid. so...
+-- oh right, the 11th character level is a 5x4 ordered grid. so...
 --'23456789CFGHJMPQRVWX'
 -- R V W X
 -- J M P Q 
@@ -41,10 +31,14 @@ CODE_ALPHABET_ = '23456789CFGHJMPQRVWX' --no longer local, so we can use it in o
 --local PAIR_RESOLUTIONS_ = {20.0, 1.0, .05, .0025, .000125}
 
 -- Number of columns in the grid refinement method.
---local GRID_COLUMNS_ = 4;
+local GRID_COLUMNS_ = 4;
 
 -- Number of rows in the grid refinement method.
---local GRID_ROWS_ = 5;
+local GRID_ROWS_ = 5;
+
+--for decoding the 11th digit?
+local GRID_ROW_MULTIPLIER = 3125
+local GRID_COL_MULTIPLIER = 1024
 
 --my own pass at the algorithm. shorter, less thorough.
 function tryMyEncode(latitude, longitude, codeLength)
@@ -52,6 +46,11 @@ function tryMyEncode(latitude, longitude, codeLength)
     local code = ""
     local lat = math.floor((latitude + 90) * 8000)
     local long = math.floor((longitude + 180) * 8000)
+    if (codeLength == 11) then
+        lat = lat * GRID_ROW_MULTIPLIER
+        long = long * GRID_COL_MULTIPLIER
+    end
+
     if (debug) then print("calc'd lat is   " .. lat) end
     if (debug) then print("calc'd long is  " .. long) end 
 
@@ -67,6 +66,14 @@ function tryMyEncode(latitude, longitude, codeLength)
     end
 
     --11th digit is from a 4x5 grid, starting with 2 in the lower-left corner and ending with X in the upper-right, increasing left-to-right and then bottom-to-top
+    if (codeLength == 11) then
+        print("lat is " .. lat .. " lon is " .. long)
+        local latGrid = lat % 5
+        local lonGrid = long % 4
+        local indexDigit = latGrid * GRID_COLUMNS_ + lonGrid
+        code = code .. CODE_ALPHABET_:sub(indexDigit, indexDigit)
+        return code:sub(1,8) .. SEPARATOR_ .. code:sub(9, 11);
+    end 
 
     return code:sub(1,8) .. SEPARATOR_ .. code:sub(9, 10);
 end

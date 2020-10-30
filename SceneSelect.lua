@@ -44,9 +44,10 @@ local function SwitchTo10Grid11ImageScene()
     composer.gotoScene("10GridScene11image", options)
 end
 
+--this would just be downloading a 1-pixel image. Thats silly. Keep this as the existing scene.
 local function SwitchTo10Grid10ImageScene()
     local options = {effect = "flip", time = 125}
-    composer.gotoScene("10GridScene10image", options)
+    composer.gotoScene("10GridScene", options)
 end
  
  
