@@ -30,6 +30,8 @@ local historicalCell = {.7, .7, 7, 1}  --edit to.... something? Historically int
 local mallCell = {1, .7, .2, 1}  --edit to something?  Big indoor retail area. Might change to just retail.
 local trailCell = {.47, .18, .02, 1}  --Brown  A footpath or bridleway or cycleway or a path that isn't a sidewalk, in OSM terms
 local adminCell = {0,0,0,0} --None. We shouldn't draw admin cells. But the database has started tracking admin boundaries.
+local buildingCell = {0.5,0.5,0.5,1} 
+local roadCell = {.1, .1, .1, 1} 
 
 local timerResults = nil
 local firstRun = true
@@ -134,13 +136,23 @@ local function UpdateLocal()
                     elseif (cellCollection[square].type == "13") then
                     --elseif (string.sub(cellCollection[square].type, 1, 5) == "admin") then
                         --cellCollection[square].fill = adminCell --We don't draw these
+                    elseif (cellCollection[square].type == "14") then -- "trail"
+                        cellCollection[square].fill = buildingCell
+                    elseif (cellCollection[square].type == "15") then -- "trail"
+                        cellCollection[square].fill = roadCell
+                    elseif (cellCollection[square].type == "16") then -- "trail"
+                        cellCollection[square].fill = roadCell
                     end
                 end
+
             end
 
             if (currentPlusCode == thisSquaresPluscode) then
                 -- draw this place's name on screen, or an empty string if its not a place.
                 locationName.text = cellCollection[square].name
+                if locationName.text == "" then
+                    locationName.text = typeNames[cellCollection[square].type]
+                end
             end
         end
     end

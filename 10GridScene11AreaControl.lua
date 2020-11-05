@@ -1,3 +1,6 @@
+-- TODO: this will be the Area Control scene for this debug/demo app.
+--Tap a square, show overlayAreaClaim to claim a square
+--have a 2nd grid of images overlaying the original grid, tint those squares sky blue and translucent (50%? 30%?) if it's an owned cell.
 local composer = require("composer")
 local scene = composer.newScene()
 
@@ -10,11 +13,8 @@ require("localNetwork")
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
--- TODO
---??
-
-local cellCollection = {}
-local visitedCellDisplay = {} --where we tint cells to show visited info
+local cellCollection = {} --show cell area data/image tiles
+local visitedCellDisplay = {} --where we tint cells to show control.
 -- color codes
 
 local unvisitedCell = {0, 0} -- completely transparent
@@ -33,8 +33,6 @@ local historicalCell = {.7, .7, 7, 1}  --edit to.... something? Historically int
 local mallCell = {1, .7, .2, 1}  --edit to something?  Big indoor retail area. Might change to just retail.
 local trailCell = {.47, .18, .02, 1}  --Brown  A footpath or bridleway or cycleway or a path that isn't a sidewalk, in OSM terms
 local adminCell = {0,0,0,0} --None. We shouldn't draw admin cells. But the database has started tracking admin boundaries.
-local buildingCell = {0.5,0.5,0.5,1} 
-local roadCell = {.1, .1, .1, 1} 
 
 local timerResults = nil
 local firstRun = true
@@ -108,6 +106,7 @@ local function UpdateLocal()
                     cellCollection[square].fill = paint
                     cellCollection[square].isFilled = true
                 end
+
                 --tints the image. if I've walked into a cell. 
                 --This is Area Control mode, though, so I should apply this to areas I control.
                  if VisitedCell(thisSquaresPluscode) then
@@ -189,9 +188,10 @@ function scene:create(event)
     scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1250, native.systemFont, 20)
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
 
-    --CreateSquareGrid(23, 25, sceneGroup, cellCollection)
-    CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection) -- rectangles are different sized now. Will have to investigate sizing.
-    CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay) -- rectangular Cell11 grid  with tint for displaying where we;ve visited
+    --CreateSquareGrid(23, 25, sceneGroup, cellCollection) --original square grid with spacing
+    CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+    CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay) -- rectangular Cell11 grid  with tint for area control
+
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 25, 25)
     directionArrow.x = display.contentCenterX

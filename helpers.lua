@@ -1,3 +1,5 @@
+local sockets = require("socket")
+
 --debugging helper function
 function dump(o)
     if type(o) == 'table' then
@@ -73,4 +75,9 @@ function doesFileExist( fname, path )
    end
 
    return results
+end
+
+--not a real sleep function but close enough.
+function sleep(sec)
+   sockets.select(nil, nil, sec)
 end

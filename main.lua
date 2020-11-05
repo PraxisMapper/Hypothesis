@@ -48,6 +48,24 @@ lastHeadingTime = 0
 
 lastLocationEvent = ""
 
+typeNames = {}
+typeNames["1"] = "Water"
+typeNames["2"] = "Wetlands"
+typeNames["3"] = "Park"
+typeNames["4"] = "Beach"
+typeNames["5"] = "University"
+typeNames["6"] = "Nature Reserve"
+typeNames["7"] = "Cemetery"
+--typeNames["8"] = "Retail" --old mall entry, should never appear
+typeNames["9"] = "Retail"
+typeNames["10"] = "Tourism"
+typeNames["11"] = "Historical"
+typeNames["12"] = "Trail"
+--typeNames["13"] = "" --admin entry, should never appear
+typeNames["14"] = "Building"
+typeNames["15"] = "Road"
+typeNames["16"] = "Parking"
+
 --making the network indicator persist through all scenes
 networkDown = display.newImageRect("themables/networkDown.png", 25, 25)
 networkDown.x = 0
@@ -104,6 +122,7 @@ function gpsListener(event)
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
        --currentPlusCode = "85PFF56C+5P" --Old Faithful
+       
 
     local plusCode6 = currentPlusCode:sub(0,6)
 

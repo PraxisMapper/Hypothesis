@@ -44,6 +44,12 @@ local function SwitchTo10Grid11ImageScene()
     composer.gotoScene("10GridScene11image", options)
 end
 
+local function SwitchToAreaControlScene()
+    local options = {effect = "flip", time = 125}
+    composer.gotoScene("10GridScene11AreaControl", options)
+end
+
+
 --this would just be downloading a 1-pixel image. Thats silly. Keep this as the existing scene.
 local function SwitchTo10Grid10ImageScene()
     local options = {effect = "flip", time = 125}
@@ -104,6 +110,14 @@ function scene:create( event )
     change10Grid10Image.x = 390
     change10Grid10Image.y = 500
     change10Grid10Image:addEventListener("tap", SwitchTo10Grid10ImageScene)
+
+    local changeAreaControl = display.newImageRect(sceneGroup, "themables/AreaControl.png", 300, 100)
+    changeAreaControl.anchorX = 0
+    changeAreaControl.anchorY = 0
+    changeAreaControl.x = 390
+    changeAreaControl.y = 700
+    changeAreaControl:addEventListener("tap", SwitchToAreaControlScene)
+
  
 end
  

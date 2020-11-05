@@ -97,6 +97,15 @@ function upgradeDatabaseVersion(oldDBversion)
          ]]
          Exec(v8Command)
    end
+   if (oldDBversion < 9) then
+    --do any scripting to match upgrade to version 9, i think i missed a number somewhere.
+        --new table
+        local v9Command = 
+       [[CREATE TABLE IF NOT EXISTS areasOwned(id INTEGER PRIMARY KEY, mapDataId, name, points);
+       ALTER TABLE terrainData ADD COLUMN MapDataId;
+         ]]
+         Exec(v9Command)
+   end   
 
    Exec("UPDATE systemData SET dbVersionID = " .. dbVersionID)
 end
@@ -113,6 +122,7 @@ function ResetDatabase()
     db:exec("drop table weeklyVisited")
     db:exec("drop table dailyVisited")
     db:exec("drop table trophysBought")
+    db:exec("drop table areasOwned")
     db:close()
     startDatabase()
 end

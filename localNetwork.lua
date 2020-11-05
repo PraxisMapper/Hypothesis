@@ -7,8 +7,8 @@ require("helpers") --for Split
 
 --serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
 --serverURL = "http://192.168.1.92:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
-serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
---serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
+--serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
+serverURL = "http://192.168.1.92/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
 --serverURL = "http://ec2-18-189-29-204.us-east-2.compute.amazonaws.com/" --AWS Test server, IP part of address will change each time instance is launched.
 
 --note: GpsExplore/" is now half of it, the other half is MapData/
@@ -115,8 +115,8 @@ function plusCode6Listener(event)
     print(#resultsTable)
     --Format:
     --line1: the 6cell requested
-    --remaining lines: the last 4 digits for a 10cell=name|type
-    --EX: 2248=Local Park|park
+    --remaining lines: the last 4 digits for a 10cell=name|type|mapDataId (for Area Control requests)
+    --EX: 2248=Local Park|park|12345
   
     local insertString = ""
     local insertCount = 0
@@ -127,7 +127,7 @@ function plusCode6Listener(event)
         if (resultsTable[i] ~= nil and resultsTable[i] ~= "") then 
             local data = Split(resultsTable[i], "|") --3 data parts in order
             data[2] = string.gsub(data[2], "'", "''")--escape data[2] to allow ' in name of places.
-            insertString = "INSERT INTO terrainData (plusCode, name, areatype) VALUES ('" .. resultsTable[1] .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "');" --insertString .. 
+            insertString = "INSERT INTO terrainData (plusCode, name, areatype, MapDataId) VALUES ('" .. resultsTable[1] .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "," .. data[4] .. "');" --insertString .. 
             db:exec(insertString)
         end
     end
@@ -191,9 +191,9 @@ function Get6CellImage11(plusCode6)
     --local params = { response = { filename = pluscode6 .. "-11.png", baseDirectory = system.DocumentsDirectory}}
     local params = {}
     params.response  = {filename = plusCode6 .. "-11.png", baseDirectory = system.DocumentsDirectory}
-    print("params set")
+    --print("params set")
     network.request(serverURL .. "MapData/6cellBitmap11/" .. plusCode6, "GET", image611Listener, params)
-    print("request made")
+    --print("request made")
 end
 
 function Get8CellImage10(plusCode8)
@@ -202,24 +202,24 @@ function Get8CellImage10(plusCode8)
     networkReqPending = true
     netTransfer()
     ShowLoadingPopup()
-    print("past loading popup")
+    --print("past loading popup")
     if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/8cellbitmap/" .. plusCode8) end
     local params = { response = { filename = plusCode8 .. "-10.png", baseDirectory = system.DocumentsDirectory}}
     network.request(serverURL .. "MapData/8cellBitmap/" .. plusCode8, "GET", image810Listener, params)
 end
 
 function Get8CellImage11(plusCode8)
-    print("trying 8cell11 download")
-    print(plusCode8)
+    --print("trying 8cell11 download")
+    --print(plusCode8)
     --if networkReqPending == true then return end
     networkReqPending = true
     netTransfer()
     ShowLoadingPopup()
-    print("past loading popup")
+    --print("past loading popup")
     --if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/8cellbitmap11/" .. plusCode8) end
     local params = {}
     params.response  = {filename = plusCode8 .. "-11.png", baseDirectory = system.DocumentsDirectory}
-    print("params set")
+    --print("params set")
     network.request(serverURL .. "MapData/8cellBitmap11/" .. plusCode8, "GET", image811Listener, params)
 end
 
@@ -231,11 +231,11 @@ function Get10CellImage11(plusCode)
     networkReqPending = true
     netTransfer()
     ShowLoadingPopup()
-    print("past loading popup")
+    --print("past loading popup")
     --if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/8cellbitmap11/" .. plusCode8) end
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.DocumentsDirectory}
-    print("params set")
+    --print("params set")
     network.request(serverURL .. "MapData/10cellBitmap11/" .. plusCode, "GET", image1011Listener, params)
 end
 
@@ -274,4 +274,11 @@ function image1011Listener(event)
     if (debug) then print("11cell11 listener fired") end
     HideLoadingPopup()
     if event.status == 200 then netUp() else netDown() end
+end
+
+--new ARea Control functions
+function GetAreaSizes()
+end
+
+function AreaSizeListener(event)
 end

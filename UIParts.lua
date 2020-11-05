@@ -45,7 +45,8 @@ end
 function debuggerHelperSquare(event)
     print("displaying data on a cell:" .. event.target.name)
     print(event.target == null)
-    native.showAlert("Cell", event.target.pluscode .. " | " .. event.target.name .. " | " .. event.target.type)
+    print(event.target.type)
+    native.showAlert("Cell", event.target.pluscode .. " | " .. event.target.name .. " | " .. typeNames[event.target.type])
 end
 
 function GoToStoreScene()
