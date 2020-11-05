@@ -1,5 +1,5 @@
 # GPSExploreGame
-Explore areas via PlusCodes for points
+Explore areas via PlusCodes for points. Use points for gameplay actions like claiming an area to control.
 
 Privacy Policy:
 Short version: Ads suck. Tracking data sucks. This app uses neither for monetary purposes. It send an ID to the leaderboards only to update your scores on the leaderboard.
