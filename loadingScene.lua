@@ -121,7 +121,7 @@ end
 function imageListenerLoading(event)
     --print("11cell11 listener fired")
     imagecount = imagecount - 1;
-    --print(imagecount)
+    print(imagecount)
     if (imagecount == 0) then
         startGame()
     end
