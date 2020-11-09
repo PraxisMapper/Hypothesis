@@ -38,8 +38,8 @@ local timerResults = nil
 local firstRun = true
 
 local locationText = ""
-local countText = ""
-local pointText = ""
+local explorePointText = ""
+local scoreText = ""
 local timeText = ""
 local directionArrow = ""
 local scoreLog = ""
@@ -93,6 +93,15 @@ local function UpdateLocal()
                 cellCollection[square].name = ""
                 cellCollection[square].type = ""
             end
+            
+            --Area control specific properties
+            --tints the image. if I've walked into a cell. 
+            cellCollection[square].MapDataId = terrainInfo[6]
+            if (CheckAreaOwned(terrainInfo[6]) == true) then
+               visitedCellDisplay[square].fill = visitedCell
+            else
+                visitedCellDisplay[square].fill = unvisitedCell
+            end
 
             if not cellCollection[square].isFilled then
                 --print("cell " .. square)
@@ -106,15 +115,7 @@ local function UpdateLocal()
                     cellCollection[square].fill = paint
                     cellCollection[square].isFilled = true
                 end
-
-                --tints the image. if I've walked into a cell. 
-                --This is Area Control mode, though, so I should apply this to areas I control.
-                 if VisitedCell(thisSquaresPluscode) then
-                    visitedCellDisplay[square].fill = visitedCell
-                 else
-                    visitedCellDisplay[square].fill = unvisitedCell
-                 end
-            end
+            end          
 
             if (currentPlusCode == thisSquaresPluscode) then
                 -- draw this place's name on screen, or an empty string if its not a place.
@@ -129,8 +130,8 @@ local function UpdateLocal()
     if (debugGPS) then print("grid done or skipped") end
     if (debugGPS) then print(locationText.text) end
     locationText.text = "Current location:" .. currentPlusCode
-    countText.text = "Total Explored Cells: " .. TotalExploredCells()
-    pointText.text = "Score: " .. Score()
+    explorePointText.text = "Explore Points: " .. Score()
+    scoreText.text = "Control Score: " .. AreaControlScore()
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading
     scoreLog.text = lastScoreLog
@@ -183,15 +184,14 @@ function scene:create(event)
 
     locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
-    countText = display.newText(sceneGroup, "Total Cells Explored: ?", display.contentCenterX, 240, native.systemFont, 20)
-    pointText = display.newText(sceneGroup, "Score: ?", display.contentCenterX, 260, native.systemFont, 20)
+    explorePointText = display.newText(sceneGroup, "Explore Points: ?", display.contentCenterX, 240, native.systemFont, 20)
+    scoreText = display.newText(sceneGroup, "Control Score: ?", display.contentCenterX, 260, native.systemFont, 20)
     scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1250, native.systemFont, 20)
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
 
     --CreateSquareGrid(23, 25, sceneGroup, cellCollection) --original square grid with spacing
-    CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-    CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay) -- rectangular Cell11 grid  with tint for area control
-
+    CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection, true) -- rectangular Cell11 grid with map tiles
+    CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay, true) -- rectangular Cell11 grid  with tint for area control
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 25, 25)
     directionArrow.x = display.contentCenterX
@@ -212,7 +212,7 @@ function scene:create(event)
     changeGrid:addEventListener("tap", SwitchToBigGrid)
     changeTrophy:addEventListener("tap", SwitchToTrophy)
 
-    local header = display.newImageRect(sceneGroup, "themables/SmallGridButton.png", 300, 100)
+    local header = display.newImageRect(sceneGroup, "themables/AreaControl.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)

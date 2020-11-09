@@ -48,6 +48,10 @@ lastHeadingTime = 0
 
 lastLocationEvent = ""
 
+tappedAreaName = ""
+tappedAreaScore = 0
+tappedAreaMapDataId = 0
+
 typeNames = {}
 typeNames["1"] = "Water"
 typeNames["2"] = "Wetlands"
@@ -122,7 +126,7 @@ function gpsListener(event)
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
        --currentPlusCode = "85PFF56C+5P" --Old Faithful
-      
+       
 
     local plusCode6 = currentPlusCode:sub(0,6)
 

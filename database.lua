@@ -304,11 +304,44 @@ function Downloaded6Cell(pluscode)
     local query = "SELECT COUNT(*) as c FROM dataDownloaded WHERE pluscode8 = '" .. pluscode .. "'"
     print (query)
     for i,row in ipairs(Query(query)) do
-        print(dump(row))
+        --print(dump(row))
         if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
             return true
         else
             return false
         end
     end
+end
+
+function ClaimAreaLocally(mapdataid, name, score)
+    if (debug) then print("claiming area " .. mapdataid) end
+    local cmd = "INSERT INTO areasOwned (mapDataId, name, points) VALUES (" .. mapdataid .. ", '" .. name .. "'," .. score ..")"
+    db:exec(cmd)
+end
+
+function CheckAreaOwned(mapdataid)
+    --if (debug) then print(mapdataid) end
+    if (mapdataid == null) then return false end
+    local query = "SELECT COUNT(*) as c FROM areasOwned WHERE MapDataId = "  .. mapdataid
+    for i,row in ipairs(Query(query)) do
+        --print(dump(row))
+        if (row[1] >= 1) then --any number of entries over 1 means this entry is owned
+            return true
+        else
+            return false
+        end
+    end
+end
+
+function AreaControlScore()
+    local query = "SELECT SUM(points) FROM areasOwned"
+    for i,row in ipairs(Query(query)) do
+        --if (debug) then print(row[1]) end
+        return row[1]
+    end
+end
+
+function SpendPoints(points)
+    local cmd = "UPDATE playerData SET totalPoints = totalPoints - " .. points
+    db:exec(cmd)
 end

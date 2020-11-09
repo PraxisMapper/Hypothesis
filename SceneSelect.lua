@@ -67,6 +67,8 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
+    local headerText = display.newText(sceneGroup, "Hypothesis - Mode Select", display.contentCenterX, 30, native.systemFont, 50)
+
     local change8grid = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300, 100)
     change8grid.anchorX = 0
     change8grid.anchorY = 0
@@ -78,14 +80,14 @@ function scene:create( event )
     change8grid11Image.anchorX = 0
     change8grid11Image.anchorY = 0
     change8grid11Image.x = 60
-    change8grid11Image.y = 300
+    change8grid11Image.y = 500
     change8grid11Image:addEventListener("tap", SwitchTo8GridScene11Image)
 
     local change8grid10Image = display.newImageRect(sceneGroup, "themables/8cell10image.png", 300, 100)
     change8grid10Image.anchorX = 0
     change8grid10Image.anchorY = 0
     change8grid10Image.x = 60
-    change8grid10Image.y = 500
+    change8grid10Image.y = 300
     change8grid10Image:addEventListener("tap", SwitchTo8GridScene10Image)
 
 
@@ -100,7 +102,7 @@ function scene:create( event )
     change10Grid11Image.anchorX = 0
     change10Grid11Image.anchorY = 0
     change10Grid11Image.x = 390
-    change10Grid11Image.y = 300
+    change10Grid11Image.y = 500
     change10Grid11Image:addEventListener("tap", SwitchTo10Grid11ImageScene)
 
 
@@ -108,7 +110,7 @@ function scene:create( event )
     change10Grid10Image.anchorX = 0
     change10Grid10Image.anchorY = 0
     change10Grid10Image.x = 390
-    change10Grid10Image.y = 500
+    change10Grid10Image.y = 300
     change10Grid10Image:addEventListener("tap", SwitchTo10Grid10ImageScene)
 
     local changeAreaControl = display.newImageRect(sceneGroup, "themables/AreaControl.png", 300, 100)

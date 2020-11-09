@@ -190,8 +190,8 @@ function scene:create(event)
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
 
     --CreateSquareGrid(23, 25, sceneGroup, cellCollection)
-    CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection) -- rectangles are different sized now. Will have to investigate sizing.
-    CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay) -- rectangular Cell11 grid  with tint for displaying where we;ve visited
+    CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection, false) -- rectangles are different sized now. Will have to investigate sizing.
+    CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay, false) -- rectangular Cell11 grid  with tint for displaying where we;ve visited
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 25, 25)
     directionArrow.x = display.contentCenterX

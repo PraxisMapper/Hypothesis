@@ -1,16 +1,52 @@
 --the popup to claim an area in the app.
 --Spend points == size of the whole area to color all it's cells sky blue to show ownership.
 local composer = require( "composer" )
+require("database")
+require("localNetwork")
 local scene = composer.newScene()
  
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
- 
- 
- 
- 
+
+local bg = ""
+local textDisplay = ""
+local yesButton = ""
+local noButton = ""
+
+local function yesListener()
+    --check walking score, if high enough, spend points and color this area in.
+    if (debug) then print("yes tapped") end
+    local points = Score()
+    if (debug) then print(points) end
+    if (points > tappedAreaScore) then
+        if (debug) then print("claiming") end
+        SpendPoints(tappedAreaScore)
+        ClaimAreaLocally(tappedAreaMapDataId, tappedAreaName, tappedAreaScore)
+        forceRedraw = true
+    end
+    composer.hideOverlay("overlayAreaClaim")
+end
+
+local function noListener()
+    composer.hideOverlay("overlayAreaClaim")
+end
+
+function GetAreaScore(mapdataid)
+    if (debug) then print("getting score for " .. mapdataid .. "locally") end
+    network.request(serverURL .. "MapData/CalculateMapDataScore/" .. mapdataid, "GET", AreaSizeListener)
+end
+
+function AreaSizeListener(event)
+    if (debug) then print("AreaSize local response: " .. event.response .. " " .. event.status) end
+    local scoreResults = Split(event.response, "|")[2]
+    tappedAreaScore = tonumber(scoreResults)
+    if (debug) then print(scoreResults) end
+    textDisplay.text = textDisplay.text .. scoreResults .. " points?"
+    yesButton.isVisible = true
+end
+
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -20,6 +56,23 @@ function scene:create( event )
  
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
+
+    local bgFill = {.6, .6, .6, 1}
+    bg = display.newRect(sceneGroup, display.contentCenterX, display.contentCenterY, 700, 500)
+    bg.fill = bgFill
+    textDisplay = display.newText(sceneGroup, "Claim X with Y points?", display.contentCenterX, display.contentCenterY - 150, 600, 100, native.systemFont, 30)
+
+    --need a yes and no button.
+    yesButton = display.newImageRect(sceneGroup, "themables/ACYes.png", 100, 100)
+    yesButton.x = display.contentCenterX - 200
+    yesButton.y = display.contentCenterY + 100
+    yesButton:addEventListener("tap", yesListener)
+    yesButton.isVisible = false
+
+    noButton = display.newImageRect(sceneGroup, "themables/ACNo.png", 100, 100)
+    noButton.x = display.contentCenterX + 200
+    noButton.y = display.contentCenterY + 100
+    noButton:addEventListener("tap", noListener)
  
 end
  
@@ -32,7 +85,8 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
- 
+        textDisplay.text = "Claim " .. tappedAreaName .. " with "
+        GetAreaScore(tappedAreaMapDataId) 
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
  

@@ -134,7 +134,7 @@ function scene:create( event )
 
     --NOTE: 11-cell resolution images for 8cells are 100x80, so use the new function
     --CreateSquareGrid(9, 65, sceneGroup, cellCollection)
-    CreateRectangleGrid(7, 80, 100, sceneGroup, cellCollection) --7 is the max that fits on screen at this image size
+    CreateRectangleGrid(7, 80, 100, sceneGroup, cellCollection, false) --7 is the max that fits on screen at this image size
 
     directionArrow = display.newImageRect(sceneGroup, "themables/circle1.png", 65, 65)
     directionArrow.x = display.contentCenterX
