@@ -302,7 +302,21 @@ end
 function Downloaded6Cell(pluscode)
     if (debug) then print("Checking if downloaded current 6 cell " .. pluscode) end
     local query = "SELECT COUNT(*) as c FROM dataDownloaded WHERE pluscode8 = '" .. pluscode .. "'"
-    print (query)
+    --print (query)
+    for i,row in ipairs(Query(query)) do
+        --print(dump(row))
+        if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
+            return true
+        else
+            return false
+        end
+    end
+end
+
+function Downloaded8Cell(pluscode)
+    --if (debug) then print("Checking if downloaded current 8 cell " .. pluscode) end
+    local query = "SELECT COUNT(*) as c FROM dataDownloaded WHERE pluscode8 = '" .. pluscode .. "'"
+    --print (query)
     for i,row in ipairs(Query(query)) do
         --print(dump(row))
         if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
@@ -331,14 +345,19 @@ function CheckAreaOwned(mapdataid)
             return false
         end
     end
+    return false
 end
 
 function AreaControlScore()
     local query = "SELECT SUM(points) FROM areasOwned"
     for i,row in ipairs(Query(query)) do
-        --if (debug) then print(row[1]) end
-        return row[1]
+        if (#row == 1) then
+            return row[1]
+        else
+            return 0
+        end
     end
+    return 0
 end
 
 function SpendPoints(points)

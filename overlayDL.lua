@@ -17,8 +17,6 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
  
  
- 
- 
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -26,7 +24,7 @@ local scene = composer.newScene()
 -- create()
 function scene:create( event )
  
-    print("creating AreaClaim overlay")
+    print("creating loading overlay")
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
     local spinner = display.newImageRect(sceneGroup, "themables/spinner.png", 300, 300)
@@ -43,7 +41,7 @@ end
  
 -- show()
 function scene:show( event )
-    print("showing AreaClaim overlay")
+    print("showing loading overlay")
     local sceneGroup = self.view
     local phase = event.phase
  

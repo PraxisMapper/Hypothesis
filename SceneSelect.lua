@@ -66,6 +66,7 @@ function scene:create( event )
  
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
+    if (debug) then print("showing SceneSelect") end
 
     local headerText = display.newText(sceneGroup, "Hypothesis - Mode Select", display.contentCenterX, 30, native.systemFont, 50)
 
@@ -129,6 +130,7 @@ function scene:show( event )
  
     local sceneGroup = self.view
     local phase = event.phase
+    if (debug) then print("showing SceneSelect") end
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
@@ -145,6 +147,8 @@ function scene:hide( event )
  
     local sceneGroup = self.view
     local phase = event.phase
+
+    if (debug) then print("hiding SceneSelect") end
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
@@ -161,6 +165,7 @@ function scene:destroy( event )
  
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view
+    if (debug) then print("destroying SceneSelect") end
  
 end
  

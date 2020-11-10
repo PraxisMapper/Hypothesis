@@ -70,6 +70,8 @@ typeNames["14"] = "Building"
 typeNames["15"] = "Road"
 typeNames["16"] = "Parking"
 
+requestedCells = {}
+
 --making the network indicator persist through all scenes
 networkDown = display.newImageRect("themables/networkDown.png", 25, 25)
 networkDown.x = 0
@@ -98,6 +100,7 @@ composer.gotoScene("loadingScene")
 
 function gpsListener(event)
 
+    print("main gps on")
     local eventL = event --assign it locally just in case somethings messing with the parent event object
 
     if (debugGPS) then
@@ -126,17 +129,18 @@ function gpsListener(event)
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
        --currentPlusCode = "85PFF56C+5P" --Old Faithful
+
        
 
-    local plusCode6 = currentPlusCode:sub(0,6)
+    local plusCode8 = currentPlusCode:sub(0,8)
 
     --checking here. Checking for this after GrantPoints updates the visited list before this, would never load data.
     --Note: 6-cell image download takes over a minute most times. dont use it.
     print("checking for terrain data")
-    local hasData = Downloaded6Cell(plusCode6)
+    local hasData = Downloaded8Cell(plusCode8)
     print(hasData)
     if (hasData == false) then
-        Get6CellData(plusCode6) -- we do need terrain info here.
+        Get8CellData(plusCode8) -- we do need terrain info here.
     end
 
     --These seem more reasonable to use game-wise. much faster and smaller

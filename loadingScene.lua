@@ -16,6 +16,9 @@ require("localNetwork")
  local statusText = "" --displayText object for info
  imagecount = 0; --pending responses on map tiles.
 
+ local lat = 0
+ local lon = 0
+
  local function startGame()
     --composer.gotoScene("10SceneNavigate")
     --composer.gotoScene("8GridScene11Image")
@@ -23,14 +26,22 @@ require("localNetwork")
     composer.gotoScene("SceneSelect")
  end
 
- function Get6CellDataLoading(pluscode6)
+ function Get8CellDataLoading(pluscode8)
     if networkReqPending == true then return end
-    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell6Info/" .. pluscode6) end
-    network.request(serverURL .. "MapData/Cell6Info/" .. pluscode6, "GET", plusCode6ListenerLoading)
+    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell8Info/" .. pluscode8) end
+    network.request(serverURL .. "MapData/Cell8Info/" .. pluscode8, "GET", plusCode8ListenerLoading)
 end
 
-function plusCode6ListenerLoading(event)
-    if (debugNetwork) then print("plus code 6 event response status: " .. event.status) end --these are fairly large, 10k entries isnt weird.
+-- function GetSurroundingData(lat, lon)
+--     print("getting surrounding data")
+--     if (networkReqPending == true) then print("abandoning data load") return end
+--     if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/LearnSurroundingFlex/" .. lat .. "/" .. lon .. "/.0025") end
+--     network.request(serverURL .. "MapData/LearnSurroundingFlex/" .. lat .. "/" .. lon .. "/.0025", "GET", flexLoadingListener)
+--     print("flex request sent")
+-- end
+
+function plusCode8ListenerLoading(event)
+    if (debugNetwork) then print("plus code 8 event response status: " .. event.status) end --these are fairly large, 10k entries isnt weird.
     if (event.status ~= 200) then 
         LoadMapData()
         return --dont' save invalid results on an error.
@@ -71,6 +82,44 @@ function plusCode6ListenerLoading(event)
     LoadMapData()
 end
 
+-- function flexLoadingListener(event)
+--     print("flex listener started")
+--     if (debugNetwork) then print("flex event response status: " .. event.status) end --these are fairly large, 10k entries isnt weird.
+--     if event.status == 200 then netUp() else netDown() end
+--     if (event.status ~= 200) then 
+--         networkReqPending = false --allow the download to retry on the next event.
+--         return --dont' save invalid results on an error.
+--     end 
+
+--     print(event.response)
+--     --This one splits each 10cell via newline.
+--     local resultsTable = Split(event.response, "\r\n") --windows newlines
+--     --Format:
+--     --first line is lat/lon coords passed in
+--     --10cell|name|typeID|size
+--     --EX: 86CCXX2248=Local Park|park|12345
+  
+--     local insertString = ""
+--     local insertCount = 0
+
+--     db:exec("BEGIN TRANSACTION") --transactions for multiple inserts are a huge performance boost.
+--     for i = 2, #resultsTable do
+--         if (resultsTable[i] ~= nil and resultsTable[i] ~= "") then 
+--             local data = Split(resultsTable[i], "|") --3 data parts in order
+--             data[2] = string.gsub(data[2], "'", "''")--escape data[2] to allow ' in name of places.
+--             insertString = "INSERT INTO terrainData (plusCode, name, areatype, MapDataId) VALUES ('" .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "', '" .. data[4] .. "');" --insertString .. 
+--             --print(insertString)
+--             local results = db:exec(insertString)
+--             --print(results)
+--         end
+--     end
+--     local e2 = db:exec("END TRANSACTION")
+--     if(debugNetwork) then print("table done") end
+
+--     networkReqPending = false 
+--     LoadMapData()
+-- end
+
 function LoadMapData()
     statusText.text = "Downloading map data"
     print("getting map info")
@@ -82,7 +131,10 @@ function LoadMapData()
                     shiftedCode = shiftCellV3(shiftedCode, y, 9)
                     local plusCodeNoPlus = shiftedCode:sub(1, 8) .. shiftedCode:sub(10, 11)
                     --print(plusCodeNoPlus)
-                    Get10CellImage11Loading(plusCodeNoPlus)
+                    local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
+                    if (not imageExists) then
+                        Get10CellImage11Loading(plusCodeNoPlus)
+                    end
                 end
             end
 
@@ -93,18 +145,23 @@ function LoadMapData()
                     shiftedCode = shiftCellV3(shiftedCode, y, 7)
                     local plusCodeNoPlus = shiftedCode:sub(1, 8)
                     --print(plusCodeNoPlus)
-                    Get8CellImage11Loading(plusCodeNoPlus)
+                    local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
+                    if (not imageExists) then
+                        Get8CellImage11Loading(plusCodeNoPlus)
+                    end
                 end
             end
         
         --print("loading scene done")
         --statusText.text = "Opening Game..."
-        --timer.performWithDelay(50, startGame, 1)   
+        if (imagecount == 0) then
+            timer.performWithDelay(50, startGame, 1)   
+        end
 end
 
 function Get10CellImage11Loading(plusCode)
     --print("trying 10cell11 download")
-    print(plusCode)
+    --print(plusCode)
     --plusCode10 = plusCode10:sub(0, 8) .. plusCode10:sub(10, 11) -- remove the actual plus sign
     --if networkReqPending == true then return end
     --print("past loading popup")
@@ -114,14 +171,14 @@ function Get10CellImage11Loading(plusCode)
     --print("params set")
     network.request(serverURL .. "MapData/10cellBitmap11/" .. plusCode, "GET", imageListenerLoading, params)
     imagecount = imagecount + 1
-    print(imagecount)
-    print("end network request")
+    --print(imagecount)
+    --print("end network request")
 end
 
 function imageListenerLoading(event)
     --print("11cell11 listener fired")
     imagecount = imagecount - 1;
-    print(imagecount)
+    --print(imagecount)
     if (imagecount == 0) then
         startGame()
     end
@@ -145,6 +202,8 @@ end
  function loadingGpsListener(event)
     local eventL = event --assign it locally just in case somethings messing with the parent event object
 
+    currentPlusCode = "86HWG93R+6J" --CWRU
+
     if (debugGPS) then
         print("got GPS event")
         if (eventL.errorCode ~= nil) then
@@ -155,6 +214,8 @@ end
         print("Coords " .. eventL.latitude .. " " ..eventL.longitude)
     end
 
+    lat = eventL.latitude
+    lon = eventL.longitude
     local pluscode = tryMyEncode(eventL.latitude, eventL.longitude, 10); --only goes to 10 right now.
     if (debugGPS) then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode
@@ -227,16 +288,16 @@ function scene:show( event )
         CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS trophysBought(id INTEGER PRIMARY KEY, itemCode, boughtOn);
+        CREATE TABLE IF NOT EXISTS terrainData (id INTEGER PRIMARY KEY, pluscode UNIQUE, name, areatype, lastUpdated, MapDataId);
+        CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode);
+        CREATE TABLE IF NOT EXISTS dataDownloaded(id INTEGER PRIMARY KEY, pluscode8, downloadedOn);
+        CREATE TABLE IF NOT EXISTS areasOwned(id INTEGER PRIMARY KEY, mapDataId, name, points);
         CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
         CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
         CREATE INDEX IF NOT EXISTS indexOwnedMapIds on areasOwned(mapDataId);
         INSERT OR IGNORE INTO systemData(id, dbVersionID, isGoodPerson, coffeesBought, deviceID) values (1, ]] .. currentDbVersion .. ", 0, 0, '" .. system.getInfo("deviceID") .. [[') ;
         INSERT OR IGNORE INTO playerData(id, distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude, minAltitude) values (1, 0.0, 0, 0, 0, 0.0, 0.0, 0, 20000);
         INSERT OR IGNORE INTO trophysBought(id, itemCode, boughtOn) VALUES (1, 0, 0);
-        CREATE TABLE IF NOT EXISTS terrainData (id INTEGER PRIMARY KEY, pluscode UNIQUE, name, areatype, lastUpdated, MapDataId);
-        CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode);
-        CREATE TABLE IF NOT EXISTS dataDownloaded(id INTEGER PRIMARY KEY, pluscode8, downloadedOn);
-        CREATE TABLE IF NOT EXISTS areasOwned(id INTEGER PRIMARY KEY, mapDataId, name, points);
         ]]
         
         print("tablesetup exists")
@@ -281,13 +342,17 @@ function scene:show( event )
 
         --If we dont have data for this Cell6, download it.
         --if we do, skip this.
-        if (Downloaded6Cell(currentPlusCode:sub(0,6)) == false) then
-            print("downloading 6cell data")
+        --if (Downloaded6Cell(currentPlusCode:sub(0,6)) == false) then
+          --  print("downloading 6cell data")
             statusText.text = "downloading area data"
-            Get6CellDataLoading(currentPlusCode:sub(0, 6)) --fill up the database will all the 10-cell entries for this 6-cell if possible.
-        else
-            startGame()
-        end
+            Get8CellDataLoading(currentPlusCode:sub(0, 8)) --fill up the database will all the 10-cell entries for this 6-cell if possible.
+        --while (lon == 0) do
+        --just gonna busy loop here.
+        --end
+            --GetSurroundingData(lat, lon)
+        --else
+          --  startGame()
+        --end
     end
 end
  

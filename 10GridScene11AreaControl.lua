@@ -1,6 +1,7 @@
 -- TODO: this will be the Area Control scene for this debug/demo app.
 --Tap a square, show overlayAreaClaim to claim a square
 --have a 2nd grid of images overlaying the original grid, tint those squares sky blue and translucent (50%? 30%?) if it's an owned cell.
+
 local composer = require("composer")
 local scene = composer.newScene()
 
@@ -58,6 +59,8 @@ local function UpdateLocal()
     if (debugLocal) then print("start UpdateLocal") end
     if (debugLocal) then print(currentPlusCode) end
 
+    cellsToRequest = {} -- these need to be distinct. I cant just add every cell.
+
     if (currentPlusCode == "") then
         if timerResults == nil then
             timerResults = timer.performWithDelay(500, UpdateLocal, -1)
@@ -69,6 +72,7 @@ local function UpdateLocal()
     if (debug) then debugText.text = dump(lastLocationEvent) end
 
     if (currentPlusCode ~= previousPlusCode or firstRun or forceRedraw or debugGPS) then
+        if (debugLocal) then print("entering main loop") end
         firstRun = false
         forceRedraw = false
         previousPlusCode = currentPlusCode
@@ -80,6 +84,10 @@ local function UpdateLocal()
             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 9)
             cellCollection[square].pluscode = thisSquaresPluscode
             local plusCodeNoPlus = thisSquaresPluscode:sub(1, 8) .. thisSquaresPluscode:sub(10, 11)
+
+            if (Downloaded8Cell(thisSquaresPluscode:sub(1, 8)) == false) then
+                cellsToRequest[#cellsToRequest+ 1] = thisSquaresPluscode:sub(1, 8)
+            end
 
             --print("updating local")
             -- apply type now if we found it.
@@ -95,10 +103,14 @@ local function UpdateLocal()
             end
             
             --Area control specific properties
-            --tints the image. if I've walked into a cell. 
-            cellCollection[square].MapDataId = terrainInfo[6]
-            if (CheckAreaOwned(terrainInfo[6]) == true) then
-               visitedCellDisplay[square].fill = visitedCell
+            --only try to tint cells if we have a TerrainInfo property
+            if (#terrainInfo >= 6) then
+                cellCollection[square].MapDataId = terrainInfo[6]
+                if (CheckAreaOwned(terrainInfo[6]) == true) then
+                    visitedCellDisplay[square].fill = visitedCell
+                else    
+                    visitedCellDisplay[square].fill = unvisitedCell
+                end
             else
                 visitedCellDisplay[square].fill = unvisitedCell
             end
@@ -109,25 +121,31 @@ local function UpdateLocal()
                 if (not imageExists) then
                     --pull image from server
                     --print("dl image " .. plusCodeNoPlus)
-                    Get10CellImage11(plusCodeNoPlus)
+                    if (requestedCells[plusCodeNoPlus] == null) then
+                        Get10CellImage11(plusCodeNoPlus)
+                        requestedCells[plusCodeNoPlus] = 1
+                    end
                 else
                     local paint = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.DocumentsDirectory}
                     cellCollection[square].fill = paint
                     cellCollection[square].isFilled = true
+                    --if (debugLocal) then print("painted cell with loaded image") end
                 end
             end          
 
+          
             if (currentPlusCode == thisSquaresPluscode) then
+                if (debugLocal) then print("setting name") end
                 -- draw this place's name on screen, or an empty string if its not a place.
                 locationName.text = cellCollection[square].name
-                if locationName.text == "" then
+                if (locationName.text == ""  and cellCollection[square].type ~= 0) then
                     locationName.text = typeNames[cellCollection[square].type]
                 end
             end
         end
     end
 
-    if (debugGPS) then print("grid done or skipped") end
+    if (debugLocal) then print("grid done or skipped") end
     if (debugGPS) then print(locationText.text) end
     locationText.text = "Current location:" .. currentPlusCode
     explorePointText.text = "Explore Points: " .. Score()
@@ -136,11 +154,23 @@ local function UpdateLocal()
     directionArrow.rotation = currentHeading
     scoreLog.text = lastScoreLog
 
+    if (debugLocal) then print("setting timer") end
     if timerResults == nil then
         timerResults = timer.performWithDelay(500, UpdateLocal, -1)
     end
 
-    if (debugGPS) then print("end updateLocal") end
+    --print("not borked yet " .. #cellsToRequest)
+    local allCells = ""
+    for i = 1, #cellsToRequest do
+        if (string.find(allCells, cellsToRequest[i]) == nil) then
+            print("getting data on " .. cellsToRequest[i])
+            Get8CellData(cellsToRequest[i])
+            allCells = allCells .. "," .. cellsToRequest[i]
+            forceRedraw = true
+        end
+    end
+
+    if (debugLocal) then print("end updateLocal") end
 end
 
 local function SwitchToBigGrid()
@@ -178,7 +208,7 @@ end
 
 function scene:create(event)
 
-    if (debug) then print("creating 10GridScene") end
+    if (debug) then print("creating AreaControlScene") end
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
@@ -237,13 +267,13 @@ function scene:create(event)
         print("Created debugText")
     end
 
-    if (debug) then print("created 10Grid11Scene") end
+    if (debug) then print("created AreaControl scene") end
 
 end
 
 -- show()
 function scene:show(event)
-    if (debug) then print("showing 10Grid11Scene") end
+    if (debug) then print("showing AreaControl scene") end
     local sceneGroup = self.view
     local phase = event.phase
 
@@ -261,7 +291,7 @@ end
 
 -- hide()
 function scene:hide(event)
-    if (debug) then print("hiding 10GridScene") end
+    if (debug) then print("hiding AreaControl scene") end
     local sceneGroup = self.view
     local phase = event.phase
 
@@ -277,7 +307,7 @@ end
 
 -- destroy()
 function scene:destroy(event)
-    if (debug) then print("destroying 10GridScene") end
+    if (debug) then print("destroying AreaControl scene") end
 
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view

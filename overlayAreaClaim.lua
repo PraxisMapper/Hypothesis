@@ -42,9 +42,12 @@ function AreaSizeListener(event)
     if (debug) then print("AreaSize local response: " .. event.response .. " " .. event.status) end
     local scoreResults = Split(event.response, "|")[2]
     tappedAreaScore = tonumber(scoreResults)
-    if (debug) then print(scoreResults) end
+    if (debug) then print(scoreResults) print(Score()) end
     textDisplay.text = textDisplay.text .. scoreResults .. " points?"
-    yesButton.isVisible = true
+    if (tonumber(scoreResults) <= Score()) then
+        print("showing yes button")
+        yesButton.isVisible = true
+    end
 end
 
 -- -----------------------------------------------------------------------------------

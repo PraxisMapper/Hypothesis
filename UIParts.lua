@@ -57,13 +57,20 @@ function debuggerHelperSquare(event)
 end
 
 function showAreaClaim(event)
+    --sanity check, if we click on an area we don't have data for, request that data again.
+    if (Downloaded8Cell(event.target.pluscode:sub(0,8)) == false) then
+        Get8CellData(event.target.pluscode:sub(0,8))
+    end
+
     if (debug) then 
-        print("claim display for area cell" .. event.target.name) 
+        print("showareaclaim clicked")
         print(event.target == null)
         print(event.target.type)
+
+        print("claim display for area cell" .. event.target.name) 
         print(event.target.MapDataId)
     end
-    if (event.target.type == "") then
+    if (event.target.type == "" or event.target.type == null) then
         return
     end
     --dont claim areas you already own
