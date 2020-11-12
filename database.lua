@@ -316,15 +316,16 @@ end
 function Downloaded8Cell(pluscode)
     --if (debug) then print("Checking if downloaded current 8 cell " .. pluscode) end
     local query = "SELECT COUNT(*) as c FROM dataDownloaded WHERE pluscode8 = '" .. pluscode .. "'"
-    --print (query)
+    print (query)
     for i,row in ipairs(Query(query)) do
-        --print(dump(row))
+        print(dump(row))
         if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
             return true
         else
             return false
         end
     end
+    return false
 end
 
 function ClaimAreaLocally(mapdataid, name, score)

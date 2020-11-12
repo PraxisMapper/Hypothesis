@@ -122,7 +122,9 @@ local function UpdateLocal()
             
             --if not cellCollection[square].isFilled then
                 --check if we need to download the map tile
+                
                 local imageExists = mapTilesAlreadyPresent[plusCodeNoPlus]
+                
                 if (imageExists == nil) then
                     imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
                 end

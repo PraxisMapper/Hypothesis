@@ -100,8 +100,8 @@ networkTx.isVisible = false
 print("shifting to loading scene")
 local composer = require("composer")
 composer.isDebug = debug
---composer.gotoScene("loadingScene")
-composer.gotoScene("SceneSelect")
+composer.gotoScene("loadingScene")
+--composer.gotoScene("SceneSelect")
 
 
 function gpsListener(event)

@@ -29,7 +29,8 @@ require("localNetwork")
  function Get8CellDataLoading(pluscode8)
     if networkReqPending == true then return end
     if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell8Info/" .. pluscode8) end
-    network.request(serverURL .. "MapData/Cell8Info/" .. pluscode8, "GET", plusCode8ListenerLoading)
+    --network.request(serverURL .. "MapData/Cell8Info/" .. pluscode8, "GET", plusCode8ListenerLoading)
+    LoadMapData()
 end
 
 -- function GetSurroundingData(lat, lon)
@@ -125,32 +126,32 @@ function LoadMapData()
     print("getting map info")
             --download map cells.
             --check 35x35 area, since that's the starting grid.
-            for x = -17, 17 do
-                for y = -17, 17 do
-                    local shiftedCode = shiftCellV3(currentPlusCode, x, 10)
-                    shiftedCode = shiftCellV3(shiftedCode, y, 9)
-                    local plusCodeNoPlus = shiftedCode:sub(1, 8) .. shiftedCode:sub(10, 11)
-                    --print(plusCodeNoPlus)
-                    local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
-                    if (not imageExists) then
-                        Get10CellImage11Loading(plusCodeNoPlus)
-                    end
-                end
-            end
+            -- for x = -17, 17 do
+            --     for y = -17, 17 do
+            --         local shiftedCode = shiftCellV3(currentPlusCode, x, 10)
+            --         shiftedCode = shiftCellV3(shiftedCode, y, 9)
+            --         local plusCodeNoPlus = shiftedCode:sub(1, 8) .. shiftedCode:sub(10, 11)
+            --         --print(plusCodeNoPlus)
+            --         local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
+            --         if (not imageExists) then
+            --             Get10CellImage11Loading(plusCodeNoPlus)
+            --         end
+            --     end
+            -- end
 
-            --TODO: should also grab the Cell8 tiles while i'm here.
-            for x = -3, 3 do
-                for y = -3, 3 do
-                    local shiftedCode = shiftCellV3(currentPlusCode, x, 8)
-                    shiftedCode = shiftCellV3(shiftedCode, y, 7)
-                    local plusCodeNoPlus = shiftedCode:sub(1, 8)
-                    --print(plusCodeNoPlus)
-                    local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
-                    if (not imageExists) then
-                        Get8CellImage11Loading(plusCodeNoPlus)
-                    end
-                end
-            end
+            -- --TODO: should also grab the Cell8 tiles while i'm here.
+            -- for x = -3, 3 do
+            --     for y = -3, 3 do
+            --         local shiftedCode = shiftCellV3(currentPlusCode, x, 8)
+            --         shiftedCode = shiftCellV3(shiftedCode, y, 7)
+            --         local plusCodeNoPlus = shiftedCode:sub(1, 8)
+            --         --print(plusCodeNoPlus)
+            --         local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
+            --         if (not imageExists) then
+            --             Get8CellImage11Loading(plusCodeNoPlus)
+            --         end
+            --     end
+            -- end
         
         --print("loading scene done")
         --statusText.text = "Opening Game..."
@@ -332,20 +333,22 @@ function scene:show( event )
         end
 
         statusText.text = "Checking area data"
-        print(currentPlusCode)
-        while currentPlusCode == "" do
-            -- do nothing until we have a location
-            print(currentPlusCode)
-            sleep(1)
-        end
-        print("past plus code wait")
+        LoadMapData()
+        
+        --print(currentPlusCode)
+        -- while currentPlusCode == "" do
+        --     -- do nothing until we have a location
+        --     print(currentPlusCode)
+        --     sleep(1)
+        -- end
+        -- print("past plus code wait")
 
         --If we dont have data for this Cell6, download it.
         --if we do, skip this.
         --if (Downloaded6Cell(currentPlusCode:sub(0,6)) == false) then
           --  print("downloading 6cell data")
-            statusText.text = "downloading area data"
-            Get8CellDataLoading(currentPlusCode:sub(0, 8)) --fill up the database will all the 10-cell entries for this 6-cell if possible.
+            --statusText.text = "downloading area data"
+            --Get8CellDataLoading(currentPlusCode:sub(0, 8)) --fill up the database will all the 10-cell entries for this 6-cell if possible.
         --while (lon == 0) do
         --just gonna busy loop here.
         --end
