@@ -3,6 +3,8 @@
 -----------------------------------------------------------------------------------------
 --this function sets up a few global variables and baseline config.
 --remember, lua requires code to be in order to reference (cant call a function that's lower in the file than the current one)
+--Remember: in LUA, if you use strings to index a table, you can't use #table to get a count accurately, but the string reference will work.
+
 
 --TODO:
 --implement store stuff
@@ -31,7 +33,7 @@ debug = true --set false for release builds. Set true for lots of console info b
 debugShift = false --display math for shifting PlusCodes
 debugGPS = false --display data for the GPS event and timer loop and auto-move
 debugDB = false
-debugLocal = false
+debugLocal = true
 debugNetwork = true
 --uncomment when testing to clear local data.
 --ResetDatabase()
@@ -70,7 +72,7 @@ typeNames["14"] = "Building"
 typeNames["15"] = "Road"
 typeNames["16"] = "Parking"
 
-requestedCells = {}
+requestedCells = ""
 
 --making the network indicator persist through all scenes
 networkDown = display.newImageRect("themables/networkDown.png", 25, 25)
@@ -94,13 +96,17 @@ networkTx.anchorY = 0
 networkTx.isVisible = false
 
 
+
 print("shifting to loading scene")
 local composer = require("composer")
-composer.gotoScene("loadingScene")
+composer.isDebug = debug
+--composer.gotoScene("loadingScene")
+composer.gotoScene("SceneSelect")
+
 
 function gpsListener(event)
 
-    print("main gps on")
+    print("main gps fired")
     local eventL = event --assign it locally just in case somethings messing with the parent event object
 
     if (debugGPS) then
@@ -129,8 +135,6 @@ function gpsListener(event)
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
        --currentPlusCode = "85PFF56C+5P" --Old Faithful
-
-       
 
     local plusCode8 = currentPlusCode:sub(0,8)
 
@@ -198,8 +202,8 @@ function gpsListener(event)
     lastLocationEvent = eventL
 end
 
-
 timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)
+Runtime:addEventListener("location", gpsListener)
 
 function netUp()
     print("network is up")

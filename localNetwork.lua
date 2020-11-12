@@ -12,7 +12,7 @@ serverURL = "http://192.168.50.247/GPSExploreServerAPI/" -- local network, doesn
 --serverURL = "http://ec2-18-189-29-204.us-east-2.compute.amazonaws.com/" --AWS Test server, IP part of address will change each time instance is launched.
 
 --note: GpsExplore/" is now half of it, the other half is MapData/
-local requestedCells = ""
+--local requestedCells = "" this is now in main and global
 
 --In-process change:
 --look into changing from downloading a whole 6-cell to pulling areas .01 degree at at time (~4 8-cells at once)
@@ -205,10 +205,14 @@ function Get8CellData(lat, lon)
 end
 
 function Get8CellData(code8)
-    print("getting 8 cell data " .. code8)
     --if networkReqPending == true then return end
-    if (requestedCells.find(code8 .. ",") ~= nil) then return end
+    print("starting cell8 data " .. code8)
+    local cellAlreadyRequested = string.find(requestedCells, code8 .. ",")
+    print(cellAlreadyRequested)
+    if (cellAlreadyRequested ~= nil) then print("or not") return end
+    print("found requested cell")
     networkReqPending = true
+    if debugNetwork then print("network: getting 8 cell data " .. code8) end
     requestedCells = requestedCells .. code8 .. ","
     if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell8Info/" .. code8) end
     network.request(serverURL .. "MapData/Cell8Info/" .. code8, "GET", plusCode8Listener)
@@ -260,7 +264,7 @@ end
 
 function Get10CellImage11(plusCode)
     --print("trying 10cell11 download")
-    print(plusCode)
+    print("DL image for " .. plusCode)
     --plusCode10 = plusCode10:sub(0, 8) .. plusCode10:sub(10, 11) -- remove the actual plus sign
     --if networkReqPending == true then return end
     networkReqPending = true
@@ -289,8 +293,8 @@ function image811Listener(event)
 end
 
 function image1011Listener(event)
-    if (debug) then print("10cell11 listener fired") end
-    HideLoadingPopup()
+    if (debug) then print("10cell11 listener fired:" .. event.status) end
+    --HideLoadingPopup()
     forceRedraw = true
     if event.status == 200 then netUp() else netDown() end
 end

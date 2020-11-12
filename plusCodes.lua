@@ -42,7 +42,7 @@ local GRID_COL_MULTIPLIER = 1024
 
 --my own pass at the algorithm. shorter, less thorough.
 function tryMyEncode(latitude, longitude, codeLength)
-    if (debug) then print("encoding latlong") end
+    --if (debug) then print("encoding latlong") end
     local code = ""
     local lat = math.floor((latitude + 90) * 8000)
     local long = math.floor((longitude + 180) * 8000)
@@ -51,8 +51,8 @@ function tryMyEncode(latitude, longitude, codeLength)
         long = long * GRID_COL_MULTIPLIER
     end
 
-    if (debug) then print("calc'd lat is   " .. lat) end
-    if (debug) then print("calc'd long is  " .. long) end 
+    --if (debug) then print("calc'd lat is   " .. lat) end
+    --if (debug) then print("calc'd long is  " .. long) end 
 
     -- 10 most significant digits
     for i= 1, 5, 1 do
@@ -62,12 +62,12 @@ function tryMyEncode(latitude, longitude, codeLength)
         code = CODE_ALPHABET_:sub(nextLatChar, nextLatChar) .. CODE_ALPHABET_:sub(nextLongChar, nextLongChar) .. code
         lat = math.floor(lat / 20)
         long = math.floor(long / 20)
-        if (debug) then print("assembled code so far is  " .. code) end
+        --if (debug) then print("assembled code so far is  " .. code) end
     end
 
     --11th digit is from a 4x5 grid, starting with 2 in the lower-left corner and ending with X in the upper-right, increasing left-to-right and then bottom-to-top
     if (codeLength == 11) then
-        print("lat is " .. lat .. " lon is " .. long)
+        --print("lat is " .. lat .. " lon is " .. long)
         local latGrid = lat % 5
         local lonGrid = long % 4
         local indexDigit = latGrid * GRID_COLUMNS_ + lonGrid

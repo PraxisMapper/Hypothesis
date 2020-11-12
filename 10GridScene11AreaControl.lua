@@ -47,6 +47,11 @@ local scoreLog = ""
 local debugText = {}
 local locationName = ""
 
+local allCellsTerrain = ""
+local cellTerrainToRequest = {} -- these need to be distinct. I cant just add every cell.
+local cellTilesToRequest = {}
+local mapTilesAlreadyPresent = {}
+
 local function testDrift()
     if (os.time() % 2 == 0) then
         currentPlusCode = shiftCellV3(currentPlusCode, 1, 9) -- move north
@@ -59,7 +64,7 @@ local function UpdateLocal()
     if (debugLocal) then print("start UpdateLocal") end
     if (debugLocal) then print(currentPlusCode) end
 
-    cellsToRequest = {} -- these need to be distinct. I cant just add every cell.
+    
 
     if (currentPlusCode == "") then
         if timerResults == nil then
@@ -85,10 +90,10 @@ local function UpdateLocal()
             cellCollection[square].pluscode = thisSquaresPluscode
             local plusCodeNoPlus = thisSquaresPluscode:sub(1, 8) .. thisSquaresPluscode:sub(10, 11)
 
+            --check if we need to download terrain data
             if (Downloaded8Cell(thisSquaresPluscode:sub(1, 8)) == false) then
-                cellsToRequest[#cellsToRequest+ 1] = thisSquaresPluscode:sub(1, 8)
+                cellTerrainToRequest[#cellTerrainToRequest+ 1] = thisSquaresPluscode:sub(1, 8)
             end
-
             --print("updating local")
             -- apply type now if we found it.
             local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
@@ -97,7 +102,6 @@ local function UpdateLocal()
                 cellCollection[square].name = terrainInfo[3]
                 cellCollection[square].type = terrainInfo[4]
             else
-                -- apply generic colors.
                 cellCollection[square].name = ""
                 cellCollection[square].type = ""
             end
@@ -115,25 +119,33 @@ local function UpdateLocal()
                 visitedCellDisplay[square].fill = unvisitedCell
             end
 
-            if not cellCollection[square].isFilled then
-                --print("cell " .. square)
-                local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
+            
+            --if not cellCollection[square].isFilled then
+                --check if we need to download the map tile
+                local imageExists = mapTilesAlreadyPresent[plusCodeNoPlus]
+                if (imageExists == nil) then
+                    imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
+                end
                 if (not imageExists) then
                     --pull image from server
                     --print("dl image " .. plusCodeNoPlus)
-                    if (requestedCells[plusCodeNoPlus] == null) then
+                    --print(requestedCells)
+                cellTerrainToRequest[#cellTerrainToRequest+ 1] = thisSquaresPluscode:sub(1, 8)
+                local cellTilesToRequest = {}
+                    local cellAlreadyCalled = string.find(requestedCells, plusCodeNoPlus .. ",")
+                    if ( cellAlreadyCalled == nil) then
                         Get10CellImage11(plusCodeNoPlus)
-                        requestedCells[plusCodeNoPlus] = 1
+                        requestedCells = requestedCells .. plusCodeNoPlus .. ","
                     end
                 else
+                    mapTilesAlreadyPresent[plusCodeNoPlus] = 1
                     local paint = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.DocumentsDirectory}
                     cellCollection[square].fill = paint
                     cellCollection[square].isFilled = true
                     --if (debugLocal) then print("painted cell with loaded image") end
                 end
-            end          
+              
 
-          
             if (currentPlusCode == thisSquaresPluscode) then
                 if (debugLocal) then print("setting name") end
                 -- draw this place's name on screen, or an empty string if its not a place.
@@ -159,13 +171,21 @@ local function UpdateLocal()
         timerResults = timer.performWithDelay(500, UpdateLocal, -1)
     end
 
-    --print("not borked yet " .. #cellsToRequest)
-    local allCells = ""
-    for i = 1, #cellsToRequest do
-        if (string.find(allCells, cellsToRequest[i]) == nil) then
-            print("getting data on " .. cellsToRequest[i])
-            Get8CellData(cellsToRequest[i])
-            allCells = allCells .. "," .. cellsToRequest[i]
+    --print("not borked yet " .. #cellTerrainToRequest)
+    local cellTilesToRequest = {}
+    for i = 1, #cellTerrainToRequest do
+        local cellTilesToRequest = {}
+        if (string.find(allCellsTerrain, cellTerrainToRequest[i]) == nil) then
+            local cellTilesToRequest = {}
+            print("getting data on " .. cellTerrainToRequest[i])
+            local cellTilesToRequest = {}
+            Get8CellData(cellTerrainToRequest[i])
+            local cellTilesToRequest = {}
+            print("data requested")
+            allCellsTerrain
+         = allCellsTerrain
+         .. "," .. cellTerrainToRequest[i]
+            local cellTilesToRequest = {}
             forceRedraw = true
         end
     end
