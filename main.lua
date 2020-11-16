@@ -54,6 +54,8 @@ tappedAreaName = ""
 tappedAreaScore = 0
 tappedAreaMapDataId = 0
 
+tappedCell = ""
+
 typeNames = {}
 typeNames["1"] = "Water"
 typeNames["2"] = "Wetlands"
@@ -95,7 +97,9 @@ networkTx.anchorX = 0
 networkTx.anchorY = 0
 networkTx.isVisible = false
 
-
+tapData = display.newText("cell tapped:", 25, 0, native.systemFont, 20)
+tapData.anchorX = 0
+tapData.anchorY = 0;
 
 print("shifting to loading scene")
 local composer = require("composer")
@@ -202,11 +206,16 @@ function gpsListener(event)
     lastLocationEvent = eventL
 end
 
+--This only shows the apps config. Useless.
+-- function updateFPS()
+--     fpsText.text = "FPS:" .. display.fps
+-- end
+
 timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)
 Runtime:addEventListener("location", gpsListener)
 
 function netUp()
-    print("network is up")
+    --print("network is up")
     networkResults = "up"
     networkUp.isVisible = true
     networkDown.isVisible = false
@@ -214,7 +223,7 @@ function netUp()
 end
 
 function netDown()
-    print("network is down")
+    --print("network is down")
     networkResults = "down"
     networkDown.isVisible = true
     networkUp.isVisible = false
@@ -222,7 +231,7 @@ function netDown()
 end
 
 function netTransfer()
-    print("network data in process")
+    --print("network data in process")
     networkResults = "transfer"
     networkDown.isVisible = false
     networkUp.isVisible = false
@@ -236,3 +245,4 @@ end
 function HideLoadingPopup()
     composer.hideOverlay("overlayDL")
 end
+

@@ -5,14 +5,19 @@
 local composer = require("composer")
 local scene = composer.newScene()
 
+
+
 require("UIParts")
 require("database")
-require("localNetwork")
+--require("localNetwork") --testing replacing this with DataTracker
+require("dataTracker")
 
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
+
+local bigGrid = true
 
 local cellCollection = {} --show cell area data/image tiles
 local visitedCellDisplay = {} --where we tint cells to show control.
@@ -20,6 +25,7 @@ local visitedCellDisplay = {} --where we tint cells to show control.
 
 local unvisitedCell = {0, 0} -- completely transparent
 local visitedCell = {.529, .807, .921, .4} -- sky blue, 50% transparent
+local selectedCell = {.8, .2, .2, .4} -- some kind of red, 50% transparent
 
 local parkCell = {0, .7, .0, 1} --bold green
 local waterCell = {0, 0, .7, 1} --deep blue
@@ -49,7 +55,9 @@ local locationName = ""
 
 local allCellsTerrain = ""
 local cellTerrainToRequest = {} -- these need to be distinct. I cant just add every cell.
+local allCellsMapTiles = ""
 local cellTilesToRequest = {}
+
 local mapTilesAlreadyPresent = {}
 
 local function testDrift()
@@ -63,8 +71,6 @@ end
 local function UpdateLocal()
     if (debugLocal) then print("start UpdateLocal") end
     if (debugLocal) then print(currentPlusCode) end
-
-    
 
     if (currentPlusCode == "") then
         if timerResults == nil then
@@ -91,9 +97,13 @@ local function UpdateLocal()
             local plusCodeNoPlus = thisSquaresPluscode:sub(1, 8) .. thisSquaresPluscode:sub(10, 11)
 
             --check if we need to download terrain data
-            if (Downloaded8Cell(thisSquaresPluscode:sub(1, 8)) == false) then
-                cellTerrainToRequest[#cellTerrainToRequest+ 1] = thisSquaresPluscode:sub(1, 8)
-            end
+            GetMapData8(thisSquaresPluscode:sub(1, 8))
+            -- if (Downloaded8Cell(thisSquaresPluscode:sub(1, 8)) == false) then
+            --     if (string.find(allCellsTerrain, thisSquaresPluscode:sub(1, 8)) == nil) then
+            --         cellTerrainToRequest[#cellTerrainToRequest+ 1] = thisSquaresPluscode:sub(1, 8)
+            --         allCellsTerrain = allCellsTerrain .. thisSquaresPluscode:sub(1, 8) .. ","
+            --     end
+            --end
             --print("updating local")
             -- apply type now if we found it.
             local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
@@ -105,7 +115,7 @@ local function UpdateLocal()
                 cellCollection[square].name = ""
                 cellCollection[square].type = ""
             end
-            
+                        
             --Area control specific properties
             --only try to tint cells if we have a TerrainInfo property
             if (#terrainInfo >= 6) then
@@ -119,34 +129,34 @@ local function UpdateLocal()
                 visitedCellDisplay[square].fill = unvisitedCell
             end
 
-            
             --if not cellCollection[square].isFilled then
                 --check if we need to download the map tile
                 
-                local imageExists = mapTilesAlreadyPresent[plusCodeNoPlus]
-                
+                local imageExists = requestedMapTileCells[plusCodeNoPlus] --read from DataTracker because we want to know if we can paint the cell or not.
+                --print(imageExists)
                 if (imageExists == nil) then
                     imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
                 end
                 if (not imageExists) then
+                    GetMapTile10(plusCodeNoPlus)
                     --pull image from server
                     --print("dl image " .. plusCodeNoPlus)
                     --print(requestedCells)
-                cellTerrainToRequest[#cellTerrainToRequest+ 1] = thisSquaresPluscode:sub(1, 8)
-                local cellTilesToRequest = {}
-                    local cellAlreadyCalled = string.find(requestedCells, plusCodeNoPlus .. ",")
-                    if ( cellAlreadyCalled == nil) then
-                        Get10CellImage11(plusCodeNoPlus)
-                        requestedCells = requestedCells .. plusCodeNoPlus .. ","
-                    end
+                -- cellTerrainToRequest[#cellTerrainToRequest+ 1] = thisSquaresPluscode:sub(1, 8)
+                -- local cellTilesToRequest = {}
+                --     local cellAlreadyCalled = string.find(allCellsMapTiles, plusCodeNoPlus .. ",")
+                --     if ( cellAlreadyCalled == nil) then
+                --         Get10CellImage11(plusCodeNoPlus)
+                --         allCellsMapTiles = allCellsMapTiles .. plusCodeNoPlus .. ","
+                --     end
                 else
-                    mapTilesAlreadyPresent[plusCodeNoPlus] = 1
+                    --mapTilesAlreadyPresent[plusCodeNoPlus] = 1
                     local paint = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.DocumentsDirectory}
                     cellCollection[square].fill = paint
-                    cellCollection[square].isFilled = true
+                    --cellCollection[square].isFilled = true
                     --if (debugLocal) then print("painted cell with loaded image") end
                 end
-              
+            
 
             if (currentPlusCode == thisSquaresPluscode) then
                 if (debugLocal) then print("setting name") end
@@ -155,6 +165,11 @@ local function UpdateLocal()
                 if (locationName.text == ""  and cellCollection[square].type ~= 0) then
                     locationName.text = typeNames[cellCollection[square].type]
                 end
+            end
+
+            if (tappedCell == thisSquaresPluscode) then
+                --highlight this square on the grid so i can see what i clicked.
+                visitedCellDisplay[square].fill = selectedCell
             end
         end
     end
@@ -168,29 +183,20 @@ local function UpdateLocal()
     directionArrow.rotation = currentHeading
     scoreLog.text = lastScoreLog
 
-    if (debugLocal) then print("setting timer") end
     if timerResults == nil then
+        if (debugLocal) then print("setting timer") end
         timerResults = timer.performWithDelay(500, UpdateLocal, -1)
     end
 
     --print("not borked yet " .. #cellTerrainToRequest)
-    local cellTilesToRequest = {}
-    for i = 1, #cellTerrainToRequest do
-        local cellTilesToRequest = {}
-        if (string.find(allCellsTerrain, cellTerrainToRequest[i]) == nil) then
-            local cellTilesToRequest = {}
-            print("getting data on " .. cellTerrainToRequest[i])
-            local cellTilesToRequest = {}
-            Get8CellData(cellTerrainToRequest[i])
-            local cellTilesToRequest = {}
-            print("data requested")
-            allCellsTerrain
-         = allCellsTerrain
-         .. "," .. cellTerrainToRequest[i]
-            local cellTilesToRequest = {}
-            forceRedraw = true
-        end
-    end
+    -- for i = 1, #cellTerrainToRequest do
+    --     if (string.find(allCellsTerrain, cellTerrainToRequest[i]) == nil) then
+    --         print("getting data on " .. cellTerrainToRequest[i])
+    --         Get8CellData(cellTerrainToRequest[i])
+    --         --print("data requested")
+    --         forceRedraw = true
+    --     end
+    -- end
 
     if (debugLocal) then print("end updateLocal") end
 end
@@ -205,9 +211,31 @@ local function SwitchToTrophy()
     composer.gotoScene("trophyScene", options)
 end
 
-local function GoToStoreScene()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("storeScene", options)
+-- local function GoToStoreScene()
+--     local options = {effect = "flip", time = 125}
+--     composer.gotoScene("storeScene", options)
+-- end
+
+local function ToggleZoom()
+    bigGrid = not bigGrid   
+    local sceneGroup = scene.view
+
+    for i = 1, #cellCollection do
+        cellCollection[i]:removeSelf()
+        visitedCellDisplay[i]:removeSelf()
+    end
+    cellCollection = {}
+    visitedCellDisplay = {}
+
+    if (bigGrid) then
+        CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection, "ac") -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay, "tint") -- rectangular Cell11 grid  with tint for area control
+    else
+        CreateRectangleGrid(17, 32, 40, sceneGroup, cellCollection, "ac") -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(17, 32, 40, sceneGroup, visitedCellDisplay, "tint") -- rectangular Cell11 grid  with tint for area control
+    end
+    directionArrow:toFront()
+    forceRedraw = true
 end
 
 local function GoToLeaderboardScene()
@@ -242,8 +270,13 @@ function scene:create(event)
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
 
     --CreateSquareGrid(23, 25, sceneGroup, cellCollection) --original square grid with spacing
-    CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection, true) -- rectangular Cell11 grid with map tiles
-    CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay, true) -- rectangular Cell11 grid  with tint for area control
+    if (bigGrid) then
+        CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection, "ac") -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay, "tint") -- rectangular Cell11 grid  with tint for area control
+    else
+        CreateRectangleGrid(17, 32, 40, sceneGroup, cellCollection, "ac") -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(17, 32, 40, sceneGroup, visitedCellDisplay, "tint") -- rectangular Cell11 grid  with tint for area control
+    end
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 25, 25)
     directionArrow.x = display.contentCenterX
@@ -269,12 +302,14 @@ function scene:create(event)
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)
 
-    local store = display.newImageRect(sceneGroup, "themables/StoreIcon.png", 100, 100)
+    --local store = display.newImageRect(sceneGroup, "themables/StoreIcon.png", 100, 100)
+    local store = display.newImageRect(sceneGroup, "themables/ToggleZoom.png", 100, 100)
     store.anchorX = 0
     -- store.anchorY = 0
     store.x = 50
     store.y = 100
-    store:addEventListener("tap", GoToStoreScene)
+    --store:addEventListener("tap", GoToStoreScene)
+    store:addEventListener("tap", ToggleZoom)
 
     local leaderboard = display.newImageRect(sceneGroup, "themables/LeaderboardIcon.png", 100, 100)
     leaderboard.anchorX = 0

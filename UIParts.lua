@@ -22,7 +22,7 @@ function CreateSquareGrid(gridSize, cellSize, gridGroup, cellCollection)
     if (debug) then print("Done CreateSquareGrid") end
 end
 
-function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellCollection, areaControl)
+function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellCollection, tapHandlerType)
     --size is rectangular, X by Y size. Must be odd so that i can have a center square. Even values get treated as one larger to be made odd.
     if (debug) then print("Starting CreateSquareGrid") end
     local padding = 1 --space between cells.
@@ -37,10 +37,12 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
             newSquare.name = "" --added for terrain/location support
             newSquare.type = ""--added for terrain/location support
             newSquare.MapDataId = 0 --for area control mode
-            if (areaControl == null) then
+            if (tapHandlerType == "debug") then
                 newSquare:addEventListener("tap", debuggerHelperSquare) --for debugging display grid, show the cell's plus code by click/tap
-            elseif (areaControl == true) then
-                newSquare:addEventListener("tap", showAreaClaim) --for debugging display grid, show the cell's plus code by click/tap
+            elseif (tapHandlerType == "ac") then
+                newSquare:addEventListener("tap", showAreaClaim) --actual gameplay dialog.
+            elseif (tapHandlerType == "tint") then
+                newSquare:addEventListener("tap", tintOnClick) --see where you tapped
             end
             cellCollection[#cellCollection + 1] = newSquare
         end
@@ -50,6 +52,9 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
 end
 
 function debuggerHelperSquare(event)
+    tapData.text = "cell tapped: " .. event.target.pluscode
+    tappedCell = event.target.pluscode
+    forceRedraw = true
     print("displaying data on a cell:" .. event.target.name)
     print(event.target == null)
     print(event.target.type)
@@ -57,25 +62,30 @@ function debuggerHelperSquare(event)
 end
 
 function showAreaClaim(event)
+    tapData.text = "cell tapped: " .. event.target.pluscode
+    tappedCell = event.target.pluscode
+    forceRedraw = true
+    --print("starting show area claim display")
     --sanity check, if we click on an area we don't have data for, request that data again.
-    if (Downloaded8Cell(event.target.pluscode:sub(0,8)) == false) then
-        Get8CellData(event.target.pluscode:sub(0,8))
-    end
+    --This really shouldnt be necessary. The map should do this.
+    --if (Downloaded8Cell(event.target.pluscode:sub(0,8)) == false) then
+        --Get8CellData(event.target.pluscode:sub(0,8))
+    --end
 
     if (debug) then 
         print("showareaclaim clicked")
-        print(event.target == null)
+        --print(event.target == nil)
         print(event.target.type)
-
-        print("claim display for area cell" .. event.target.name) 
-        print(event.target.MapDataId)
     end
-    if (event.target.type == "" or event.target.type == null) then
-        return
+    if (event.target.type == nil or event.target.type == "") then
+        print("returning false from area claim")
+        return false
     end
+    print("claim display for area cell" .. event.target.name) 
+    print(event.target.MapDataId)
     --dont claim areas you already own
     if (CheckAreaOwned(event.target.MapDataId)) then
-        return
+        return false
     end
 
     if (event.target.name == "") then
@@ -87,7 +97,16 @@ function showAreaClaim(event)
     tappedAreaScore = 0 --i don't save this locally, this requires a network call to get and update
     tappedAreaMapDataId = event.target.MapDataId
     composer.showOverlay("overlayAreaClaim", {isModal = true})
+    return false
 end
+
+function tintOnClick(event)
+    print("tintclick")
+    event.target.fill = {.8, .2, .2, .4}
+    print("cell tinted")
+    return false
+end
+
 
 function GoToStoreScene()
     local options = {
