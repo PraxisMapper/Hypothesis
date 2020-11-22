@@ -63,8 +63,14 @@ end
 
 function showAreaClaim(event)
     tapData.text = "cell tapped: " .. event.target.pluscode
-    tappedCell = event.target.pluscode
-    --forceRedraw = true
+    print(tappedCell)
+    local noplus = tappedCell:sub(1, 8) .. tappedCell:sub(10, 11)
+    tappedCell = event.target.pluscode --needs to be before this print or it screws up on the first tap
+    --print(noplus)
+    print(dump(cellDataCache[noplus]))
+    --cellDataCache[noplus].refresh = true
+    redrawOverlay = true
+    --forceRedraw = true --removing this means the grid never correctly removes red squares. setting refresh to true should force a square to go back to its normal color?
     --print("starting show area claim display")
     --sanity check, if we click on an area we don't have data for, request that data again.
     --This really shouldnt be necessary. The map should do this.

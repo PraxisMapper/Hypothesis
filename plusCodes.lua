@@ -121,3 +121,8 @@ function shiftCellV3(pluscode, Shift, position)
 
     return newCode
 end
+
+function removePlus(pluscode)
+    --return pluscode:sub(1, 8) .. pluscode:sub(10, 11) --or is gsub faster?
+    return string.gsub(pluscode, "+", "") --not sure which is faster, but i suspect this one is. TODO confirm this.
+end

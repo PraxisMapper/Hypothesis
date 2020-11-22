@@ -20,7 +20,7 @@ local function yesListener()
     if (debug) then print("yes tapped") end
     local points = Score()
     if (debug) then print(points) end
-    if (points > tappedAreaScore) then
+    if (tonumber(points) >= tonumber(tappedAreaScore)) then
         if (debug) then print("claiming") end
         SpendPoints(tappedAreaScore)
         ClaimAreaLocally(tappedAreaMapDataId, tappedAreaName, tappedAreaScore)
@@ -44,10 +44,14 @@ function AreaSizeListener(event)
     tappedAreaScore = tonumber(scoreResults)
     if (debug) then print(scoreResults) print(Score()) end
     textDisplay.text = textDisplay.text .. scoreResults .. " points?"
-    if (tonumber(scoreResults) <= Score()) then
+    print(tappedAreaScore)
+    if (tappedAreaScore <= tonumber(Score())) then
         print("showing yes button")
         yesButton.isVisible = true
+    else
+        print(tappedAreaScore .. " is bigger than " .. Score()) 
     end
+    print("1")
 end
 
 -- -----------------------------------------------------------------------------------

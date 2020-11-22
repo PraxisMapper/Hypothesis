@@ -31,10 +31,10 @@ forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
 debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugShift = false --display math for shifting PlusCodes
-debugGPS = true --display data for the GPS event and timer loop and auto-move
+debugGPS = false --display data for the GPS event and timer loop and auto-move
 debugDB = false
-debugLocal = true
-debugNetwork = true
+debugLocal = false
+debugNetwork = false
 --uncomment when testing to clear local data.
 --ResetDatabase()
 startDatabase()
@@ -54,7 +54,8 @@ tappedAreaName = ""
 tappedAreaScore = 0
 tappedAreaMapDataId = 0
 
-tappedCell = ""
+tappedCell = "            "
+redrawOverlay = false
 
 typeNames = {}
 typeNames["1"] = "Water"

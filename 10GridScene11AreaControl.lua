@@ -262,13 +262,28 @@ local function UpdateLocalOptimized()
 
     if (currentPlusCode == "") then
         if timerResults == nil then
-            timerResults = timer.performWithDelay(200, UpdateLocalOptimized, -1)
+            timerResults = timer.performWithDelay(150, UpdateLocalOptimized, -1)
         end
         if (debugLocal) then print("skipping, no location.") end
         return
     end
   
     if (debug) then debugText.text = dump(lastLocationEvent) end
+
+    if (redrawOverlay) then
+        print("redrawing overlay: " .. tappedCell)
+        --only do the overlay layer, probably because we tapped a cell. Should be faster than a full redraw
+        for square = 1, #cellCollection do -- this is slightly faster than ipairs
+            local pc = removePlus(cellCollection[square].pluscode)
+            if (cellCollection[square].pluscode == tappedCell) then
+                visitedCellDisplay[square].fill = selectedCell
+            else
+                visitedCellDisplay[square].fill = cellDataCache[pc].visitedFill
+            end
+        end
+        redrawOverlay = false
+        print("completed redrawing overlay: ")
+    end
 
     if (currentPlusCode ~= previousPlusCode or firstRun or forceRedraw or debugGPS) then
         if (debugLocal) then print("entering main loop") end
@@ -281,8 +296,9 @@ local function UpdateLocalOptimized()
             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 10)
             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 9)
             cellCollection[square].pluscode = thisSquaresPluscode
-            local plusCodeNoPlus = thisSquaresPluscode:sub(1, 8) .. thisSquaresPluscode:sub(10, 11)
+            local plusCodeNoPlus = removePlus(thisSquaresPluscode)
 
+            if (cellDataCache[plusCodeNoPlus] ~= nil and cellDataCache[plusCodeNoPlus].refresh == true) then print("need to refresh a cell!") end
             if (forceRedraw == false and cellDataCache[plusCodeNoPlus] ~= nil and cellDataCache[plusCodeNoPlus].refresh == false) then
                 --we can skip some of the processing we did earlier.
                 cellCollection[square].fill = cellDataCache[plusCodeNoPlus].tileFill
@@ -290,12 +306,12 @@ local function UpdateLocalOptimized()
                 cellCollection[square].name = cellDataCache[plusCodeNoPlus].name
                 cellCollection[square].type = cellDataCache[plusCodeNoPlus].type
                 cellCollection[square].MapDataId =  cellDataCache[plusCodeNoPlus].MapDataId
+                cellDataCache[plusCodeNoPlus].refresh = false
             else
                 --fill in all the stuff for this cell
                 --check if we need to download terrain data
                 cellDataCache[plusCodeNoPlus] = {}
                 GetMapData8(thisSquaresPluscode:sub(1, 8))
-                --I wonder if we can speed up performance by throwing TerrainData into a table the way we do for data call and map tiles
                 local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
                 if (terrainInfo[4] ~= "") then -- 4 is areaType. not every area is named, so use type.
                     -- apply info
@@ -355,9 +371,12 @@ local function UpdateLocalOptimized()
             if (tappedCell == thisSquaresPluscode) then
                 --highlight this square on the grid so i can see what i clicked.
                 visitedCellDisplay[square].fill = selectedCell
+            else
+                visitedCellDisplay[square].fill = cellDataCache[plusCodeNoPlus].visitedFill
             end
         end
     end
+
     forceRedraw = false
     if (debugLocal) then print("grid done or skipped") end
     if (debugGPS) then print(locationText.text) end
@@ -370,7 +389,7 @@ local function UpdateLocalOptimized()
 
     if timerResults == nil then
         if (debugLocal) then print("setting timer") end
-        timerResults = timer.performWithDelay(200, UpdateLocalOptimized, -1)
+        timerResults = timer.performWithDelay(150, UpdateLocalOptimized, -1)
     end
 
     if (debugLocal) then print("end updateLocalOptimized") end
