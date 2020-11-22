@@ -57,8 +57,9 @@ local allCellsTerrain = ""
 local cellTerrainToRequest = {} -- these need to be distinct. I cant just add every cell.
 local allCellsMapTiles = ""
 local cellTilesToRequest = {}
-
 local mapTilesAlreadyPresent = {}
+
+
 
 local function testDrift()
     if (os.time() % 2 == 0) then
@@ -106,6 +107,8 @@ local function UpdateLocal()
             --end
             --print("updating local")
             -- apply type now if we found it.
+
+            --I wonder if we can speed up performance by throwing TerrainData into a table the way we do for data call and map tiles
             local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
             if (terrainInfo[4] ~= "") then -- 4 is areaType. not every area is named, so use type.
                 -- apply info
@@ -252,6 +255,127 @@ local function GoToSceneSelect()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("SceneSelect", options)
 end
+
+local function UpdateLocalOptimized()
+    if (debugLocal) then print("start UpdateLocalOptimized") end
+    if (debugLocal) then print(currentPlusCode) end
+
+    if (currentPlusCode == "") then
+        if timerResults == nil then
+            timerResults = timer.performWithDelay(200, UpdateLocalOptimized, -1)
+        end
+        if (debugLocal) then print("skipping, no location.") end
+        return
+    end
+  
+    if (debug) then debugText.text = dump(lastLocationEvent) end
+
+    if (currentPlusCode ~= previousPlusCode or firstRun or forceRedraw or debugGPS) then
+        if (debugLocal) then print("entering main loop") end
+        firstRun = false
+        previousPlusCode = currentPlusCode
+        for square = 1, #cellCollection do -- this is slightly faster than ipairs
+            -- check each spot based on current cell, modified by gridX and gridY
+            local thisSquaresPluscode = currentPlusCode
+            --print (currentPlusCode)
+            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 10)
+            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 9)
+            cellCollection[square].pluscode = thisSquaresPluscode
+            local plusCodeNoPlus = thisSquaresPluscode:sub(1, 8) .. thisSquaresPluscode:sub(10, 11)
+
+            if (forceRedraw == false and cellDataCache[plusCodeNoPlus] ~= nil and cellDataCache[plusCodeNoPlus].refresh == false) then
+                --we can skip some of the processing we did earlier.
+                cellCollection[square].fill = cellDataCache[plusCodeNoPlus].tileFill
+                visitedCellDisplay[square].fill = cellDataCache[plusCodeNoPlus].visitedFill
+                cellCollection[square].name = cellDataCache[plusCodeNoPlus].name
+                cellCollection[square].type = cellDataCache[plusCodeNoPlus].type
+                cellCollection[square].MapDataId =  cellDataCache[plusCodeNoPlus].MapDataId
+            else
+                --fill in all the stuff for this cell
+                --check if we need to download terrain data
+                cellDataCache[plusCodeNoPlus] = {}
+                GetMapData8(thisSquaresPluscode:sub(1, 8))
+                --I wonder if we can speed up performance by throwing TerrainData into a table the way we do for data call and map tiles
+                local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
+                if (terrainInfo[4] ~= "") then -- 4 is areaType. not every area is named, so use type.
+                    -- apply info
+                    cellCollection[square].name = terrainInfo[3]
+                    cellCollection[square].type = terrainInfo[4]
+                else
+                    cellCollection[square].name = ""
+                    cellCollection[square].type = ""
+                end
+                        
+                --Area control specific properties
+                --only try to tint cells if we have a TerrainInfo property
+                if (#terrainInfo >= 6) then
+                    cellCollection[square].MapDataId = terrainInfo[6]
+                    if (CheckAreaOwned(terrainInfo[6]) == true) then
+                        visitedCellDisplay[square].fill = visitedCell
+                        cellDataCache[plusCodeNoPlus].visitedFill = visitedCell
+                    else    
+                        visitedCellDisplay[square].fill = unvisitedCell
+                        cellDataCache[plusCodeNoPlus].visitedFill = unvisitedCell
+                    end
+                else
+                    visitedCellDisplay[square].fill = unvisitedCell
+                    cellDataCache[plusCodeNoPlus].visitedFill = unvisitedCell
+                end
+                
+                local imageExists = requestedMapTileCells[plusCodeNoPlus] --read from DataTracker because we want to know if we can paint the cell or not.
+                --print(imageExists)
+                if (imageExists == nil) then
+                    imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
+                end
+                if (not imageExists) then
+                    GetMapTile10(plusCodeNoPlus)
+                else
+                    local paint = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.DocumentsDirectory}
+                    cellCollection[square].fill = paint
+                end
+
+                --save all this data (we already saved the visitedFill earlier)
+                cellDataCache[plusCodeNoPlus].tileFill = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.DocumentsDirectory}
+                cellDataCache[plusCodeNoPlus].name = cellCollection[square].name
+                cellDataCache[plusCodeNoPlus].type = cellCollection[square].type
+                cellDataCache[plusCodeNoPlus].MapDataId =  cellCollection[square].MapDataId
+                cellDataCache[plusCodeNoPlus].refresh = false
+            end
+
+            --these checks happens either way.
+            if (currentPlusCode == thisSquaresPluscode) then
+                if (debugLocal) then print("setting name") end
+                -- draw this place's name on screen, or an empty string if its not a place.
+                locationName.text = cellCollection[square].name
+                if (locationName.text == ""  and cellCollection[square].type ~= 0) then
+                    locationName.text = typeNames[cellCollection[square].type]
+                end
+            end
+
+            if (tappedCell == thisSquaresPluscode) then
+                --highlight this square on the grid so i can see what i clicked.
+                visitedCellDisplay[square].fill = selectedCell
+            end
+        end
+    end
+    forceRedraw = false
+    if (debugLocal) then print("grid done or skipped") end
+    if (debugGPS) then print(locationText.text) end
+    locationText.text = "Current location:" .. currentPlusCode
+    explorePointText.text = "Explore Points: " .. Score()
+    scoreText.text = "Control Score: " .. AreaControlScore()
+    timeText.text = "Current time:" .. os.date("%X")
+    directionArrow.rotation = currentHeading
+    scoreLog.text = lastScoreLog
+
+    if timerResults == nil then
+        if (debugLocal) then print("setting timer") end
+        timerResults = timer.performWithDelay(200, UpdateLocalOptimized, -1)
+    end
+
+    if (debugLocal) then print("end updateLocalOptimized") end
+end
+
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -340,9 +464,9 @@ function scene:show(event)
 
     elseif (phase == "did") then
         -- Code here runs when the scene is entirely on screen 
-        timer.performWithDelay(50, UpdateLocal, 1)
+        timer.performWithDelay(50, UpdateLocalOptimized, 1)
 
-        if (debugGPS) then timer.performWithDelay(500, testDrift, -1) end
+        if (debugGPS) then timer.performWithDelay(8000, testDrift, -1) end
     end
 end
 

@@ -82,7 +82,7 @@ function shiftCellV3(pluscode, Shift, position)
     --take the current cell, move it some number of cells at some position. (Call this twice to do X and Y)
     --Shift should be under 20
     --position is which cell we're looking to shift, from 1 to 10. This function handles the plus sign by skipping it.
-    if (debugShift) then print("ShiftV3: " .. pluscode .. " "  .. Shift .. " " .. position) end
+   -- if (debugShift) then print("ShiftV3: " .. pluscode .. " "  .. Shift .. " " .. position) end
 
     local charPos = position
     if (position > 8) then --shift this over 1, to avoid the + in the plus code
@@ -92,32 +92,32 @@ function shiftCellV3(pluscode, Shift, position)
     local newCode = pluscode
     local currentDigit = ""
     local digitIndex = 0
-    if (debugShift)then print ("V3shifting cell " .. pluscode) end
+    --if (debugShift)then print ("V3shifting cell " .. pluscode) end
     --do the shift
     if (Shift ~= 0) then
-        if (debugShift)then print ("V3Shifting " .. Shift .. " spots in pos " .. charPos) end
+       -- if (debugShift)then print ("V3Shifting " .. Shift .. " spots in pos " .. charPos) end
 
         currentDigit = pluscode:sub(charPos, charPos)
-        if (debugShift)then print ("V3 curDigit is " .. currentDigit) end
+       -- if (debugShift)then print ("V3 curDigit is " .. currentDigit) end
         digitIndex = CODE_ALPHABET_:find(currentDigit)
         digitIndex = digitIndex + Shift
-        if (debugShift)then print ("V3 digitIndex is " .. digitIndex) end
+       -- if (debugShift)then print ("V3 digitIndex is " .. digitIndex) end
 
         if (digitIndex <= 0) then
             digitIndex = 20 + digitIndex
-            if (debugShift) then print ("SUBSHIFT") end
+           -- if (debugShift) then print ("SUBSHIFT") end
             newCode = shiftCellV3(newCode, -1, position - 2) 
         end
         if (digitIndex > 20) then
             digitIndex = digitIndex - 20
-            if (debugShift) then print ("SUBSHIFT") end
+            --if (debugShift) then print ("SUBSHIFT") end
             newCode = shiftCellV3(newCode, 1, position - 2) 
         end
         currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
-    if (debugShift) then print("new character in pos " .. charPos .. " is ".. currentDigit) end
+    --if (debugShift) then print("new character in pos " .. charPos .. " is ".. currentDigit) end
         newCode = newCode:sub(1, charPos - 1) .. currentDigit .. newCode:sub(charPos + 1, 11)
     end
-    if (debugShift) then print ("V3newcode final is " .. newCode) end
+    --if (debugShift) then print ("V3newcode final is " .. newCode) end
 
     return newCode
 end

@@ -64,7 +64,7 @@ end
 function showAreaClaim(event)
     tapData.text = "cell tapped: " .. event.target.pluscode
     tappedCell = event.target.pluscode
-    forceRedraw = true
+    --forceRedraw = true
     --print("starting show area claim display")
     --sanity check, if we click on an area we don't have data for, request that data again.
     --This really shouldnt be necessary. The map should do this.
@@ -101,9 +101,9 @@ function showAreaClaim(event)
 end
 
 function tintOnClick(event)
-    print("tintclick")
+    --print("tintclick")
     event.target.fill = {.8, .2, .2, .4}
-    print("cell tinted")
+    --print("cell tinted")
     return false
 end
 
