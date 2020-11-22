@@ -1,5 +1,6 @@
-# GPSExploreGame
-Explore areas via PlusCodes for points. Use points for gameplay actions like claiming an area to control.
+# Hypothesis
+A test application for PraxisMapper. Connect to an instance, download area data, map tiles, and play a single-player Area Control mode.
+
 
 Privacy Policy:
 Short version: Ads suck. Tracking data sucks. This app uses neither for monetary purposes. It send an ID to the leaderboards only to update your scores on the leaderboard.
