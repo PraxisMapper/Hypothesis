@@ -117,6 +117,7 @@ function TrackplusCode8Listener(event)
     Exec(updateCmd)
     print("data inserted")
     requestedDataCells[plusCode8] = 1
+    forceRedraw = true
 end
 
 function TrackerGet10CellImage11(plusCode)
