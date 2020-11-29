@@ -1,11 +1,3 @@
---TODO here: create buttons to link to all scenes in this test/debug app.
---TODO: scenes to create:
---8-cells with textures for cells instead of solid colors, using 10-cell resolution
---above with 11-cell resolution
---above, but with 6-cell data for both resolutions
---10-cell grid but using textured 8-cell data
---11-cell grid, also using textured 8-cell data
-
 local composer = require( "composer" ) 
 local scene = composer.newScene()
  
@@ -120,6 +112,20 @@ function scene:create( event )
     changeAreaControl.x = 390
     changeAreaControl.y = 700
     changeAreaControl:addEventListener("tap", SwitchToAreaControlScene)
+
+    local changeMPAreaControl = display.newImageRect(sceneGroup, "themables/MultiplayerAreaControl.png", 300, 100)
+    changeMPAreaControl.anchorX = 0
+    changeMPAreaControl.anchorY = 0
+    changeMPAreaControl.x = 390
+    changeMPAreaControl.y = 900
+    --changeMPAreaControl:addEventListener("tap", SwitchToAreaControlScene)
+
+    local changeSettings = display.newImageRect(sceneGroup, "themables/Settings.png", 300, 100)
+    changeSettings.anchorX = 0
+    changeSettings.anchorY = 0
+    changeSettings.x = 390
+    changeSettings.y = 1100
+    --changeSettings:addEventListener("tap", SwitchToAreaControlScene)
 
  
 end
