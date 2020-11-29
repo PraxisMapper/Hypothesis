@@ -4,7 +4,8 @@ local scene = composer.newScene()
 --TODO: update this to load an image file for each square, request if not found.
 require("UIParts")
 require("database")
-require("localNetwork")
+--require("localNetwork")
+require("dataTracker") --replaced localNetwork for this scene
  
 if (debug) then print("8GridScene11image loading") end
 -- -----------------------------------------------------------------------------------
@@ -33,36 +34,76 @@ local function UpdateLocal8()
     local previousPlusCode8 =  previousPlusCode:sub(1,8)
     if (debugGPS) then print(currentPlusCode8) end
 
-    if (currentPlusCode8 ~= previousPlusCode8 or firstRun8) then
+    if (currentPlusCode8 ~= previousPlusCode8 or firstRun8 or forceRedraw) then
         firstRun8 = false
         previousPlusCode8 = currentPlusCode8
         if (debugGPS) then print("in 8 grid loop " ..previousPlusCode8 .. " " .. currentPlusCode8) end
         for square = 1, #cellCollection do --this is slightly faster than ipairs
             --check each spot based on current cell, modified by gridX and gridY
-            local thisSquaresPluscode= currentPlusCode8
-             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 8)
-             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 7)
+            -- check each spot based on current cell, modified by gridX and gridY
+            local thisSquaresPluscode = currentPlusCode8
+            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 8)
+            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 7)
             cellCollection[square].pluscode = thisSquaresPluscode
-            
-            if not cellCollection[square].isFilled then
-            local imageExists = doesFileExist(thisSquaresPluscode .. "-11.png", system.DocumentsDirectory)
-            if (not imageExists) then
-                --pull image from server
-                Get8CellImage11(thisSquaresPluscode)
-                if Visited8Cell(thisSquaresPluscode) then
-                    cellCollection[square].fill = visitedCell
-                else
-                    cellCollection[square].fill = unvisitedCell
-                end
+            -- local thisSquaresPluscode= currentPlusCode8
+            --  thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 8)
+            --  thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 7)
+            -- cellCollection[square].pluscode = thisSquaresPluscode
+
+            if (forceRedraw == false and cellDataCache[thisSquaresPluscode] ~= nil) then
+                --we can skip some of the processing we did earlier.
+                cellCollection[square].fill = cellDataCache[thisSquaresPluscode].tileFill
+                --visitedCellDisplay[square].fill = cellDataCache[thisSquaresPluscode].visitedFill
+                --cellCollection[square].name = cellDataCache[thisSquaresPluscode].name
+                --cellCollection[square].type = cellDataCache[thisSquaresPluscode].type
+                --cellCollection[square].MapDataId =  cellDataCache[thisSquaresPluscode].MapDataId
             else
-                local paint = {type  = "image", filename = thisSquaresPluscode .. "-11.png", baseDir = system.DocumentsDirectory}
-                cellCollection[square].fill = paint
-                cellCollection[square].isFilled = true
+                --todo
+                cellDataCache[thisSquaresPluscode] = {}
+                local imageExists = requestedMapTileCells[thisSquaresPluscode] --read from DataTracker because we want to know if we can paint the cell or not.
+                if (imageExists == nil) then
+                    imageExists = doesFileExist(thisSquaresPluscode .. "-11.png", system.DocumentsDirectory)
+                end
+                if (not imageExists) then
+                    GetMapTile8(thisSquaresPluscode)
+                else
+                    local paint = {type  = "image", filename = thisSquaresPluscode .. "-11.png", baseDir = system.DocumentsDirectory}
+                    cellCollection[square].fill = paint
+                    cellDataCache[thisSquaresPluscode].tileFill = {type  = "image", filename = thisSquaresPluscode .. "-11.png", baseDir = system.DocumentsDirectory}
+                end
+
             end
-        end
+            
+            -- if not cellCollection[square].isFilled then
+            --     local imageExists = doesFileExist(thisSquaresPluscode .. "-11.png", system.DocumentsDirectory)
+            --     if (not imageExists) then
+            --         --pull image from server
+            --         --print("dl image " .. plusCodeNoPlus)
+            --         Get8CellImage11(thisSquaresPluscode)
+            --     else
+            --         local paint = {type  = "image", filename = thisSquaresPluscode .. "-11.png", baseDir = system.DocumentsDirectory}
+            --         cellCollection[square].fill = paint
+            --         cellCollection[square].isFilled = true
+            --     end
+            -- local imageExists = doesFileExist(thisSquaresPluscode .. "-11.png", system.DocumentsDirectory)
+            -- if (not imageExists) then
+            --     --pull image from server
+            --     Get8CellImage11(thisSquaresPluscode)
+            --     if Visited8Cell(thisSquaresPluscode) then
+            --         cellCollection[square].fill = visitedCell
+            --     else
+            --         cellCollection[square].fill = unvisitedCell
+            --     end
+            -- else
+            --     local paint = {type  = "image", filename = thisSquaresPluscode .. "-11.png", baseDir = system.DocumentsDirectory}
+            --     cellCollection[square].fill = paint
+            --     cellCollection[square].isFilled = true
+            -- end
+        --end
         end
     end
 
+    forceRedraw = false
     if (debugGPS) then print("8grid done or skipped") end
     if (debugGPS) then print(locationText.text) end
     locationText.text = "Current 8 location:" .. currentPlusCode8
@@ -155,7 +196,7 @@ function scene:create( event )
     changeGrid:addEventListener("tap", SwitchToSmallGrid)
     changeTrophy:addEventListener("tap", SwitchToTrophy)
     
-    local header = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300, 100)
+    local header = display.newImageRect(sceneGroup, "themables/8cell11image.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)

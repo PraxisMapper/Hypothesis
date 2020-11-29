@@ -212,7 +212,7 @@ function scene:create(event)
     changeGrid:addEventListener("tap", SwitchToBigGrid)
     changeTrophy:addEventListener("tap", SwitchToTrophy)
 
-    local header = display.newImageRect(sceneGroup, "themables/SmallGridButton.png", 300, 100)
+    local header = display.newImageRect(sceneGroup, "themables/10cell11image.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)

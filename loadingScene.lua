@@ -20,8 +20,6 @@ require("localNetwork")
  local lon = 0
 
  local function startGame()
-    --composer.gotoScene("10SceneNavigate")
-    --composer.gotoScene("8GridScene11Image")
     statusText.text = "Opening Game..."
     composer.gotoScene("SceneSelect")
  end
@@ -32,14 +30,6 @@ require("localNetwork")
     --network.request(serverURL .. "MapData/Cell8Info/" .. pluscode8, "GET", plusCode8ListenerLoading)
     LoadMapData()
 end
-
--- function GetSurroundingData(lat, lon)
---     print("getting surrounding data")
---     if (networkReqPending == true) then print("abandoning data load") return end
---     if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/LearnSurroundingFlex/" .. lat .. "/" .. lon .. "/.0025") end
---     network.request(serverURL .. "MapData/LearnSurroundingFlex/" .. lat .. "/" .. lon .. "/.0025", "GET", flexLoadingListener)
---     print("flex request sent")
--- end
 
 function plusCode8ListenerLoading(event)
     if (debugNetwork) then print("plus code 8 event response status: " .. event.status) end --these are fairly large, 10k entries isnt weird.
@@ -83,126 +73,37 @@ function plusCode8ListenerLoading(event)
     LoadMapData()
 end
 
--- function flexLoadingListener(event)
---     print("flex listener started")
---     if (debugNetwork) then print("flex event response status: " .. event.status) end --these are fairly large, 10k entries isnt weird.
---     if event.status == 200 then netUp() else netDown() end
---     if (event.status ~= 200) then 
---         networkReqPending = false --allow the download to retry on the next event.
---         return --dont' save invalid results on an error.
---     end 
-
---     print(event.response)
---     --This one splits each 10cell via newline.
---     local resultsTable = Split(event.response, "\r\n") --windows newlines
---     --Format:
---     --first line is lat/lon coords passed in
---     --10cell|name|typeID|size
---     --EX: 86CCXX2248=Local Park|park|12345
-  
---     local insertString = ""
---     local insertCount = 0
-
---     db:exec("BEGIN TRANSACTION") --transactions for multiple inserts are a huge performance boost.
---     for i = 2, #resultsTable do
---         if (resultsTable[i] ~= nil and resultsTable[i] ~= "") then 
---             local data = Split(resultsTable[i], "|") --3 data parts in order
---             data[2] = string.gsub(data[2], "'", "''")--escape data[2] to allow ' in name of places.
---             insertString = "INSERT INTO terrainData (plusCode, name, areatype, MapDataId) VALUES ('" .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "', '" .. data[4] .. "');" --insertString .. 
---             --print(insertString)
---             local results = db:exec(insertString)
---             --print(results)
---         end
---     end
---     local e2 = db:exec("END TRANSACTION")
---     if(debugNetwork) then print("table done") end
-
---     networkReqPending = false 
---     LoadMapData()
--- end
-
 function LoadMapData()
     statusText.text = "Downloading map data"
     print("getting map info")
-            --download map cells.
-            --check 35x35 area, since that's the starting grid.
-            -- for x = -17, 17 do
-            --     for y = -17, 17 do
-            --         local shiftedCode = shiftCellV3(currentPlusCode, x, 10)
-            --         shiftedCode = shiftCellV3(shiftedCode, y, 9)
-            --         local plusCodeNoPlus = shiftedCode:sub(1, 8) .. shiftedCode:sub(10, 11)
-            --         --print(plusCodeNoPlus)
-            --         local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
-            --         if (not imageExists) then
-            --             Get10CellImage11Loading(plusCodeNoPlus)
-            --         end
-            --     end
-            -- end
-
-            -- --TODO: should also grab the Cell8 tiles while i'm here.
-            -- for x = -3, 3 do
-            --     for y = -3, 3 do
-            --         local shiftedCode = shiftCellV3(currentPlusCode, x, 8)
-            --         shiftedCode = shiftCellV3(shiftedCode, y, 7)
-            --         local plusCodeNoPlus = shiftedCode:sub(1, 8)
-            --         --print(plusCodeNoPlus)
-            --         local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
-            --         if (not imageExists) then
-            --             Get8CellImage11Loading(plusCodeNoPlus)
-            --         end
-            --     end
-            -- end
-        
-        --print("loading scene done")
-        --statusText.text = "Opening Game..."
         if (imagecount == 0) then
             timer.performWithDelay(50, startGame, 1)   
         end
 end
 
 function Get10CellImage11Loading(plusCode)
-    --print("trying 10cell11 download")
-    --print(plusCode)
-    --plusCode10 = plusCode10:sub(0, 8) .. plusCode10:sub(10, 11) -- remove the actual plus sign
-    --if networkReqPending == true then return end
-    --print("past loading popup")
-    --if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/8cellbitmap11/" .. plusCode8) end
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.DocumentsDirectory}
-    --print("params set")
     network.request(serverURL .. "MapData/10cellBitmap11/" .. plusCode, "GET", imageListenerLoading, params)
     imagecount = imagecount + 1
-    --print(imagecount)
-    --print("end network request")
 end
 
 function imageListenerLoading(event)
-    --print("11cell11 listener fired")
     imagecount = imagecount - 1;
-    --print(imagecount)
     if (imagecount == 0) then
         startGame()
     end
-    --if event.status == 200  end
 end
 
 function Get8CellImage11Loading(plusCode8)
-    --print("trying 8cell11 download")
-    --print(plusCode8)
-    --if networkReqPending == true then return end
-    
-    --print("past loading popup")
-    --if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/8cellbitmap11/" .. plusCode8) end
     local params = {}
     params.response  = {filename = plusCode8 .. "-11.png", baseDirectory = system.DocumentsDirectory}
-    --print("params set")
     network.request(serverURL .. "MapData/8cellBitmap11/" .. plusCode8, "GET", imageListenerLoading, params)
     imagecount = imagecount + 1
 end
 
  function loadingGpsListener(event)
-    local eventL = event --assign it locally just in case somethings messing with the parent event object
-
+    local eventL = event
     currentPlusCode = "86HWG93R+6J" --CWRU
 
     if (debugGPS) then
@@ -228,7 +129,7 @@ end
        --currentPlusCode ="8FW4V75V+8R" --Eiffel Tower. ~60,000 entries.
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
-       --currentPlusCode = "85PFF56C+5P" --Old Faithful
+       --currentPlusCode = "85PFF56C+5P" --Old Faithful 
 
        
 
@@ -261,7 +162,6 @@ end
  
 -- show()
 function scene:show( event )
- 
     local sceneGroup = self.view
     local phase = event.phase
  
@@ -334,59 +234,29 @@ function scene:show( event )
 
         statusText.text = "Checking area data"
         LoadMapData()
-        
-        --print(currentPlusCode)
-        -- while currentPlusCode == "" do
-        --     -- do nothing until we have a location
-        --     print(currentPlusCode)
-        --     sleep(1)
-        -- end
-        -- print("past plus code wait")
-
-        --If we dont have data for this Cell6, download it.
-        --if we do, skip this.
-        --if (Downloaded6Cell(currentPlusCode:sub(0,6)) == false) then
-          --  print("downloading 6cell data")
-            --statusText.text = "downloading area data"
-            --Get8CellDataLoading(currentPlusCode:sub(0, 8)) --fill up the database will all the 10-cell entries for this 6-cell if possible.
-        --while (lon == 0) do
-        --just gonna busy loop here.
-        --end
-            --GetSurroundingData(lat, lon)
-        --else
-          --  startGame()
-        --end
     end
 end
  
 -- hide()
 function scene:hide( event )
- 
     local sceneGroup = self.view
     local phase = event.phase
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
         print("loadingScene hiding")
- 
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
         Runtime:removeEventListener("location", loadingGpsListener)
         Runtime:addEventListener("location", gpsListener)
         print("loadingScene hidden, GPS on.")
- 
     end
 end
- 
- 
--- destroy()
+  
 function scene:destroy( event )
- 
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view
- 
 end
- 
  
 -- -----------------------------------------------------------------------------------
 -- Scene event function listeners
