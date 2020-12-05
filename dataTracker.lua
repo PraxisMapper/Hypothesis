@@ -13,6 +13,7 @@ require("localNetwork") --for serverURL.
 -- -1 value: last request failed.
 requestedDataCells = {} --these should be Cell8
 requestedMapTileCells = {} --these should be Cell10
+requestedMPMapTileCells = {} --these should be Cell10, separate because they can change quickly.
 
 function GetMapData8(Cell8) -- the terrain type call.
     local status = requestedDataCells[Cell8] --this can occasionally be nil if there's multiple active calls that return out of order on the first update
@@ -49,7 +50,7 @@ function GetMapTile10(Cell10)
      end
 
      if (status == -1) then --retry a failed download.
-        requestedDataCells[Cell10] = 0
+        requestedMapTileCells[Cell10] = 0
         TrackerGet10CellImage11(Cell10)
      end
 end
@@ -79,8 +80,8 @@ end
 function Get8CellTerrainData(code8)
     networkReqPending = true
     if debugNetwork then print("network: getting 8 cell data " .. code8) end
-    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell8Info/" .. code8) end
-    network.request(serverURL .. "MapData/Cell8Info/" .. code8 , "GET", TrackplusCode8Listener)
+    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/LearnCell8/" .. code8) end
+    network.request(serverURL .. "MapData/LearnCell8/" .. code8 , "GET", TrackplusCode8Listener)
 end
 
 function TrackplusCode8Listener(event)
@@ -125,18 +126,18 @@ function TrackerGet10CellImage11(plusCode)
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.DocumentsDirectory}
-    network.request(serverURL .. "MapData/10cellBitmap11/" .. plusCode, "GET", Trackerimage1011Listener, params)
+    network.request(serverURL .. "MapData/DrawCell10Highres/" .. plusCode, "GET", Trackerimage1011Listener, params)
 end
 
 function Trackerimage1011Listener(event)
     if event.status == 200 then
         forceRedraw = true
         netUp() 
-        local filename = string.gsub(event.url, serverURL .. "MapData/10cellBitmap11/", "")
+        local filename = string.gsub(event.url, serverURL .. "MapData/DrawCell10Highres/", "")
         requestedMapTileCells[filename] = 1
     else 
         netDown() 
-        local filename = string.gsub(event.url, serverURL .. "MapData/10cellBitmap11/", "")
+        local filename = string.gsub(event.url, serverURL .. "MapData/DrawCell10Highres/", "")
         requestedMapTileCells[filename] = -1
     end
 end
@@ -146,18 +147,84 @@ function TrackerGet8CellImage11(plusCode)
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.DocumentsDirectory}
-    network.request(serverURL .. "MapData/8cellBitmap11/" .. plusCode, "GET", Trackerimage1011Listener, params)
+    network.request(serverURL .. "MapData/DrawCell8Highres/" .. plusCode, "GET", Trackerimage1011Listener, params)
 end
 
 function Trackerimage811Listener(event)
     if event.status == 200 then
         forceRedraw = true
         netUp() 
-        local filename = string.gsub(event.url, serverURL .. "MapData/8cellBitmap11/", "")
+        local filename = string.gsub(event.url, serverURL .. "MapData/DrawCell8Highres/", "")
         requestedMapTileCells[filename] = 1
     else 
         netDown() 
-        local filename = string.gsub(event.url, serverURL .. "MapData/8cellBitmap11/", "")
+        local filename = string.gsub(event.url, serverURL .. "MapData/DrawCell8Highres/", "")
         requestedMapTileCells[filename] = -1
+    end
+end
+
+--TODO: make new handler methods, update URLs for these, create new Lua tables for these map tiles with a faster refresh.
+function GetTeamControlMapTile10(Cell10)
+    if (requestedMPMapTileCells[cell10] == 1) then
+        --We already have this tile.
+        return
+    end
+    local status = requestedMPMapTileCells[Cell10] --this can occasionally be nil if there's multiple active calls that return out of order on the first update
+     if (status == nil) then --first time requesting this cell this session.
+        local dataPresent = doesFileExist(Cell10 .. "-AC-11.png", system.DocumentsDirectory)
+        if (dataPresent == true) then --use local data.
+            requestedMPMapTileCells[Cell10] = 1
+            return
+        end
+        requestedMPMapTileCells[Cell10] = 0
+        TrackerGetMP10CellImage11(Cell10)
+     end
+
+     if (status == -1) then --retry a failed download.
+        requestedDataCells[Cell10] = 0
+        TrackerGetMP10CellImage11(Cell10)
+     end
+end
+
+function GetTeamControlMapTile8(Cell8)
+    if (requestedMPMapTileCells[cell8] == 1) then
+        --We already have this tile.
+        return
+    end
+    local status = requestedMPMapTileCells[Cell8] --this can occasionally be nil if there's multiple active calls that return out of order on the first update
+     if (status == nil) then --first time requesting this cell this session.
+        local dataPresent = doesFileExist(Cell8 .. "-AC-11.png", system.DocumentsDirectory)
+        if (dataPresent == true) then --use local data.
+            requestedMPMapTileCells[Cell8] = 1
+            return
+        end
+        requestedMPMapTileCells[Cell8] = 0
+        TrackerGet8CellImage11(Cell8)
+     end
+
+     if (status == -1) then --retry a failed download.
+        requestedDataCells[Cell8] = 0
+        TrackerGet8CellImage11(Cell8)
+     end
+end
+
+function TrackerGetMP10CellImage11(plusCode)
+    networkReqPending = true
+    netTransfer()
+    local params = {}
+    params.response  = {filename = plusCode .. "-AC-11.png", baseDirectory = system.DocumentsDirectory}
+    network.request(serverURL .. "Gameplay/DrawFactionModeCell10HighRes/" .. plusCode, "GET", TrackerMPimage1011Listener, params)
+end
+
+function TrackerMPimage1011Listener(event)
+    if event.status == 200 then
+        forceRedraw = true
+        netUp() 
+        local filename = string.gsub(event.url, serverURL .. "Gameplay/DrawFactionModeCell10HighRes/", "")
+        requestedMPMapTileCells[filename] = 1
+    else 
+        netDown() 
+        local filename = string.gsub(event.url, serverURL .. "Gameplay/DrawFactionModeCell10HighRes/", "")
+        requestedMPMapTileCells[filename] = -1
     end
 end

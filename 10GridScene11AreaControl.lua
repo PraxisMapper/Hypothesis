@@ -72,10 +72,10 @@ local function ToggleZoom()
 
     if (bigGrid) then
         CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection, "ac") -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay, "tint") -- rectangular Cell11 grid  with tint for area control
+        CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay) -- rectangular Cell11 grid  with tint for area control
     else
         CreateRectangleGrid(17, 32, 40, sceneGroup, cellCollection, "ac") -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(17, 32, 40, sceneGroup, visitedCellDisplay, "tint") -- rectangular Cell11 grid  with tint for area control
+        CreateRectangleGrid(17, 32, 40, sceneGroup, visitedCellDisplay) -- rectangular Cell11 grid  with tint for area control
     end
     directionArrow:toFront()
     forceRedraw = true
@@ -120,6 +120,7 @@ local function UpdateLocalOptimized()
     end
 
     if (currentPlusCode ~= previousPlusCode or firstRun or forceRedraw or debugGPS) then
+        if (timerResults ~= nil) then timer.pause(timerResults) end
         if (debugLocal) then print("entering main loop") end
         firstRun = false
         previousPlusCode = currentPlusCode
@@ -202,6 +203,7 @@ local function UpdateLocalOptimized()
                 visitedCellDisplay[square].fill = cellDataCache[plusCodeNoPlus].visitedFill
             end
         end
+        if (timerResults ~= nil) then timer.resume(timerResults) end
     end
 
     forceRedraw = false

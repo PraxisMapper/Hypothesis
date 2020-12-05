@@ -1,15 +1,13 @@
 -- the class for handling sending data to/from the API server
 -- NOTE: naming this 'network' overrides the internal library with the same name and breaks everything.
--- TODO:
---also need to work out plan to update saved location type/name data eventually
 require("database")
 require("helpers") --for Split
 
 --serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
 --serverURL = "http://192.168.50.247:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
---serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
+serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
 --serverURL = "http://192.168.50.247/GPSExploreServerAPI/" -- local network, doesnt work on https due to self-signed certs.
-serverURL = "http://ec2-18-189-29-204.us-east-2.compute.amazonaws.com/" --AWS Test server, IP part of address will change each time instance is launched.
+--serverURL = "http://ec2-18-189-29-204.us-east-2.compute.amazonaws.com/" --AWS Test server, IP part of address will change each time instance is launched.
 
 --note: GpsExplore/" is now half of it, the other half is MapData/
 --local requestedCells = "" this is now in main and global
@@ -200,8 +198,8 @@ end
 function Get8CellData(lat, lon)
     if networkReqPending == true then return end
     networkReqPending = true
-    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell8Info/" .. lat .. "/" .. lon) end
-    network.request(serverURL .. "MapData/Cell8Info/" .. lat .. "/" .. lon, "GET", plusCode8Listener)
+    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/LearnCell8/" .. lat .. "/" .. lon) end
+    network.request(serverURL .. "MapData/LearnCell8/" .. lat .. "/" .. lon, "GET", plusCode8Listener)
 end
 
 function Get8CellData(code8)
@@ -217,16 +215,16 @@ function Get8CellData(code8)
     networkReqPending = true
     if debugNetwork then print("network: getting 8 cell data " .. code8) end
     requestedCells = requestedCells .. code8 .. ","
-    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell8Info/" .. code8) end
-    network.request(serverURL .. "MapData/Cell8Info/" .. code8, "GET", plusCode8Listener)
+    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/LearnCell8/" .. code8) end
+    network.request(serverURL .. "MapData/LearnCell8/" .. code8, "GET", plusCode8Listener)
 end
 
 function Get6CellData(lat, lon)
     if networkReqPending == true then return end
     networkReqPending = true
     netTransfer()
-    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell6Info/" .. lat .. "/" .. lon) end
-    network.request(serverURL .. "MapData/Cell6Info/" .. lat .. "/" .. lon, "GET", plusCode6Listener)
+    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/LearnCell6/" .. lat .. "/" .. lon) end
+    network.request(serverURL .. "MapData/LearnCell6/" .. lat .. "/" .. lon, "GET", plusCode6Listener)
 end
 
 function GetSurroundingData(lat, lon)
@@ -245,9 +243,9 @@ function Get8CellImage10(plusCode8)
     netTransfer()
     --ShowLoadingPopup()
     --print("past loading popup")
-    if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/8cellbitmap/" .. plusCode8) end
+    if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/DrawCell8/" .. plusCode8) end
     local params = { response = { filename = plusCode8 .. "-10.png", baseDirectory = system.DocumentsDirectory}}
-    network.request(serverURL .. "MapData/8cellBitmap/" .. plusCode8, "GET", image810Listener, params)
+    network.request(serverURL .. "MapData/DrawCell8/" .. plusCode8, "GET", image810Listener, params)
 end
 
 function Get8CellImage11(plusCode8)
@@ -258,11 +256,11 @@ function Get8CellImage11(plusCode8)
     netTransfer()
     --ShowLoadingPopup()
     --print("past loading popup")
-    --if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/8cellbitmap11/" .. plusCode8) end
+    --if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/DrawCell8Highres/" .. plusCode8) end
     local params = {}
     params.response  = {filename = plusCode8 .. "-11.png", baseDirectory = system.DocumentsDirectory}
     --print("params set")
-    network.request(serverURL .. "MapData/8cellBitmap11/" .. plusCode8, "GET", image811Listener, params)
+    network.request(serverURL .. "MapData/DrawCell8Highres/" .. plusCode8, "GET", image811Listener, params)
 end
 
 function Get10CellImage11(plusCode)
@@ -274,11 +272,11 @@ function Get10CellImage11(plusCode)
     netTransfer()
     --ShowLoadingPopup()
     --print("past loading popup")
-    --if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/8cellbitmap11/" .. plusCode8) end
+    --if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/DrawCell10Highres/" .. plusCode8) end
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.DocumentsDirectory}
     --print("params set")
-    network.request(serverURL .. "MapData/10cellBitmap11/" .. plusCode, "GET", image1011Listener, params)
+    network.request(serverURL .. "MapData/DrawCell10Highres/" .. plusCode, "GET", image1011Listener, params)
 end
 
 function image810Listener(event)
@@ -315,3 +313,4 @@ end
 --     if (debug) then print("AreaSize response: " .. event.response .. " " .. event.status) end
 --     local scoreResults = Split(event.response, "|")
 -- end
+

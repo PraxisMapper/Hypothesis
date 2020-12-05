@@ -66,17 +66,17 @@ local function ToggleZoom()
 
     for i = 1, #cellCollection do
         cellCollection[i]:removeSelf()
-        visitedCellDisplay[i]:removeSelf()
+        --visitedCellDisplay[i]:removeSelf()
     end
     cellCollection = {}
-    visitedCellDisplay = {}
+    --visitedCellDisplay = {}
 
     if (bigGrid) then
-        CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection, "ac") -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay, "tint") -- rectangular Cell11 grid  with tint for area control
+        CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection, "mac") -- rectangular Cell11 grid with map tiles
+        --CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay, "tint") -- rectangular Cell11 grid  with tint for area control
     else
-        CreateRectangleGrid(17, 32, 40, sceneGroup, cellCollection, "ac") -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(17, 32, 40, sceneGroup, visitedCellDisplay, "tint") -- rectangular Cell11 grid  with tint for area control
+        CreateRectangleGrid(17, 32, 40, sceneGroup, cellCollection, "mac") -- rectangular Cell11 grid with map tiles
+        --CreateRectangleGrid(17, 32, 40, sceneGroup, visitedCellDisplay, "tint") -- rectangular Cell11 grid  with tint for area control
     end
     directionArrow:toFront()
     forceRedraw = true
@@ -95,6 +95,7 @@ end
 local function UpdateLocalOptimized()
     if (debugLocal) then print("start UpdateLocalOptimized") end
 
+
     if (currentPlusCode == "") then
         if timerResults == nil then
             timerResults = timer.performWithDelay(150, UpdateLocalOptimized, -1)
@@ -105,23 +106,24 @@ local function UpdateLocalOptimized()
   
     if (debug) then debugText.text = dump(lastLocationEvent) end
 
-    if (redrawOverlay) then
-        print("redrawing overlay: " .. tappedCell)
-        --only do the overlay layer, because we tapped a cell.
-        for square = 1, #cellCollection do
-            local pc = removePlus(cellCollection[square].pluscode)
-            if (cellCollection[square].pluscode == tappedCell) then
-                visitedCellDisplay[square].fill = selectedCell
-            else
-                visitedCellDisplay[square].fill = cellDataCache[pc].visitedFill
-            end
-        end
-        redrawOverlay = false
-        print("completed redrawing overlay: ")
-    end
+    -- if (redrawOverlay) then
+    --     print("redrawing overlay: " .. tappedCell)
+    --     --only do the overlay layer, because we tapped a cell.
+    --     for square = 1, #cellCollection do
+    --         local pc = removePlus(cellCollection[square].pluscode)
+    --         if (cellCollection[square].pluscode == tappedCell) then
+    --             visitedCellDisplay[square].fill = selectedCell
+    --         else
+    --             visitedCellDisplay[square].fill = cellDataCache[pc].visitedFill
+    --         end
+    --     end
+    --     redrawOverlay = false
+    --     print("completed redrawing overlay: ")
+    -- end
 
     if (currentPlusCode ~= previousPlusCode or firstRun or forceRedraw or debugGPS) then
         if (debugLocal) then print("entering main loop") end
+        if (timerResults ~= nil) then timer.pause(timerResults) end
         firstRun = false
         previousPlusCode = currentPlusCode
         for square = 1, #cellCollection do
@@ -132,10 +134,10 @@ local function UpdateLocalOptimized()
             cellCollection[square].pluscode = thisSquaresPluscode
             local plusCodeNoPlus = removePlus(thisSquaresPluscode)
 
-            if (forceRedraw == false and cellDataCache[plusCodeNoPlus] ~= nil) then
-                --we can skip some of the processing we did earlier.
+            if (forceRedraw == false and cellDataCache[plusCodeNoPlus] ~= nil and cellDataCache[plusCodeNoPlus].lastRefresh < os.time() - 60000) then
+                --we can skip some of the processing we did earlier. Force a refresh every 60 seconds to make sure multiplayer data is reasonably up to date.
                 cellCollection[square].fill = cellDataCache[plusCodeNoPlus].tileFill
-                visitedCellDisplay[square].fill = cellDataCache[plusCodeNoPlus].visitedFill
+                --visitedCellDisplay[square].fill = cellDataCache[plusCodeNoPlus].visitedFill
                 cellCollection[square].name = cellDataCache[plusCodeNoPlus].name
                 cellCollection[square].type = cellDataCache[plusCodeNoPlus].type
                 cellCollection[square].MapDataId =  cellDataCache[plusCodeNoPlus].MapDataId
@@ -158,33 +160,34 @@ local function UpdateLocalOptimized()
                 if (#terrainInfo >= 6) then
                     cellCollection[square].MapDataId = terrainInfo[6]
                     if (CheckAreaOwned(terrainInfo[6]) == true) then
-                        visitedCellDisplay[square].fill = visitedCell
+                        --visitedCellDisplay[square].fill = visitedCell
                         cellDataCache[plusCodeNoPlus].visitedFill = visitedCell
                     else    
-                        visitedCellDisplay[square].fill = unvisitedCell
+                        --visitedCellDisplay[square].fill = unvisitedCell
                         cellDataCache[plusCodeNoPlus].visitedFill = unvisitedCell
                     end
                 else
-                    visitedCellDisplay[square].fill = unvisitedCell
+                    --visitedCellDisplay[square].fill = unvisitedCell
                     cellDataCache[plusCodeNoPlus].visitedFill = unvisitedCell
                 end
                 
                 local imageExists = requestedMapTileCells[plusCodeNoPlus] --read from DataTracker because we want to know if we can paint the cell or not.
                 if (imageExists == nil) then
-                    imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
+                    imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.DocumentsDirectory)
                 end
                 if (not imageExists) then
-                    GetMapTile10(plusCodeNoPlus)
+                    GetTeamControlMapTile10(plusCodeNoPlus)
                 else
-                    local paint = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.DocumentsDirectory}
+                    local paint = {type  = "image", filename = plusCodeNoPlus .. "-AC-11.png", baseDir = system.DocumentsDirectory}
                     cellCollection[square].fill = paint
                 end
 
                 --save all this data (we already saved the visitedFill earlier)
-                cellDataCache[plusCodeNoPlus].tileFill = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.DocumentsDirectory}
+                cellDataCache[plusCodeNoPlus].tileFill = {type  = "image", filename = plusCodeNoPlus .. "-AC-11.png", baseDir = system.DocumentsDirectory}
                 cellDataCache[plusCodeNoPlus].name = cellCollection[square].name
                 cellDataCache[plusCodeNoPlus].type = cellCollection[square].type
                 cellDataCache[plusCodeNoPlus].MapDataId =  cellCollection[square].MapDataId
+                cellDataCache[plusCodeNoPlus].lastRefresh =  os.time()
             end
 
             --these checks happens either way.
@@ -197,12 +200,13 @@ local function UpdateLocalOptimized()
                 end
             end
 
-            if (tappedCell == thisSquaresPluscode) then
-                visitedCellDisplay[square].fill = selectedCell
-            else
-                visitedCellDisplay[square].fill = cellDataCache[plusCodeNoPlus].visitedFill
-            end
+            -- if (tappedCell == thisSquaresPluscode) then
+            --     visitedCellDisplay[square].fill = selectedCell
+            -- else
+            --     visitedCellDisplay[square].fill = cellDataCache[plusCodeNoPlus].visitedFill
+            -- end
         end
+        if (timerResults ~= nil) then timer.resume(timerResults) end
     end
 
     forceRedraw = false
@@ -240,11 +244,9 @@ function scene:create(event)
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
 
     if (bigGrid) then
-        CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection, "ac") -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay) -- rectangular Cell11 grid  with tint for area control
+        CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection, "mac") -- rectangular Cell11 grid with map tiles
     else
-        CreateRectangleGrid(17, 32, 40, sceneGroup, cellCollection, "ac") -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(17, 32, 40, sceneGroup, visitedCellDisplay) -- rectangular Cell11 grid  with tint for area control
+        CreateRectangleGrid(17, 32, 40, sceneGroup, cellCollection, "mac") -- rectangular Cell11 grid with map tiles
     end
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 25, 25)
@@ -266,7 +268,7 @@ function scene:create(event)
     changeGrid:addEventListener("tap", SwitchToBigGrid)
     changeTrophy:addEventListener("tap", SwitchToTrophy)
 
-    local header = display.newImageRect(sceneGroup, "themables/AreaControl.png", 300, 100)
+    local header = display.newImageRect(sceneGroup, "themables/MultiplayerAreaControl.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)

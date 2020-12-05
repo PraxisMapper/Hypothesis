@@ -41,6 +41,11 @@ local function SwitchToAreaControlScene()
     composer.gotoScene("10GridScene11AreaControl", options)
 end
 
+local function SwitchToMultiplayerAreaControlScene()
+    local options = {effect = "flip", time = 125}
+    composer.gotoScene("MutiplayerAreaControl", options)
+end
+
 
 --this would just be downloading a 1-pixel image. Thats silly. Keep this as the existing scene.
 local function SwitchTo10Grid10ImageScene()
@@ -118,7 +123,7 @@ function scene:create( event )
     changeMPAreaControl.anchorY = 0
     changeMPAreaControl.x = 390
     changeMPAreaControl.y = 900
-    --changeMPAreaControl:addEventListener("tap", SwitchToAreaControlScene)
+    changeMPAreaControl:addEventListener("tap", SwitchToMultiplayerAreaControlScene)
 
     local changeSettings = display.newImageRect(sceneGroup, "themables/Settings.png", 300, 100)
     changeSettings.anchorX = 0

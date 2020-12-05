@@ -26,8 +26,8 @@ require("localNetwork")
 
  function Get8CellDataLoading(pluscode8)
     if networkReqPending == true then return end
-    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/Cell8Info/" .. pluscode8) end
-    --network.request(serverURL .. "MapData/Cell8Info/" .. pluscode8, "GET", plusCode8ListenerLoading)
+    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/LearnCell8/" .. pluscode8) end
+    --network.request(serverURL .. "MapData/LearnCell8/" .. pluscode8, "GET", plusCode8ListenerLoading)
     LoadMapData()
 end
 
@@ -84,7 +84,7 @@ end
 function Get10CellImage11Loading(plusCode)
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.DocumentsDirectory}
-    network.request(serverURL .. "MapData/10cellBitmap11/" .. plusCode, "GET", imageListenerLoading, params)
+    network.request(serverURL .. "MapData/DrawCell10Highres/" .. plusCode, "GET", imageListenerLoading, params)
     imagecount = imagecount + 1
 end
 
@@ -98,7 +98,7 @@ end
 function Get8CellImage11Loading(plusCode8)
     local params = {}
     params.response  = {filename = plusCode8 .. "-11.png", baseDirectory = system.DocumentsDirectory}
-    network.request(serverURL .. "MapData/8cellBitmap11/" .. plusCode8, "GET", imageListenerLoading, params)
+    network.request(serverURL .. "MapData/DrawCell8Highres/" .. plusCode8, "GET", imageListenerLoading, params)
     imagecount = imagecount + 1
 end
 
@@ -131,7 +131,7 @@ end
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
        --currentPlusCode = "85PFF56C+5P" --Old Faithful 
 
-       
+       currentPlusCode = "86HWG93R+PJ" --CWRU
 
     --local plusCode6 = currentPlusCode:sub(0,6)
 end
@@ -179,13 +179,13 @@ function scene:show( event )
         statusText.text = "Database Opened"
         print("database started")
 
-        local currentDbVersion = 9;
+        local currentDbVersion = 10;
 
         local tablesetup =
         [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits, eightCode);
         CREATE TABLE IF NOT EXISTS acheivements(id INTEGER PRIMARY KEY, name, acheived, acheivedOn);
         CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, distanceWalked REAL, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude, minAltitude);
-        CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID, isGoodPerson, coffeesBought, deviceID);
+        CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID, isGoodPerson, coffeesBought, deviceID, factionID);
         CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS trophysBought(id INTEGER PRIMARY KEY, itemCode, boughtOn);
@@ -196,7 +196,7 @@ function scene:show( event )
         CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
         CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
         CREATE INDEX IF NOT EXISTS indexOwnedMapIds on areasOwned(mapDataId);
-        INSERT OR IGNORE INTO systemData(id, dbVersionID, isGoodPerson, coffeesBought, deviceID) values (1, ]] .. currentDbVersion .. ", 0, 0, '" .. system.getInfo("deviceID") .. [[') ;
+        INSERT OR IGNORE INTO systemData(id, dbVersionID, isGoodPerson, coffeesBought, deviceID, factionID) values (1, ]] .. currentDbVersion .. ", 0, 0, '" .. system.getInfo("deviceID") .. [[', 1) ;
         INSERT OR IGNORE INTO playerData(id, distanceWalked, totalPoints, totalCellVisits, totalSecondsPlayed, maximumSpeed, totalSpeed, maxAltitude, minAltitude) values (1, 0.0, 0, 0, 0, 0.0, 0.0, 0, 20000);
         INSERT OR IGNORE INTO trophysBought(id, itemCode, boughtOn) VALUES (1, 0, 0);
         ]]

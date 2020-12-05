@@ -8,7 +8,7 @@ require("helpers")
 
 local sqlite3 = require("sqlite3") 
 db = "" 
-local dbVersionID = 6
+local dbVersionID = 10
 
 function startDatabase()
     -- Open "data.db". If the file doesn't exist, it will be created
@@ -103,6 +103,16 @@ function upgradeDatabaseVersion(oldDBversion)
         local v9Command = 
        [[CREATE TABLE IF NOT EXISTS areasOwned(id INTEGER PRIMARY KEY, mapDataId, name, points);
        ALTER TABLE terrainData ADD COLUMN MapDataId;
+         ]]
+         Exec(v9Command)
+   end   
+   if (oldDBversion < 10) then
+    --do any scripting to match upgrade to version 10, i think i missed a number somewhere.
+        --add column to table.
+        local v9Command = 
+       [[
+       ALTER TABLE systemData ADD COLUMN factionID;
+       UPDATE systemData SET factionID = 1;
          ]]
          Exec(v9Command)
    end   
@@ -364,4 +374,16 @@ end
 function SpendPoints(points)
     local cmd = "UPDATE playerData SET totalPoints = totalPoints - " .. points
     db:exec(cmd)
+end
+
+function GetTeamID()
+    local query = "SELECT factionID FROM systemData"
+    for i,row in ipairs(Query(query)) do
+        if (#row == 1) then
+            return row[1]
+        else
+            return 0
+        end
+    end
+    return 0
 end
