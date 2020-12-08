@@ -187,6 +187,7 @@ function GetTeamControlMapTile10(Cell10)
 end
 
 function GetTeamControlMapTile8(Cell8)
+    print("requesting cell " .. Cell8)
     if (requestedMPMapTileCells[cell8] == 1) then
         --We already have this tile.
         return
@@ -199,12 +200,12 @@ function GetTeamControlMapTile8(Cell8)
             return
         end
         requestedMPMapTileCells[Cell8] = 0
-        TrackerGet8CellImage11(Cell8)
+        TrackerGetMP8CellImage11(Cell8)
      end
 
      if (status == -1) then --retry a failed download.
         requestedDataCells[Cell8] = 0
-        TrackerGet8CellImage11(Cell8)
+        TrackerGetMP8CellImage11(Cell8)
      end
 end
 
@@ -217,6 +218,7 @@ function TrackerGetMP10CellImage11(plusCode)
 end
 
 function TrackerMPimage1011Listener(event)
+    print("got data for " ..  string.gsub(event.url, serverURL .. "Gameplay/DrawFactionModeCell10HighRes/", ""))
     if event.status == 200 then
         forceRedraw = true
         netUp() 
@@ -225,6 +227,28 @@ function TrackerMPimage1011Listener(event)
     else 
         netDown() 
         local filename = string.gsub(event.url, serverURL .. "Gameplay/DrawFactionModeCell10HighRes/", "")
+        requestedMPMapTileCells[filename] = -1
+    end
+end
+
+function TrackerGetMP8CellImage11(plusCode)
+    networkReqPending = true
+    netTransfer()
+    local params = {}
+    params.response  = {filename = plusCode .. "-AC-11.png", baseDirectory = system.DocumentsDirectory}
+    network.request(serverURL .. "Gameplay/DrawFactionModeCell8HighRes/" .. plusCode, "GET", TrackerMPimage811Listener, params)
+end
+
+function TrackerMPimage811Listener(event)
+    print("got data for " ..  string.gsub(event.url, serverURL .. "Gameplay/DrawFactionModeCell8HighRes/", ""))
+    if event.status == 200 then
+        forceRedraw = true
+        netUp() 
+        local filename = string.gsub(event.url, serverURL .. "Gameplay/DrawFactionModeCell8HighRes/", "")
+        requestedMPMapTileCells[filename] = 1
+    else 
+        netDown() 
+        local filename = string.gsub(event.url, serverURL .. "Gameplay/DrawFactionModeCell8HighRes/", "")
         requestedMPMapTileCells[filename] = -1
     end
 end

@@ -41,9 +41,14 @@ local function SwitchToAreaControlScene()
     composer.gotoScene("10GridScene11AreaControl", options)
 end
 
+local function SwitchToSettingsScene()
+    local options = {effect = "flip", time = 125}
+    composer.gotoScene("SettingsScene", options)
+end
+
 local function SwitchToMultiplayerAreaControlScene()
     local options = {effect = "flip", time = 125}
-    composer.gotoScene("MutiplayerAreaControl", options)
+    composer.gotoScene("MutiplayerAreaControl2", options)
 end
 
 
@@ -130,7 +135,7 @@ function scene:create( event )
     changeSettings.anchorY = 0
     changeSettings.x = 390
     changeSettings.y = 1100
-    --changeSettings:addEventListener("tap", SwitchToAreaControlScene)
+    changeSettings:addEventListener("tap", SwitchToSettingsScene)
 
  
 end

@@ -9,10 +9,10 @@ require("dataTracker") --replaced localNetwork for this scene
 
 --cleanup dones:
 --all variables declared are used.
+--using current names on the web server.
 
 --cleanup TODOs
 --move scene switch functions to some single file instead of copying them in each scene.
---make sure cell colors, if needed, are in a central table instead of copied per scene.
 --use removeplus function where necessary
 
 -- -----------------------------------------------------------------------------------
@@ -23,7 +23,7 @@ require("dataTracker") --replaced localNetwork for this scene
 local bigGrid = true
 
 local cellCollection = {} --show cell area data/image tiles
-local visitedCellDisplay = {} --where we tint cells to show control.
+--local visitedCellDisplay = {} --where we tint cells to show control.
 -- color codes
 
 local unvisitedCell = {0, 0} -- completely transparent
@@ -125,6 +125,8 @@ local function UpdateLocalOptimized()
         if (debugLocal) then print("entering main loop") end
         if (timerResults ~= nil) then timer.pause(timerResults) end
         firstRun = false
+        local innerForceRedraw = forceRedraw
+        forceRedraw = false
         previousPlusCode = currentPlusCode
         for square = 1, #cellCollection do
             -- check each spot based on current cell, modified by gridX and gridY
@@ -134,7 +136,7 @@ local function UpdateLocalOptimized()
             cellCollection[square].pluscode = thisSquaresPluscode
             local plusCodeNoPlus = removePlus(thisSquaresPluscode)
 
-            if (forceRedraw == false and cellDataCache[plusCodeNoPlus] ~= nil and cellDataCache[plusCodeNoPlus].lastRefresh < os.time() - 60000) then
+            if (innerForceRedraw == false and cellDataCache[plusCodeNoPlus] ~= nil ) then --and cellDataCache[plusCodeNoPlus].lastRefresh < os.time() - 60000
                 --we can skip some of the processing we did earlier. Force a refresh every 60 seconds to make sure multiplayer data is reasonably up to date.
                 cellCollection[square].fill = cellDataCache[plusCodeNoPlus].tileFill
                 --visitedCellDisplay[square].fill = cellDataCache[plusCodeNoPlus].visitedFill
@@ -171,13 +173,21 @@ local function UpdateLocalOptimized()
                     cellDataCache[plusCodeNoPlus].visitedFill = unvisitedCell
                 end
                 
-                local imageExists = requestedMapTileCells[plusCodeNoPlus] --read from DataTracker because we want to know if we can paint the cell or not.
-                if (imageExists == nil) then
+                local imageRequested = requestedMapTileCells[plusCodeNoPlus] --read from DataTracker because we want to know if we can paint the cell or not.
+                local imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.DocumentsDirectory)
+                
+                --print(imageRequested)
+                --print(imageExists)
+
+                if (imageRequested == nil) then -- or imageExists == 0 --if I check for 0, this is always nil? if I check for nil, this is true when images are present?
                     imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.DocumentsDirectory)
                 end
-                if (not imageExists) then
+                
+                if (imageExists == false or imageExists == nil) then --not sure why this is true when file is found and 0 when its not? -- or imageExists == 0
+                    --print("getting new image")
                     GetTeamControlMapTile10(plusCodeNoPlus)
                 else
+                    cellCollection[square].fill = {0,0} -- required to make Solar2d actually update the texture.
                     local paint = {type  = "image", filename = plusCodeNoPlus .. "-AC-11.png", baseDir = system.DocumentsDirectory}
                     cellCollection[square].fill = paint
                 end
@@ -209,7 +219,7 @@ local function UpdateLocalOptimized()
         if (timerResults ~= nil) then timer.resume(timerResults) end
     end
 
-    forceRedraw = false
+    
     if (debugLocal) then print("grid done or skipped") end
     locationText.text = "Current location:" .. currentPlusCode
     explorePointText.text = "Explore Points: " .. Score()

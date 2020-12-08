@@ -12,9 +12,7 @@
 --move some stuff to database for efficiency purposes?
 ----EX: put colors in DB query so that i can just look up which color to draw a cell instead of checking after reading cellinfo?
 ----EX: maybe move score values to DB? could theoretically make a more complicated query that automatically updates scores that way
-----terrain types should probably come over as numbers to save a little data usage.
 --Do i want to protect the DB at all to stop players from directly editing data?
---make a screen that draws the whole explored map you have, scaled to screen? requires drawing directly to a bitmap
 --change colors to be more visible outdoors (I have a lot of dark colors, probably want light colors instead)
 system.setIdleTimer(false) --disables screen auto-off.
 
@@ -24,8 +22,10 @@ require("gameLogic")
 require("database")
 
 print("starting network")
+serverURL = "" --moving this here so it can be changed while running.
 require("localNetwork")
 networkResults = "down" --indicates if i am getting network data or not.
+
 
 forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
@@ -33,7 +33,7 @@ debug = true --set false for release builds. Set true for lots of console info b
 debugShift = false --display math for shifting PlusCodes
 debugGPS = false --display data for the GPS event and timer loop and auto-move
 debugDB = false
-debugLocal = false
+debugLocal = true
 debugNetwork = false
 --uncomment when testing to clear local data.
 --ResetDatabase()
@@ -74,6 +74,7 @@ typeNames["12"] = "Trail"
 typeNames["14"] = "Building"
 typeNames["15"] = "Road"
 typeNames["16"] = "Parking"
+typeNames["100"] = "Server-Generated"
 
 requestedCells = ""
 

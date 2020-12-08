@@ -37,6 +37,8 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
             newSquare.name = "" --added for terrain/location support
             newSquare.type = ""--added for terrain/location support
             newSquare.MapDataId = 0 --for area control mode
+            newSquare.fill = {1, .01} --default to transparent, but using 0, 0 means they don't register at all?
+            --newSquare.fill = {math.random(), .5} --this should let me see the grid overlaid on the tiles.
             if (tapHandlerType == "debug") then
                 newSquare:addEventListener("tap", debuggerHelperSquare) --for debugging display grid, show the cell's plus code by click/tap
             elseif (tapHandlerType == "ac") then
@@ -94,7 +96,8 @@ function showAreaClaim(event)
 end
 
 function multiplayerAreaClaim(event)
-    --TODO 
+    print("cell tapped for MAC")
+    tapData.text = "cell tapped: " .. event.target.pluscode
     if (event.target.type == nil or event.target.type == "") then
         print("returning false from multiplayer area claim")
         return false

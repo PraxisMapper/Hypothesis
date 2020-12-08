@@ -3,6 +3,7 @@
 local composer = require( "composer" )
 require("database")
 require("localNetwork")
+require("dataTracker") --for requestedMapTileCells
 local scene = composer.newScene()
  
 -- -----------------------------------------------------------------------------------
@@ -59,15 +60,14 @@ function AreaOwnerListener(event)
     ownerDisplay.text = ownerDisplay.text .. " " .. results[2]
 
     if (tappedAreaScore <= tonumber(Score())) then
-        print("showing yes button")
+        --print("showing yes button")
         yesButton.isVisible = true
     else
-        print(tappedAreaScore .. " is bigger than " .. Score()) 
+        --print(tappedAreaScore .. " is bigger than " .. Score()) 
     end
 end
 
 function ClaimMPArea()
-    print("1")
     local teamID = GetTeamID()
     print(serverURL .. "Gameplay/ClaimArea/" .. tappedAreaMapDataId .. "/" .. teamID)
     network.request(serverURL .. "Gameplay/ClaimArea/" .. tappedAreaMapDataId .. "/" .. teamID, "GET", ClaimMPAreaListener)
@@ -79,7 +79,53 @@ function ClaimMPAreaListener(event)
         SpendPoints(tappedAreaScore)
     end
 
+    --this call chains to another one, to find which map tiles to update.
+    timer.performWithDelay(2000, FindChangedMapTiles, 1)
+    --FindChangedMapTiles(tappedAreaMapDataId)
+    --ClearMapTiles(tappedAreaMapDataId)
+
     composer.hideOverlay("overlayMPAreaClaim")
+end
+
+function FindChangedMapTiles()
+    print("finding changed map tiles")
+    --local id = tappedAreaMapDataId
+    network.request(serverURL .. "Gameplay/FindChangedMaptiles/" .. tappedAreaMapDataId, "GET", FindMPAreaListener)
+end
+
+function FindMPAreaListener(event)
+    print("changed map tile response")
+    print(event.response)
+    if (event.status == 200) then
+        ClearMapTiles(event.response)
+    end
+end
+
+--This probably belong in DataTracker, or the actual multiplayer scene?.
+function ClearMapTiles(cellList)
+    print("clearing map tiles" )
+    local cellsToClear = Split(cellList, "|")
+    for i = 1, #cellsToClear do
+        print("removing " .. cellsToClear[i])
+        cellDataCache[cellsToClear[i]] = nil
+        os.remove(system.pathForFile(cellsToClear[i] .. "-AC-11.png", system.DocumentsDirectory))
+        requestedMapTileCells[cellsToClear[i]] = -1
+    end
+    forceRedraw = true
+
+    --print(cellDataCache)
+    --print(dump(cellDataCache))
+    -- for i,cell in pairs(cellDataCache) do
+    --     --print(cell.MapDataId)
+    --     --print(i)
+    --     --print(dump(cell))
+    --     if (cell.MapDataId == mapDataId) then--TODO clean up casing in this app all over.
+    --         print("deleting cache and file for " .. i)
+    --         cell = nil
+    --         os.remove(system.pathForFile(i .. "-AC-11.png", system.DocumentsDirectory))
+    --     end
+    -- end
+    print("tiles cleared")
 end
 
 -- -----------------------------------------------------------------------------------
@@ -88,7 +134,6 @@ end
  
 -- create()
 function scene:create( event )
- 
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
@@ -126,6 +171,7 @@ function scene:show( event )
         -- Code here runs when the scene is still off screen (but is about to come on screen)
         textDisplay.text = "Claim " .. tappedAreaName .. " with "
         --GetAreaScore(tappedAreaMapDataId) 
+        print(tappedAreaMapDataId) 
         GetAreaOwner(tappedAreaMapDataId)
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
