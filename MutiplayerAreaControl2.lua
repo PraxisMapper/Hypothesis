@@ -33,6 +33,9 @@ local bigGrid = true
 
 local cellCollection = {} -- show cell area data/image tiles
 local CellTapSensors = {} -- this is for tapping an area to claim, but needs renamed.
+local ctsGroup = display.newGroup()
+ctsGroup.x = -8
+ctsGroup.y = 10
 -- color codes
 
 local unvisitedCell = {0, 0} -- completely transparent
@@ -83,11 +86,14 @@ local function ToggleZoom()
 
     if (bigGrid) then
         CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(61, 16, 20, sceneGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        CreateRectangleGrid(61, 16, 20, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        ctsGroup.x = -8
+        ctsGroup.y = 10
     else
-        -- original values, but too small to interact with.
         CreateRectangleGrid(3, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(60, 8, 10, sceneGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        CreateRectangleGrid(60, 8, 10, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        ctsGroup.x = -4
+        ctsGroup.y = 5
     end
     --Move these to the back first, so that the map tiles will be behind them.
     for square = 1, #CellTapSensors do
@@ -269,19 +275,17 @@ function scene:create(event)
     scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1250, native.systemFont, 20)
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
 
-    -- Cell8 is 20x20 Cell10s
-    -- cell10 is 4x5 CEll11.
-    -- Cell 8 is 80x100 Cell11s
-    -- doubling that for interaction should be 160x200. hm. Sure doesnt look that way.
-    -- 1 is too small, 3 is too big at this resolution..
+    --Note: i might want to put the CellTapSensors into their own group, and shift it around a couple pixels manually to make it line up better with the actual map tiles.
     if (bigGrid) then
         CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(60, 16, 20, sceneGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        CreateRectangleGrid(60, 16, 20, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
     else
         -- original values, but too small to interact with.
         CreateRectangleGrid(3, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(60, 5, 4, sceneGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        CreateRectangleGrid(60, 5, 4, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
     end
+    print(ctsGroup.numChildren)
+    
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 25, 25)
     directionArrow.x = display.contentCenterX
