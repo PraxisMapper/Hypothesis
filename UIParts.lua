@@ -38,7 +38,7 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
             newSquare.type = ""--added for terrain/location support
             newSquare.MapDataId = 0 --for area control mode
             newSquare.fill = {1, .01} --default to transparent, but using 0, 0 means they don't register at all?
-            --newSquare.fill = {math.random(), .5} --this should let me see the grid overlaid on the tiles.
+            --newSquare.fill = {math.random(), .5} --Uncomment this to make the grid visible for debug/layout purposes
             if (tapHandlerType == "debug") then
                 newSquare:addEventListener("tap", debuggerHelperSquare) --for debugging display grid, show the cell's plus code by click/tap
             elseif (tapHandlerType == "ac") then

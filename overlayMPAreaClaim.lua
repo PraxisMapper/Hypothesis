@@ -32,10 +32,12 @@ local function yesListener()
         yesButton.isVisible = false
         noButton.isVisible = false
     end
+    return true
 end
 
 local function noListener()
     composer.hideOverlay("overlayMPAreaClaim")
+    return true
 end
 
 function GetAreaOwner(mapDataId)

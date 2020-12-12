@@ -103,7 +103,12 @@ networkTx.isVisible = false
 
 tapData = display.newText("cell tapped:", 25, 0, native.systemFont, 20)
 tapData.anchorX = 0
-tapData.anchorY = 0;
+tapData.anchorY = 0
+
+--OSM License Compliance. Do not remove this line.
+--It might be moved, but it must be visible when maptiles are.
+--TODO: link to OSM license info when tapped?
+local osmLicenseText = display.newText("© OpenStreetMap contributors", 600, 1250, native.systemFont, 14)
 
 print("shifting to loading scene")
 local composer = require("composer")

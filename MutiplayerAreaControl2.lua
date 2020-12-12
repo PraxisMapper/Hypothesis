@@ -137,12 +137,13 @@ local function UpdateLocalOptimized()
     if (debug) then debugText.text = dump(lastLocationEvent) end
 
     if (timerResults ~= nil) then timer.pause(timerResults) end
-    local innerForceRedraw = forceRedraw or firstRun or (currentPlusCode ~= previousPlusCode)
+    local innerForceRedraw = forceRedraw or firstRun or (currentPlusCode:sub(1,8) ~= previousPlusCode:sub(1,8))
     firstRun = false
     forceRedraw = false
     previousPlusCode = currentPlusCode
 
     -- Step 1: set background MAC map tiles for the Cell8. Should be much simpler than old loop.
+    if (innerForceRedraw == false) then -- none of this needs to get processed if we haven't moved and there's no new maptiles to refresh.
     for square = 1, #cellCollection do
         -- check each spot based on current cell, modified by gridX and gridY
         local thisSquaresPluscode = currentPlusCode
@@ -151,16 +152,11 @@ local function UpdateLocalOptimized()
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
 
-        if (innerForceRedraw == false) then -- and cellDataCache[plusCodeNoPlus] ~= nil) then -- and cellDataCache[plusCodeNoPlus].lastRefresh < os.time() - 60000
- 
-        else
              GetMapData8(plusCodeNoPlus)
             local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
-            local imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png",
-                                              system.DocumentsDirectory)
+            local imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.DocumentsDirectory)
             if (imageRequested == nil) then -- or imageExists == 0 --if I check for 0, this is always nil? if I check for nil, this is true when images are present?
-                imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png",
-                                            system.DocumentsDirectory)
+                imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.DocumentsDirectory)
             end
  
             if (imageExists == false or imageExists == nil) then -- not sure why this is true when file is found and 0 when its not? -- or imageExists == 0
@@ -180,9 +176,11 @@ local function UpdateLocalOptimized()
     print("done with map cells")
     -- Step 2: set up event listener grid. These need Cell10s
     local baselinePlusCode = currentPlusCode:sub(1,8) .. "+FF"
+    if (innerForceRedraw) then --Also no need to do all of this unless we shifted our Cell8 location.
     for square = 1, #CellTapSensors do
         --if (innerForceRedraw == true and cellDataCache[plusCodeNoPlus] ~= nil) then -- and cellDataCache[plusCodeNoPlus].lastRefresh < os.time() - 60000
-        if (innerForceRedraw) then
+        
+            --TODO: use cached data if present instead of dB lookups every time.
             local thisSquaresPluscode = baselinePlusCode
             local shiftChar7 = math.floor(CellTapSensors[square].gridY / 20)
             local shiftChar8 = math.floor(CellTapSensors[square].gridX / 20)
@@ -193,41 +191,49 @@ local function UpdateLocalOptimized()
             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar8, 8)
             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar9, 9)
             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar10, 10)
-            
-            CellTapSensors[square].pluscode = thisSquaresPluscode
-            local plusCodeNoPlus = removePlus(thisSquaresPluscode)
-            local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
-            
-            if (#terrainInfo > 4 and terrainInfo[4] ~= "") then -- 4 is areaType. not every area is named, so use type.
-                -- apply info
-                CellTapSensors[square].name = terrainInfo[3]
-                CellTapSensors[square].type = terrainInfo[4]
-                CellTapSensors[square].MapDataId = terrainInfo[6]
+
+            if (cellDataCache[plusCodeNoPlus] ~= nil) then
+                --use cached data. Reverse the save logic.
+                cellDataCache[plusCodeNoPlus].name = CellTapSensors[square].name
+                cellDataCache[plusCodeNoPlus].type = CellTapSensors[square].type
+                cellDataCache[plusCodeNoPlus].MapDataId = CellTapSensors[square].MapDataId
+                cellDataCache[plusCodeNoPlus].lastRefresh = os.time()
             else
-                CellTapSensors[square].name = ""
-                CellTapSensors[square].type = ""
-            end
-
-            if (CellTapSensors[square].type ~= "") then
-                CellTapSensors[square].fill = visitedCell
-            end
-
-            if (currentPlusCode == thisSquaresPluscode) then
-                if (debugLocal) then print("setting name") end
-                -- draw this place's name on screen, or an empty string if its not a place.
-                locationName.text = CellTapSensors[square].name
-                if (locationName.text == "" and CellTapSensors[square].type ~= 0) then
-                    locationName.text = typeNames[CellTapSensors[square].type]
+                CellTapSensors[square].pluscode = thisSquaresPluscode
+                local plusCodeNoPlus = removePlus(thisSquaresPluscode)
+                local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
+            
+                if (#terrainInfo > 4 and terrainInfo[4] ~= "") then -- 4 is areaType. not every area is named, so use type.
+                    -- apply info
+                    CellTapSensors[square].name = terrainInfo[3]
+                    CellTapSensors[square].type = terrainInfo[4]
+                    CellTapSensors[square].MapDataId = terrainInfo[6]
+                else
+                    CellTapSensors[square].name = ""
+                    CellTapSensors[square].type = ""
                 end
+
+                --This is a debugging setup to see what parts of the map have a touch object and which don't. Ensuring the 2 separate grids line up.
+                -- if (CellTapSensors[square].type ~= "") then
+                --     CellTapSensors[square].fill = visitedCell
+                -- end
+
+                if (currentPlusCode == thisSquaresPluscode) then
+                    if (debugLocal) then print("setting name") end
+                    -- draw this place's name on screen, or an empty string if its not a place.
+                    locationName.text = CellTapSensors[square].name
+                    if (locationName.text == "" and CellTapSensors[square].type ~= 0) then
+                        locationName.text = typeNames[CellTapSensors[square].type]
+                    end
+                end
+
+                cellDataCache[plusCodeNoPlus] = {}
+                -- cellDataCache[plusCodeNoPlus].tileFill = {type  = "image", filename = plusCodeNoPlus .. "-AC-11.png", baseDir = system.DocumentsDirectory}
+                cellDataCache[plusCodeNoPlus].name = CellTapSensors[square].name
+                cellDataCache[plusCodeNoPlus].type = CellTapSensors[square].type
+                cellDataCache[plusCodeNoPlus].MapDataId = CellTapSensors[square].MapDataId
+                cellDataCache[plusCodeNoPlus].lastRefresh = os.time()
             end
-
-            cellDataCache[plusCodeNoPlus] = {}
-            -- cellDataCache[plusCodeNoPlus].tileFill = {type  = "image", filename = plusCodeNoPlus .. "-AC-11.png", baseDir = system.DocumentsDirectory}
-            cellDataCache[plusCodeNoPlus].name = CellTapSensors[square].name
-            cellDataCache[plusCodeNoPlus].type = CellTapSensors[square].type
-            cellDataCache[plusCodeNoPlus].MapDataId = CellTapSensors[square].MapDataId
-            cellDataCache[plusCodeNoPlus].lastRefresh = os.time()
-
         end
     end
 
@@ -248,7 +254,23 @@ local function UpdateLocalOptimized()
     scoreText.text = "Control Score: " .. AreaControlScore()
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading
+    --print(currentPlusCode)
+    --Remember, currentPlusCode has the +, so i want chars 10 and 11, not 9 and 10.
+    --Shift is how many blocks to move. Multiply it by how big each block is. These offsets place the arrow in the correct Cell10.
+    local shift = CODE_ALPHABET_:find(currentPlusCode:sub(11, 11)) - 11
+    local shift2 = CODE_ALPHABET_:find(currentPlusCode:sub(10, 10)) - 10
+    print (shift .. " " ..  shift2)
+    directionArrow.x = display.contentCenterX + (shift * 16)
+    directionArrow.y = display.contentCenterY - (shift2 * 20)
+    print (directionArrow.x .. " " ..  directionArrow.y)
     scoreLog.text = lastScoreLog
+
+    locationText:toFront()
+    explorePointText:toFront()
+    scoreText:toFront()
+    timeText:toFront()
+    directionArrow:toFront()
+    scoreLog:toFront()
 
     if timerResults == nil then
         if (debugLocal) then print("setting timer") end
@@ -283,25 +305,28 @@ function scene:create(event)
         -- original values, but too small to interact with.
         CreateRectangleGrid(3, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(60, 5, 4, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
-    end
-    print(ctsGroup.numChildren)
-    
+    end  
 
-    directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 25, 25)
+    directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 16, 20)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
+    directionArrow.anchorX = 0
+    directionArrow.anchorY = 0
+    directionArrow:toFront()
 
     local changeGrid = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300,100)
     changeGrid.anchorX = 0
     changeGrid.anchorY = 0
     changeGrid.x = 60
     changeGrid.y = 1000
+    changeGrid:toFront()
 
     local changeTrophy = display.newImageRect(sceneGroup, "themables/TrophyRoom.png", 300, 100)
     changeTrophy.anchorX = 0
     changeTrophy.anchorY = 0
     changeTrophy.x = 390
     changeTrophy.y = 1000
+    changeTrophy:toFront()
 
     changeGrid:addEventListener("tap", SwitchToBigGrid)
     changeTrophy:addEventListener("tap", SwitchToTrophy)
@@ -310,21 +335,25 @@ function scene:create(event)
     header.x = display.contentCenterX
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)
+    header:toFront()
 
     local zoom = display.newImageRect(sceneGroup, "themables/ToggleZoom.png", 100, 100)
     zoom.anchorX = 0
     zoom.x = 50
     zoom.y = 100
     zoom:addEventListener("tap", ToggleZoom)
+    zoom:toFront()
 
     local leaderboard = display.newImageRect(sceneGroup, "themables/LeaderboardIcon.png", 100, 100)
     leaderboard.anchorX = 0
     leaderboard.x = 580
     leaderboard.y = 100
     leaderboard:addEventListener("tap", GoToLeaderboardScene)
+    leaderboard:toFront()
 
     if (debug) then
         debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
+        debugText:toFront()
     end
 
     if (debug) then print("created AreaControl scene") end
