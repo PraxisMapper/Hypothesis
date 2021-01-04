@@ -39,6 +39,7 @@ TeamColors[2] = {0, 1, 0, .7}
 TeamColors[3] = {.1, .605, .822, .7} --sky blue for team 3.
 
 local timerResults = nil
+local timerResultsMap = nil
 local firstRun = true
 
 local locationText = ""
@@ -75,6 +76,7 @@ local function ToggleZoom()
     local sceneGroup = scene.view
 
     timer.pause(timerResults)
+    timer.pause(timerResultsMap)
 
     for i = 1, #cellCollection do cellCollection[i]:removeSelf() end
     for i = 1, #CellTapSensors do CellTapSensors[i]:removeSelf() end
@@ -197,7 +199,7 @@ local function UpdateLocalOptimized()
             if (requestedTurfWarCells[idCheck] ~= nil) then
                 local teamID = requestedTurfWarCells[idCheck]
                 CellTapSensors[square].fill = TeamColors[tonumber(teamID)]
-                print("painted " .. idCheck .. " with team color " .. teamID)
+                --print("painted " .. idCheck .. " with team color " .. teamID)
             end
         end
     end
@@ -246,6 +248,10 @@ local function UpdateLocalOptimized()
         timerResults = timer.performWithDelay(150, UpdateLocalOptimized, -1)
     end
 
+    if timerResultsMap == nil then
+        timerResultsMap = timer.performWithDelay(3000, UpdateTurfWarMap, -1)
+    end
+
     if (debugLocal) then print("end updateLocalOptimized") end
 end
 
@@ -265,7 +271,7 @@ function scene:create(event)
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
-    sceneGroup:insert(ctsGroup) --TODO: apply this to MAC2 as well.
+    sceneGroup:insert(ctsGroup)
 
     --TODO: swap these to TurfWar info (your team, team scoreboards)
     locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
@@ -349,7 +355,7 @@ function scene:show(event)
     elseif (phase == "did") then
         -- Code here runs when the scene is entirely on screen 
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
-        timer.performWithDelay(5000, UpdateTurfWarMap, -1)
+        timer.performWithDelay(3000, UpdateTurfWarMap, -1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
     end
 end
@@ -362,6 +368,8 @@ function scene:hide(event)
     if (phase == "will") then
         timer.cancel(timerResults)
         timerResults = nil
+        timer.cancel(timerResultsMap)
+        timerResultsMap = nil
     elseif (phase == "did") then
         -- Code here runs immediately after the scene goes entirely off screen
     end
