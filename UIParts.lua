@@ -45,6 +45,8 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
                 newSquare:addEventListener("tap", showAreaClaim) --singleplayer gameplay dialog.
             elseif (tapHandlerType == "mac") then
                 newSquare:addEventListener("tap", multiplayerAreaClaim) --multiplayer gameplay dialog.
+            elseif (tapHandlerType == "turfwar") then
+                --no listener needed here.
             end
             cellCollection[#cellCollection + 1] = newSquare
         end

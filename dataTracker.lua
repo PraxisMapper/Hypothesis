@@ -14,6 +14,10 @@ require("localNetwork") --for serverURL.
 requestedDataCells = {} --these should be Cell8
 requestedMapTileCells = {} --these should be Cell10
 requestedMPMapTileCells = {} --these should be Cell10, separate because they can change quickly.
+requestedTurfWarCells = {} --Should be a table by instance types, since multiple Turf Wars can run at once.
+TurfWarInstanceIDs ={} --list of int ids.
+
+requestedTurfWarCells[1] = {}
 
 function GetMapData8(Cell8) -- the terrain type call.
     local status = requestedDataCells[Cell8] --this can occasionally be nil if there's multiple active calls that return out of order on the first update
@@ -56,6 +60,7 @@ function GetMapTile10(Cell10)
 end
 
 function GetMapTile8(Cell8)
+    print("Getting map tile for " .. Cell8) 
     if (requestedMapTileCells[cell8] == 1) then
         --We already have this tile.
         return
@@ -251,4 +256,53 @@ function TrackerMPimage811Listener(event)
         local filename = string.gsub(event.url, serverURL .. "Gameplay/DrawFactionModeCell8HighRes/", "")
         requestedMPMapTileCells[filename] = -1
     end
+end
+
+function GetTurfWarInstanceIDs()
+end
+
+
+--Since Turf War is meant to be a much faster game mode, we won't save its state in the database, just memory.
+function GetTurfWarMapData8(Cell8, instanceID) -- the turf war map update call.
+    --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
+    print("calling Turf War map info for " .. Cell8)
+    networkReqPending = true
+    netTransfer()
+    network.request(serverURL .. "TurfWar/LearnCell8/" .. instanceID .. "/" .. Cell8, "GET", TurfWarMapListener) 
+end
+
+function TurfWarMapListener(event)
+    if (debug) then print("turf war map event started") end
+    print(event.status)
+    print(event.url)
+    print(event.response)
+    if event.status == 200 then 
+        netUp() 
+    else 
+        netDown() 
+    end
+    if (event.status ~= 200) then return end --dont' save invalid results on an error.
+    networkReqPending = false 
+    --TODO, i need to pull the instance ID out of the URL
+    local instanceID = Split(string.gsub(event.url, serverURL .. "TurfWar/LearnCell8/", ""), "/")[1]
+    print(instanceID)
+    --This one splits each 10cell via pipe, each sub-vaule by =
+    local resultsTable = Split(event.response, "|")
+    print("received count: " .. #resultsTable)
+    --Format:
+    --cell10=TeamID
+
+    for cell = 1, #resultsTable do
+        local splitData = Split(resultsTable[cell], "=")
+        print(dump(splitData))
+        local key = splitData[1]
+        requestedTurfWarCells[key] = splitData[2]
+        print(dump(requestedTurfWarCells))
+        print(dump(requestedTurfWarCells[key]))
+        print("value assigned")
+    end
+
+    print("turf war table updated")
+    print(dump(requestedTurfWarCells[tonumber(instanceID)]))
+    forceRedraw = true
 end

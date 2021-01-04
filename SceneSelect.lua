@@ -51,11 +51,15 @@ local function SwitchToMultiplayerAreaControlScene()
     composer.gotoScene("MutiplayerAreaControl2", options)
 end
 
-
 --this would just be downloading a 1-pixel image. Thats silly. Keep this as the existing scene.
 local function SwitchTo10Grid10ImageScene()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("10GridScene", options)
+end
+
+local function SwitchToTurfWarScene()
+    local options = {effect = "flip", time = 125}
+    composer.gotoScene("TurfWarScene", options)
 end
  
  
@@ -137,7 +141,14 @@ function scene:create( event )
     changeSettings.y = 1100
     changeSettings:addEventListener("tap", SwitchToSettingsScene)
 
- 
+    local changeTurfWar = display.newImageRect(sceneGroup, "themables/TurfWar.png", 300, 100)
+    changeTurfWar.anchorX = 0
+    changeTurfWar.anchorY = 0
+    changeTurfWar.x = 60
+    changeTurfWar.y = 700
+    changeTurfWar:addEventListener("tap", SwitchToTurfWarScene)
+
+
 end
  
  
