@@ -50,6 +50,8 @@ local scoreLog = ""
 local debugText = {}
 local locationName = ""
 
+local factionID = 1
+
 local function testDrift()
     if (os.time() % 2 == 0) then
         currentPlusCode = shiftCellV3(currentPlusCode, 1, 9) -- move north
@@ -136,6 +138,9 @@ local function UpdateLocalOptimized()
     local innerForceRedraw = forceRedraw or firstRun or (currentPlusCode:sub(1,8) ~= previousPlusCode:sub(1,8))
     firstRun = false
     forceRedraw = false
+    if currentPlusCode ~= previousPlusCode then
+        ClaimTurfWarCell(removePlus(currentPlusCode), factionID)
+    end
     previousPlusCode = currentPlusCode
 
     -- Step 1: set background MAC map tiles for the Cell8. Should be much simpler than old loop.
