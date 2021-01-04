@@ -273,9 +273,9 @@ end
 
 function TurfWarMapListener(event)
     if (debug) then print("turf war map event started") end
-    print(event.status)
-    print(event.url)
-    print(event.response)
+    -- print(event.status)
+    --print(event.url)
+    --print(event.response)
     if event.status == 200 then 
         netUp() 
     else 
@@ -285,7 +285,7 @@ function TurfWarMapListener(event)
     networkReqPending = false 
     --TODO, i need to pull the instance ID out of the URL
     local instanceID = Split(string.gsub(event.url, serverURL .. "TurfWar/LearnCell8/", ""), "/")[1]
-    print(instanceID)
+    --print(instanceID)
     --This one splits each 10cell via pipe, each sub-vaule by =
     local resultsTable = Split(event.response, "|")
     print("received count: " .. #resultsTable)
@@ -294,15 +294,31 @@ function TurfWarMapListener(event)
 
     for cell = 1, #resultsTable do
         local splitData = Split(resultsTable[cell], "=")
-        print(dump(splitData))
+        --print(dump(splitData))
         local key = splitData[1]
         requestedTurfWarCells[key] = splitData[2]
-        print(dump(requestedTurfWarCells))
-        print(dump(requestedTurfWarCells[key]))
-        print("value assigned")
+        --print(dump(requestedTurfWarCells))
+        --print(dump(requestedTurfWarCells[key]))
+        --print("value assigned")
     end
 
     print("turf war table updated")
-    print(dump(requestedTurfWarCells[tonumber(instanceID)]))
+    --print(dump(requestedTurfWarCells[tonumber(instanceID)]))
     forceRedraw = true
+end
+
+function ClaimTurfWarCell(Cell10, factionId)
+    print("claiming cell for faction")
+    networkReqPending = true
+    netTransfer()
+    network.request(serverURL .. "TurfWar/ClaimCell10/" .. factionId .. "/" .. Cell10, "GET", TurfWarClaimListener) 
+end
+
+function TurfWarClaimListener(event) --doesnt record any data.
+    if event.status == 200 then 
+        netUp() 
+    else 
+        netDown() 
+    end
+    networkReqPending = false 
 end
