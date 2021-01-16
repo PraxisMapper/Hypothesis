@@ -268,6 +268,7 @@ function GetTurfWarMapData8(Cell8, instanceID) -- the turf war map update call.
     print("calling Turf War map info for " .. Cell8)
     networkReqPending = true
     netTransfer()
+    print(serverURL .. "TurfWar/LearnCell8/" .. instanceID .. "/" .. Cell8)
     network.request(serverURL .. "TurfWar/LearnCell8/" .. instanceID .. "/" .. Cell8, "GET", TurfWarMapListener) 
 end
 
@@ -279,6 +280,7 @@ function TurfWarMapListener(event)
     if event.status == 200 then 
         netUp() 
     else 
+        print("Turf war map listener failed")
         netDown() 
     end
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
@@ -315,9 +317,11 @@ function ClaimTurfWarCell(Cell10, factionId)
 end
 
 function TurfWarClaimListener(event) --doesnt record any data.
+    print("Turf war claim status:" .. event.status)
     if event.status == 200 then 
         netUp() 
     else 
+        print("Turf war claim failed")
         netDown() 
     end
     networkReqPending = false 

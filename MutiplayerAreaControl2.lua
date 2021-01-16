@@ -109,6 +109,7 @@ local function ToggleZoom()
     directionArrow:toFront()
     forceRedraw = true
     timer.resume(timerResults)
+    return true
 end
 
 local function GoToLeaderboardScene()
@@ -260,9 +261,13 @@ local function UpdateLocalOptimized()
     local shift = CODE_ALPHABET_:find(currentPlusCode:sub(11, 11)) - 11
     local shift2 = CODE_ALPHABET_:find(currentPlusCode:sub(10, 10)) - 10
     print (shift .. " " ..  shift2)
-    directionArrow.x = display.contentCenterX + (shift * 16)
-    directionArrow.y = display.contentCenterY - (shift2 * 20)
-    print (directionArrow.x .. " " ..  directionArrow.y)
+    if (bigGrid) then
+        directionArrow.x = display.contentCenterX + (shift * 16)
+        directionArrow.y = display.contentCenterY - (shift2 * 20)
+    else
+        directionArrow.x = display.contentCenterX + (shift * 4)
+        directionArrow.y = display.contentCenterY - (shift2 * 5)
+    end
     scoreLog.text = lastScoreLog
 
     locationText:toFront()
@@ -289,6 +294,7 @@ function scene:create(event)
     if (debug) then print("creating MPAreaControlScene2") end
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
+    sceneGroup:insert(ctsGroup)
 
     locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
@@ -355,7 +361,7 @@ function scene:create(event)
         debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
         debugText:toFront()
     end
-
+    ctsGroup:toFront()
     if (debug) then print("created AreaControl scene") end
 end
 

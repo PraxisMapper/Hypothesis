@@ -34,16 +34,18 @@ local selectedCell = {.8, .2, .2, .4} -- red, 50% transparent
 
 --TODO: populate this from server info.
 local TeamColors = {}
-TeamColors[1] = {1, 0, 0, .7}
-TeamColors[2] = {0, 1, 0, .7}
-TeamColors[3] = {.1, .605, .822, .7} --sky blue for team 3.
+TeamColors[1] = {1, 0, 0, .6}
+TeamColors[2] = {0, 1, 0, .6}
+TeamColors[3] = {.1, .605, .822, .6} --sky blue for team 3.
 
 local timerResults = nil
 local timerResultsMap = nil
+local timerResultsScoreboard = nil
+local TurfWarMapUpdateCountdown = 8 --wait this many loops over the main update before doing a network call. 
 local firstRun = true
 
 local locationText = ""
-local explorePointText = ""
+--local explorePointText = ""
 local scoreText = ""
 local timeText = ""
 local directionArrow = ""
@@ -53,6 +55,32 @@ local locationName = ""
 
 local factionID = 1
 
+local function GetScoreboard()
+    local instanceID = "1"
+    local url = serverURL .. "TurfWar/Scoreboard/" .. instanceID
+    network.request(url, "GET", GetScoreboardListener)
+    print("scoreboard request sent to " .. url)
+end
+
+function GetScoreboardListener(event) --these listeners can't be local.
+    print("scoreboard listener fired")
+    if event.status == 200 then
+        print("got Scoreboard")
+        print(event.response)
+        local results = Split(event.response, "|")
+        local setText = ""
+        --line 1 is instanceName#time.
+        --every other line is teamName=Score, need to iterate those.
+        setText = Split(results[1], "#")[1] .. "\n"
+        for i = 2, #results do
+            setText = setText .. results[i] .. "\n"
+        end
+        scoreText.text = setText
+        print(setText)
+    end
+    print("scoreboard text done")
+end
+
 local function testDrift()
     if (os.time() % 2 == 0) then
         currentPlusCode = shiftCellV3(currentPlusCode, 1, 9) -- move north
@@ -61,15 +89,15 @@ local function testDrift()
     end
 end
 
-local function SwitchToBigGrid()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("8GridScene", options)
-end
+-- local function SwitchToBigGrid()
+--     local options = {effect = "flip", time = 125}
+--     composer.gotoScene("8GridScene", options)
+-- end
 
-local function SwitchToTrophy()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("trophyScene", options)
-end
+-- local function SwitchToTrophy()
+--     local options = {effect = "flip", time = 125}
+--     composer.gotoScene("trophyScene", options)
+-- end
 
 local function ToggleZoom()
     bigGrid = not bigGrid
@@ -106,9 +134,10 @@ local function ToggleZoom()
         cellCollection[square]:toBack()
     end
 
-    directionArrow:toFront()
+    reorderUI()
     forceRedraw = true
     timer.resume(timerResults)
+    timer.resume(timerResultsMap)
 end
 
 local function GoToLeaderboardScene()
@@ -145,6 +174,7 @@ local function UpdateLocalOptimized()
     end
     previousPlusCode = currentPlusCode
 
+    TurfWarMapUpdateCountdown = TurfWarMapUpdateCountdown -1
     -- Step 1: set background MAC map tiles for the Cell8. Should be much simpler than old loop.
     if (innerForceRedraw == false) then -- none of this needs to get processed if we haven't moved and there's no new maptiles to refresh.
     for square = 1, #cellCollection do
@@ -155,7 +185,10 @@ local function UpdateLocalOptimized()
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
 
-             GetMapData8(plusCodeNoPlus)
+        if (TurfWarMapUpdateCountdown == 0) then
+            GetTurfWarMapData8(plusCodeNoPlus, 1) --probably doesnt need called every single frame. TODO add a counter to call this every 4 times or something.
+        end
+            GetMapData8(plusCodeNoPlus)
             local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
             local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
             if (imageRequested == nil) then -- or imageExists == 0 --if I check for 0, this is always nil? if I check for nil, this is true when images are present?
@@ -196,6 +229,7 @@ local function UpdateLocalOptimized()
             --print(idCheck)
             --print(requestedTurfWarCells[1][idCheck])
 
+            CellTapSensors[square].fill = unvisitedCell
             if (requestedTurfWarCells[idCheck] ~= nil) then
                 local teamID = requestedTurfWarCells[idCheck]
                 CellTapSensors[square].fill = TeamColors[tonumber(teamID)]
@@ -214,11 +248,14 @@ local function UpdateLocalOptimized()
         end
     end
 
+    if TurfWarMapUpdateCountdown == 0 then
+        TurfWarMapUpdateCountdown = 8
+    end
+
     if (timerResults ~= nil) then timer.resume(timerResults) end
     if (debugLocal) then print("grid done or skipped") end
     locationText.text = "Current location:" .. currentPlusCode
-    explorePointText.text = "Explore Points: " .. Score()
-    scoreText.text = "Control Score: " .. AreaControlScore()
+    --explorePointText.text = "Explore Points: " .. Score()
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading
     --print(currentPlusCode)
@@ -237,7 +274,7 @@ local function UpdateLocalOptimized()
     scoreLog.text = lastScoreLog
 
     locationText:toFront()
-    explorePointText:toFront()
+    --explorePointText:toFront()
     scoreText:toFront()
     timeText:toFront()
     directionArrow:toFront()
@@ -249,7 +286,7 @@ local function UpdateLocalOptimized()
     end
 
     if timerResultsMap == nil then
-        timerResultsMap = timer.performWithDelay(3000, UpdateTurfWarMap, -1)
+        timerResultsMap = timer.performWithDelay(1500, UpdateTurfWarMap, -1)
     end
 
     if (debugLocal) then print("end updateLocalOptimized") end
@@ -257,7 +294,7 @@ end
 
 function UpdateTurfWarMap()
     local TurfWarInstances = {1}
-    GetTurfWarMapData8(currentPlusCode:sub(1,8), 1)
+    --GetTurfWarMapData8(currentPlusCode:sub(1,8), 1)
 end
 
 
@@ -276,8 +313,8 @@ function scene:create(event)
     --TODO: swap these to TurfWar info (your team, team scoreboards)
     locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
-    explorePointText = display.newText(sceneGroup, "Explore Points: ?", display.contentCenterX, 240, native.systemFont, 20)
-    scoreText = display.newText(sceneGroup, "Control Score: ?", display.contentCenterX, 260, native.systemFont, 20)
+    --explorePointText = display.newText(sceneGroup, "Explore Points: ?", display.contentCenterX, 240, native.systemFont, 20)
+    scoreText = display.newText(sceneGroup, "Leaderboards: ?", display.contentCenterX, 300, native.systemFont, 20)
     scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1250, native.systemFont, 20)
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
 
@@ -297,51 +334,58 @@ function scene:create(event)
     directionArrow.anchorY = 0
     directionArrow:toFront()
 
-    local changeGrid = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300,100)
-    changeGrid.anchorX = 0
-    changeGrid.anchorY = 0
-    changeGrid.x = 60
-    changeGrid.y = 1000
-    changeGrid:toFront()
+    -- local changeGrid = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300,100)
+    -- changeGrid.anchorX = 0
+    -- changeGrid.anchorY = 0
+    -- changeGrid.x = 60
+    -- changeGrid.y = 1000
+    -- changeGrid:toFront()
 
-    local changeTrophy = display.newImageRect(sceneGroup, "themables/TrophyRoom.png", 300, 100)
-    changeTrophy.anchorX = 0
-    changeTrophy.anchorY = 0
-    changeTrophy.x = 390
-    changeTrophy.y = 1000
-    changeTrophy:toFront()
+    -- local changeTrophy = display.newImageRect(sceneGroup, "themables/TrophyRoom.png", 300, 100)
+    -- changeTrophy.anchorX = 0
+    -- changeTrophy.anchorY = 0
+    -- changeTrophy.x = 390
+    -- changeTrophy.y = 1000
+    -- changeTrophy:toFront()
 
-    changeGrid:addEventListener("tap", SwitchToBigGrid)
-    changeTrophy:addEventListener("tap", SwitchToTrophy)
+    -- changeGrid:addEventListener("tap", SwitchToBigGrid)
+    -- changeTrophy:addEventListener("tap", SwitchToTrophy)
 
-    local header = display.newImageRect(sceneGroup, "themables/TurfWar.png",300, 100)
+    header = display.newImageRect(sceneGroup, "themables/TurfWar.png",300, 100)
     header.x = display.contentCenterX
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)
     header:toFront()
 
-    local zoom = display.newImageRect(sceneGroup, "themables/ToggleZoom.png", 100, 100)
+    zoom = display.newImageRect(sceneGroup, "themables/ToggleZoom.png", 100, 100)
     zoom.anchorX = 0
     zoom.x = 50
     zoom.y = 100
     zoom:addEventListener("tap", ToggleZoom)
     zoom:toFront()
 
-    local leaderboard = display.newImageRect(sceneGroup, "themables/LeaderboardIcon.png", 100, 100)
-    leaderboard.anchorX = 0
-    leaderboard.x = 580
-    leaderboard.y = 100
-    leaderboard:addEventListener("tap", GoToLeaderboardScene)
-    leaderboard:toFront()
+    -- local leaderboard = display.newImageRect(sceneGroup, "themables/LeaderboardIcon.png", 100, 100)
+    -- leaderboard.anchorX = 0
+    -- leaderboard.x = 580
+    -- leaderboard.y = 100
+    -- leaderboard:addEventListener("tap", GoToLeaderboardScene)
+    -- leaderboard:toFront()
 
     if (debug) then
         debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
         debugText:toFront()
     end
-
-    ctsGroup:toFront()
+    --reorderUI() --not in create
 
     if (debug) then print("created TurfWar scene") end
+end
+
+function reorderUI()
+    ctsGroup:toFront()
+    header:toFront()
+    zoom:toFront()
+    --leaderboard:toFront()
+    directionArrow:toFront()
 end
 
 function scene:show(event)
@@ -355,9 +399,12 @@ function scene:show(event)
     elseif (phase == "did") then
         -- Code here runs when the scene is entirely on screen 
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
-        timer.performWithDelay(3000, UpdateTurfWarMap, -1)
+        --timer.performWithDelay(3000, UpdateTurfWarMap, -1)
+        timerResultsScoreboard = timer.performWithDelay(1500, GetScoreboard, 1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
+        reorderUI()
     end
+    if (debug) then print("showed TurfWar scene") end
 end
 
 function scene:hide(event)
@@ -370,6 +417,8 @@ function scene:hide(event)
         timerResults = nil
         timer.cancel(timerResultsMap)
         timerResultsMap = nil
+        timer.cancel(timerResultsScoreboard)
+        timerResultsScoreboard = nil
     elseif (phase == "did") then
         -- Code here runs immediately after the scene goes entirely off screen
     end
@@ -391,4 +440,8 @@ scene:addEventListener("hide", scene)
 scene:addEventListener("destroy", scene)
 -- -----------------------------------------------------------------------------------
 
+
+
 return scene
+
+
