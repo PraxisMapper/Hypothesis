@@ -53,10 +53,11 @@ local scoreLog = ""
 local debugText = {}
 local locationName = ""
 
-local factionID = 1
+local instanceID = 1
+local factionID = 0 --invalid, will avoid accidental claims until you get your team.
 
 local function GetScoreboard()
-    local instanceID = "1"
+    --local instanceID = "1"
     local url = serverURL .. "TurfWar/Scoreboard/" .. instanceID
     network.request(url, "GET", GetScoreboardListener)
     print("scoreboard request sent to " .. url)
@@ -79,6 +80,31 @@ function GetScoreboardListener(event) --these listeners can't be local.
         print(setText)
     end
     print("scoreboard text done")
+end
+
+local function GetTeamAssignment()
+    --local instanceID = "1"
+    local url = serverURL .. "TurfWar/AssignTeam/" .. instanceID .. "/" .. system.getInfo("deviceID")
+    network.request(url, "GET", GetTeamAssignmentListener)
+    print("Team request sent to " .. url)
+end
+
+function GetTeamAssignmentListener(event)
+    print("Team listener fired")
+    print(event.status)
+    if event.status == 200 then
+        print("got Team")
+        print(event.response)
+        factionID = tonumber(event.response)
+        if (factionID == 1) then
+            directionArrow:setFillColor(1, 0, 0, .5)
+        elseif (factionID == 2) then
+            directionArrow:setFillColor(0, 1, 0, .5)
+        elseif (factionID == 3) then
+            directionArrow:setFillColor(0, 0, 1, .5) 
+        end
+    end
+    print("Team Assignment done")
 end
 
 local function testDrift()
@@ -400,9 +426,10 @@ function scene:show(event)
         -- Code here runs when the scene is entirely on screen 
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
         --timer.performWithDelay(3000, UpdateTurfWarMap, -1)
-        timerResultsScoreboard = timer.performWithDelay(1500, GetScoreboard, 1)
+        timerResultsScoreboard = timer.performWithDelay(2500, GetScoreboard, -1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
         reorderUI()
+        GetTeamAssignment()
     end
     if (debug) then print("showed TurfWar scene") end
 end

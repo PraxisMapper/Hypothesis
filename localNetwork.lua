@@ -7,7 +7,7 @@ require("helpers") --for Split
 --serverURL = "http://192.168.50.247:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
 --serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
 --serverURL = "http://192.168.50.247/GPSExploreServerAPI/" -- local network IIS, doesnt work on https due to self-signed certs.
-serverURL = "http://ec2-3-138-184-251.us-east-2.compute.amazonaws.com/" --AWS Test server, IP part of address will change each time instance is launched.
+
 
 --note: GpsExplore/" is now half of it, the other half is MapData/
 --local requestedCells = "" this is now in main and global
