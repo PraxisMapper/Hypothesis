@@ -152,7 +152,7 @@ function TrackerGet8CellImage11(plusCode)
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.DocumentsDirectory}
-    network.request(serverURL .. "MapData/DrawCell8Highres/" .. plusCode, "GET", Trackerimage1011Listener, params)
+    network.request(serverURL .. "MapData/DrawCell8Highres/" .. plusCode, "GET", Trackerimage811Listener, params)
 end
 
 function Trackerimage811Listener(event)
