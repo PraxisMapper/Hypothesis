@@ -23,7 +23,6 @@ settings =
 			"android.permission.INTERNET",
             "android.permission.ACCESS_FINE_LOCATION",
             "android.permission.ACCESS_COARSE_LOCATION",
-			"com.android.vending.BILLING",
 		},
 	},
 
@@ -45,10 +44,7 @@ settings =
 	--
 	plugins =
 	{
-		["plugin.google.iap.v3"] =
-        {
-            publisherId = "com.coronalabs"
-        },
+		
 	},
 
 	--
