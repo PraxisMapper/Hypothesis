@@ -1,4 +1,7 @@
--- multiplayer Area Control mode scene.
+--Paint The Town  Mode
+--Simplified area control mode: walk into a Cell10, claim it for your team.
+--(Teams get assigned by the server randomly)
+--auto-resets on a scheduled basis, can have multiple scoreboards/instances going.
 local composer = require("composer")
 local scene = composer.newScene()
 
@@ -14,29 +17,64 @@ require("dataTracker") -- replaced localNetwork for this scene
 local bigGrid = true
 
 local cellCollection = {} -- show cell area data/image tiles
-local CellTapSensors = {} -- this is for tapping an area to claim, but needs renamed.
+local CellTapSensors = {} -- Not detecting taps in this mode. This is the highlight layer.
 local ctsGroup = display.newGroup()
 ctsGroup.x = -8
 ctsGroup.y = 10
-
 -- color codes
+
 local unvisitedCell = {0, 0} -- completely transparent
 local visitedCell = {.529, .807, .921, .4} -- sky blue, 50% transparent
 local selectedCell = {.8, .2, .2, .4} -- red, 50% transparent
 
+local TeamColors = {}
+TeamColors[1] = {1, 0, 0, .6}
+TeamColors[2] = {0, 1, 0, .6}
+TeamColors[3] = {.1, .605, .822, .6} --sky blue for team 3.
+
 local timerResults = nil
+local timerResultsScoreboard = nil
+local PaintTownMapUpdateCountdown = 8 --wait this many loops over the main update before doing a network call. 
 local firstRun = true
 
 local locationText = ""
-local explorePointText = ""
 local scoreText = ""
-local timeText = ""
 local directionArrow = ""
-local scoreLog = ""
 local debugText = {}
 local locationName = ""
 
+local zoom = ""
+local swapInstance = ""
+
+local instanceID = 1 --1 is weekly, 2 is permanent
 local arrowPainted = false
+
+local function GetScoreboard()
+    --local instanceID = "1"
+    local url = serverURL .. "PaintTown/Scoreboard/" .. instanceID
+    network.request(url, "GET", GetScoreboardListener)
+    if (debug) then print("scoreboard request sent to " .. url) end
+end
+
+function GetScoreboardListener(event) --these listeners can't be local.
+    if (debug) then  print("scoreboard listener fired") end
+    if event.status == 200 then
+        if (debug) then 
+            print("got Scoreboard")
+            print(event.response)
+        end
+        local results = Split(event.response, "|")
+        local setText = ""
+        --line 1 is instanceName#time.
+        --every other line is teamName=Score, need to iterate those.
+        setText = Split(results[1], "#")[1] .. "\n"
+        for i = 2, #results do
+            setText = setText .. results[i] .. "\n"
+        end
+        scoreText.text = setText
+    end
+    if (debug) then print("scoreboard text done") end
+end
 
 local function testDrift()
     if (os.time() % 2 == 0) then
@@ -46,11 +84,9 @@ local function testDrift()
     end
 end
 
-
 local function ToggleZoom()
     bigGrid = not bigGrid
     local sceneGroup = scene.view
-
     timer.pause(timerResults)
 
     for i = 1, #cellCollection do cellCollection[i]:removeSelf() end
@@ -61,12 +97,12 @@ local function ToggleZoom()
 
     if (bigGrid) then
         CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(61, 16, 20, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        CreateRectangleGrid(61, 16, 20, ctsGroup, CellTapSensors, "painttown") -- rectangular Cell11 grid with a color fill
         ctsGroup.x = -8
         ctsGroup.y = 10
     else
         CreateRectangleGrid(3, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(60, 8, 10, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        CreateRectangleGrid(60, 8, 10, ctsGroup, CellTapSensors, "painttown") -- rectangular Cell11 grid  with a color fill
         ctsGroup.x = -4
         ctsGroup.y = 5
     end
@@ -81,20 +117,20 @@ local function ToggleZoom()
         cellCollection[square]:toBack()
     end
 
-    directionArrow:toFront()
+    reorderUI()
     forceRedraw = true
     timer.resume(timerResults)
-    return true
 end
 
-local function GoToLeaderboardScene()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("LeaderboardScene", options)
-end
-
-local function GoToSceneSelect()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("SceneSelect", options)
+local function switchMode()
+    if (instanceID == 1) then
+        instanceID = 2
+    else
+        instanceID =1
+    end
+    scoreText.text = "Loading...."
+    forceRedraw = true
+    requestedPaintTownCells = {} --clears out the display cache
 end
 
 local function tintArrow(teamID)
@@ -108,8 +144,13 @@ local function tintArrow(teamID)
     arrowPainted = true
 end
 
+local function GoToSceneSelect()
+    local options = {effect = "flip", time = 125}
+    composer.gotoScene("SceneSelect", options)
+end
+
 local function UpdateLocalOptimized()
-    -- This needs to be 2 loops, because the cell tables are different sizes.
+    -- This now needs to be 2 loops, because the cell tables are different sizes.
     -- First loop for map tiles
     -- Then loop for touch event rectangles.
     if (debugLocal) then print("start UpdateLocalOptimized") end
@@ -123,45 +164,59 @@ local function UpdateLocalOptimized()
 
     if (debug) then debugText.text = dump(lastLocationEvent) end
 
+    local plusCodeNoPlus = removePlus(currentPlusCode)
     if (timerResults ~= nil) then timer.pause(timerResults) end
     local innerForceRedraw = forceRedraw or firstRun or (currentPlusCode:sub(1,8) ~= previousPlusCode:sub(1,8))
     firstRun = false
     forceRedraw = false
+    if currentPlusCode ~= previousPlusCode then
+        ClaimPaintTownCell(plusCodeNoPlus, tonumber(composer.getVariable("faction")))
+    end
     previousPlusCode = currentPlusCode
-    
-    if (arrowPainted == false) then
-        local teamID = tonumber(composer.getVariable("faction"))
-        if (teamID == 0) then
-            GetTeamAssignment()
-        else            
-            tintArrow(teamID)
-        end
+
+    -- draw this place's name on screen, or an empty string if its not a place.
+    local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
+    locationName.text = terrainInfo[3]; --name
+    if locationName.text == "" then
+        locationName.text = typeNames[terrainInfo[4]] --area type name
     end
 
+    PaintTownMapUpdateCountdown = PaintTownMapUpdateCountdown -1
     -- Step 1: set background MAC map tiles for the Cell8. Should be much simpler than old loop.
     if (innerForceRedraw == false) then -- none of this needs to get processed if we haven't moved and there's no new maptiles to refresh.
     for square = 1, #cellCollection do
         -- check each spot based on current cell, modified by gridX and gridY
+        
         local thisSquaresPluscode = currentPlusCode
         thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 8)
         thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 7)
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
-
-             GetMapData8(plusCodeNoPlus)
-            local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
-            local imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.CachesDirectory)
-            if (imageRequested == nil) then 
-                imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.CachesDirectory)
+        if (PaintTownMapUpdateCountdown == 0) then
+            GetPaintTownMapData8(plusCodeNoPlus, instanceID)
+            if (arrowPainted == false) then
+                local teamID = tonumber(composer.getVariable("faction"))
+                if (teamID == 0) then
+                    GetTeamAssignment()
+                else            
+                    tintArrow(teamID)
+                end
             end
- 
-            if (imageExists == false or imageExists == nil) then 
-                 GetTeamControlMapTile8(plusCodeNoPlus)
+        end
+            GetMapData8(plusCodeNoPlus)
+            local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
+            local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
+            if (imageRequested == nil) then -- or imageExists == 0 --if I check for 0, this is always nil? if I check for nil, this is true when images are present?
+                imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
+            end
+            if (imageExists == false or imageExists == nil) then -- not sure why this is true when file is found and 0 when its not? -- or imageExists == 0
+                 cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
+                 GetMapTile8(plusCodeNoPlus)
             else
                 cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
                 local paint = {
                     type = "image",
-                    filename = plusCodeNoPlus .. "-AC-11.png",
+                    filename = plusCodeNoPlus .. "-11.png",
                     baseDir = system.CachesDirectory
                 }
                 cellCollection[square].fill = paint
@@ -169,12 +224,12 @@ local function UpdateLocalOptimized()
         end
     end
 
-    
-
+    if (debug) then  print("done with map cells") end
     -- Step 2: set up event listener grid. These need Cell10s
     local baselinePlusCode = currentPlusCode:sub(1,8) .. "+FF"
     if (innerForceRedraw) then --Also no need to do all of this unless we shifted our Cell8 location.
     for square = 1, #CellTapSensors do
+            CellTapSensors[square].fill = {0, 0}
             local thisSquaresPluscode = baselinePlusCode
             local shiftChar7 = math.floor(CellTapSensors[square].gridY / 20)
             local shiftChar8 = math.floor(CellTapSensors[square].gridX / 20)
@@ -184,65 +239,26 @@ local function UpdateLocalOptimized()
             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar8, 8)
             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar9, 9)
             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar10, 10)
+            local idCheck = removePlus(thisSquaresPluscode)
 
-            if (cellDataCache[plusCodeNoPlus] ~= nil) then
-                --use cached data.
-                cellDataCache[plusCodeNoPlus].name = CellTapSensors[square].name
-                cellDataCache[plusCodeNoPlus].type = CellTapSensors[square].type
-                cellDataCache[plusCodeNoPlus].MapDataId = CellTapSensors[square].MapDataId
-                cellDataCache[plusCodeNoPlus].lastRefresh = os.time()
-            else
-                CellTapSensors[square].pluscode = thisSquaresPluscode
-                local plusCodeNoPlus = removePlus(thisSquaresPluscode)
-                local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
-            
-                if (#terrainInfo > 4 and terrainInfo[4] ~= "") then -- 4 is areaType. not every area is named, so use type.
-                    -- apply info
-                    CellTapSensors[square].name = terrainInfo[3]
-                    CellTapSensors[square].type = terrainInfo[4]
-                    CellTapSensors[square].MapDataId = terrainInfo[6]
-                else
-                    CellTapSensors[square].name = ""
-                    CellTapSensors[square].type = ""
-                end
-
-                if (currentPlusCode == thisSquaresPluscode) then
-                    if (debugLocal) then print("setting name") end
-                    -- draw this place's name on screen, or an empty string if its not a place.
-                    locationName.text = CellTapSensors[square].name
-                    if (locationName.text == "" and CellTapSensors[square].type ~= 0) then
-                        locationName.text = typeNames[CellTapSensors[square].type]
-                    end
-                end
-
-                cellDataCache[plusCodeNoPlus] = {}
-                cellDataCache[plusCodeNoPlus].name = CellTapSensors[square].name
-                cellDataCache[plusCodeNoPlus].type = CellTapSensors[square].type
-                cellDataCache[plusCodeNoPlus].MapDataId = CellTapSensors[square].MapDataId
-                cellDataCache[plusCodeNoPlus].lastRefresh = os.time()
+            CellTapSensors[square].pluscode = thisSquaresPluscode
+            if (requestedPaintTownCells[idCheck] ~= nil) then
+                local teamIDThisSpace = requestedPaintTownCells[idCheck]
+                CellTapSensors[square].fill = TeamColors[tonumber(teamIDThisSpace)]
             end
         end
     end
 
-    --these checks happens either way.
-    if (currentPlusCode == thisSquaresPluscode) then
-        if (debugLocal) then print("setting name") end
-        -- draw this place's name on screen, or an empty string if its not a place.
-        locationName.text = cellCollection[square].name
-        if (locationName.text == ""  and cellCollection[square].type ~= 0) then
-            locationName.text = typeNames[cellCollection[square].type]
-        end
+    if PaintTownMapUpdateCountdown == 0 then
+        PaintTownMapUpdateCountdown = 8
     end
 
     if (timerResults ~= nil) then timer.resume(timerResults) end
     if (debugLocal) then print("grid done or skipped") end
     locationText.text = "Current location:" .. currentPlusCode
-    explorePointText.text = "Explore Points: " .. Score()
-    scoreText.text = "Control Score: " .. AreaControlScore()
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading
-    --Remember, currentPlusCode has the +, so i want chars 10 and 11, not 9 and 10.
-    --Shift is how many blocks to move. Multiply it by how big each block is. These offsets place the arrow in the correct Cell10.
+
     local shift = CODE_ALPHABET_:find(currentPlusCode:sub(11, 11)) - 11
     local shift2 = CODE_ALPHABET_:find(currentPlusCode:sub(10, 10)) - 10
     if (bigGrid) then
@@ -252,14 +268,13 @@ local function UpdateLocalOptimized()
         directionArrow.x = display.contentCenterX + (shift * 4)
         directionArrow.y = display.contentCenterY - (shift2 * 5)
     end
-    scoreLog.text = lastScoreLog
 
     locationText:toFront()
-    explorePointText:toFront()
     scoreText:toFront()
     timeText:toFront()
     directionArrow:toFront()
-    scoreLog:toFront()
+    locationName:toFront()
+    swapInstance:toFront()
 
     if timerResults == nil then
         if (debugLocal) then print("setting timer") end
@@ -275,25 +290,25 @@ end
 
 function scene:create(event)
 
-    if (debug) then print("creating MPAreaControlScene2") end
+    if (debug) then print("creating painttown scene") end
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
+
     sceneGroup:insert(ctsGroup)
 
     locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
-    explorePointText = display.newText(sceneGroup, "Explore Points: ?", display.contentCenterX, 240, native.systemFont, 20)
-    scoreText = display.newText(sceneGroup, "Control Score: ?", display.contentCenterX, 260, native.systemFont, 20)
-    scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1250, native.systemFont, 20)
-    locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
+    scoreText = display.newText(sceneGroup, "Leaderboards: ?", display.contentCenterX, 260, native.systemFont, 20)
+    scoreText.anchorY = 0
+    locationName = display.newText(sceneGroup, "", display.contentCenterX, 240, native.systemFont, 20)
 
     if (bigGrid) then
         CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(60, 16, 20, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        CreateRectangleGrid(60, 16, 20, ctsGroup, CellTapSensors, "painttown") -- rectangular Cell11 grid  with color fill
     else
         -- original values, but too small to interact with.
         CreateRectangleGrid(3, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(60, 5, 4, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        CreateRectangleGrid(60, 5, 4, ctsGroup, CellTapSensors, "painttown") -- rectangular Cell11 grid  with color fill
     end  
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 16, 20)
@@ -303,29 +318,43 @@ function scene:create(event)
     directionArrow.anchorY = 0
     directionArrow:toFront()
 
-    local header = display.newImageRect(sceneGroup, "themables/MultiplayerAreaControl.png",300, 100)
+    header = display.newImageRect(sceneGroup, "themables/PaintTown.png",300, 100)
     header.x = display.contentCenterX
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)
     header:toFront()
 
-    local zoom = display.newImageRect(sceneGroup, "themables/ToggleZoom.png", 100, 100)
+    zoom = display.newImageRect(sceneGroup, "themables/ToggleZoom.png", 100, 100)
     zoom.anchorX = 0
     zoom.x = 50
     zoom.y = 100
     zoom:addEventListener("tap", ToggleZoom)
     zoom:toFront()
 
+    swapInstance = display.newImageRect(sceneGroup, "themables/SwitchMode.png", 100, 100)
+    swapInstance.anchorX = 0
+    swapInstance.x = 550
+    swapInstance.y = 100
+    swapInstance:addEventListener("tap", switchMode)
+    swapInstance:toFront()
+
     if (debug) then
         debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
         debugText:toFront()
     end
+
+    if (debug) then print("created PaintTown scene") end
+end
+
+function reorderUI()
     ctsGroup:toFront()
-    if (debug) then print("created AreaControl scene") end
+    header:toFront()
+    zoom:toFront()
+    directionArrow:toFront()
 end
 
 function scene:show(event)
-    if (debug) then print("showing AreaControl scene") end
+    if (debug) then print("showing painttown scene") end
     local sceneGroup = self.view
     local phase = event.phase
 
@@ -335,25 +364,31 @@ function scene:show(event)
     elseif (phase == "did") then
         -- Code here runs when the scene is entirely on screen 
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
+        timerResultsScoreboard = timer.performWithDelay(2500, GetScoreboard, -1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
+        reorderUI()
+        GetTeamAssignment()
     end
+    if (debug) then print("showed painttown scene") end
 end
 
 function scene:hide(event)
-    if (debug) then print("hiding AreaControl scene") end
+    if (debug) then print("hiding painttown scene") end
     local sceneGroup = self.view
     local phase = event.phase
 
     if (phase == "will") then
         timer.cancel(timerResults)
         timerResults = nil
+        timer.cancel(timerResultsScoreboard)
+        timerResultsScoreboard = nil
     elseif (phase == "did") then
         -- Code here runs immediately after the scene goes entirely off screen
     end
 end
 
 function scene:destroy(event)
-    if (debug) then print("destroying AreaControl scene") end
+    if (debug) then print("destroying painttown scene") end
 
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view

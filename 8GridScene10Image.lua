@@ -14,7 +14,6 @@ if (debug) then print("8GridScene11image loading") end
 
 local cellCollection = {}
 
---color codes. 8cells dont use type-specific ones.
 local visitedCell = {.8, .3, .3, 1}
 local unvisitedCell = {.1, .7, .7, 1}
 local timerResults8 = nil
@@ -45,7 +44,7 @@ local function UpdateLocal8()
             cellCollection[square].pluscode = thisSquaresPluscode
             
             if not cellCollection[square].isFilled then
-            local imageExists = doesFileExist(thisSquaresPluscode .. "-10.png", system.DocumentsDirectory)
+            local imageExists = doesFileExist(thisSquaresPluscode .. "-10.png", system.CachesDirectory)
             if (not imageExists) then
                 --pull image from server
                 Get8CellImage10(thisSquaresPluscode)
@@ -55,7 +54,7 @@ local function UpdateLocal8()
                     cellCollection[square].fill = unvisitedCell
                 end
             else
-                local paint = {type  = "image", filename = thisSquaresPluscode .. "-10.png", baseDir = system.DocumentsDirectory}
+                local paint = {type  = "image", filename = thisSquaresPluscode .. "-10.png", baseDir = system.CachesDirectory}
                 cellCollection[square].fill = paint
                 cellCollection[square].isFilled = true
             end
@@ -78,40 +77,6 @@ local function UpdateLocal8()
     if (debugGPS) then print("end updateLocal8") end
 end
 
-local function SwitchToSmallGrid()
-    local options = {
-        effect = "flip",
-        time = 125,
-    }
-    composer.gotoScene("10GridScene", options)
-end
-
-local function SwitchToTrophy()
-    local options = {
-        effect = "flip",
-        time = 125,
-    }
-    composer.gotoScene("trophyScene", options)
-    --hijacking this for perf testing
-    --composer.gotoScene("performanceTest", options)
-end
-
-local function GoToStoreScene()
-    local options = {
-        effect = "flip",
-        time = 125,
-    }
-    composer.gotoScene("storeScene", options)
-end
-
-local function GoToLeaderboardScene()
-    local options = {
-        effect = "flip",
-        time = 125,
-    }
-    composer.gotoScene("LeaderboardScene", options)
-end
-
 local function GoToSceneSelect()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("SceneSelect", options)
@@ -132,48 +97,17 @@ function scene:create( event )
     countText = display.newText(sceneGroup, "Total Cells Explored: ?", display.contentCenterX, 240, native.systemFont, 20)
     pointText = display.newText(sceneGroup, "Score: ?", display.contentCenterX, 260, native.systemFont, 20)
 
-    --NOTE: 10-cell resolution images for 8cells are 20x20, so use the original function
+    --Cell10s are square, so make a square grid
     CreateSquareGrid(9, 65, sceneGroup, cellCollection)
-    --CreateRectangleGrid(7, 100, 80, sceneGroup, cellCollection) --7 is the max that fits on screen at this image size
 
     directionArrow = display.newImageRect(sceneGroup, "themables/circle1.png", 65, 65)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
 
-    local changeGrid = display.newImageRect(sceneGroup, "themables/SmallGridButton.png", 300, 100)
-    changeGrid.anchorX = 0
-    changeGrid.anchorY = 0
-    changeGrid.x = 60
-    changeGrid.y = 1000
-
-    local changeTrophy = display.newImageRect(sceneGroup, "themables/TrophyRoom.png", 300, 100)
-    changeTrophy.anchorX = 0
-    changeTrophy.anchorY = 0
-    changeTrophy.x = 390
-    changeTrophy.y = 1000
-
-    changeGrid:addEventListener("tap", SwitchToSmallGrid)
-    changeTrophy:addEventListener("tap", SwitchToTrophy)
-    
     local header = display.newImageRect(sceneGroup, "themables/8cell10image.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)
-
-    local store = display.newImageRect(sceneGroup, "themables/StoreIcon.png", 100, 100)
-    store.anchorX = 0
-    --store.anchorY = 0
-    store.x = 50
-    store.y = 100
-    store:addEventListener("tap", GoToStoreScene)
-
-    local leaderboard = display.newImageRect(sceneGroup, "themables/LeaderboardIcon.png", 100, 100)
-    leaderboard.anchorX = 0
-    --leaderboard.anchorY = 0
-    leaderboard.x = 580
-    leaderboard.y = 100
-    leaderboard:addEventListener("tap", GoToLeaderboardScene)
-
 
     if (debug) then print("created 8GridScene11Image") end
 

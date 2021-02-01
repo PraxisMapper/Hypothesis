@@ -1,5 +1,5 @@
 --performance testing scene.
---TODO: if it matters, update this perftest setup to use shiftCellV3() instead of the old one.
+--Used a couple times to check which logic performs faster on an actual device.
 local composer = require( "composer" )
  
 local scene = composer.newScene()
@@ -19,14 +19,7 @@ require("plusCodes")
  local perfText = "" --displaytext object on screen.
  local dbInfo = "" --displaytext value too.
  
- local function SwitchToBigGrid()
-    local options = {
-        effect = "flip",
-        time = 125,
-    }
-    composer.gotoScene("8GridScene", options)
-end
- 
+  
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -71,8 +64,7 @@ function scene:show( event )
     textOptions.fontSize = 24
 
     perfText = display.newText(textOptions)
-    perfText:addEventListener("tap", SwitchToBigGrid)
-
+    
     textOptions.x = 0
     textOptions.y = 0
     textOptions.text = "dbData: "

@@ -6,11 +6,6 @@ local scene = composer.newScene()
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
  
-local function SwitchTo8GridScene()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("8GridScene", options)
-end
-
 local function SwitchTo10GridScene()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("10GridScene", options)
@@ -24,11 +19,6 @@ end
 local function SwitchTo8GridScene10Image()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("8GridScene10Image", options)
-end
-
-local function SwitchToSceneSelect()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("SceneSelect", options)
 end
 
 local function SwitchTo10Grid11ImageScene()
@@ -51,15 +41,9 @@ local function SwitchToMultiplayerAreaControlScene()
     composer.gotoScene("MutiplayerAreaControl2", options)
 end
 
---this would just be downloading a 1-pixel image. Thats silly. Keep this as the existing scene.
-local function SwitchTo10Grid10ImageScene()
+local function SwitchToPaintTownScene()
     local options = {effect = "flip", time = 125}
-    composer.gotoScene("10GridScene", options)
-end
-
-local function SwitchToTurfWarScene()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("TurfWarScene", options)
+    composer.gotoScene("PaintTownScene", options)
 end
  
  
@@ -76,79 +60,62 @@ function scene:create( event )
 
     local headerText = display.newText(sceneGroup, "Hypothesis - Mode Select", display.contentCenterX, 30, native.systemFont, 50)
 
-    local change8grid = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300, 100)
-    change8grid.anchorX = 0
-    change8grid.anchorY = 0
-    change8grid.x = 60
-    change8grid.y = 100
-    change8grid:addEventListener("tap", SwitchTo8GridScene)
-
-    local change8grid11Image = display.newImageRect(sceneGroup, "themables/8cell11image.png", 300, 100)
-    change8grid11Image.anchorX = 0
-    change8grid11Image.anchorY = 0
-    change8grid11Image.x = 60
-    change8grid11Image.y = 500
-    change8grid11Image:addEventListener("tap", SwitchTo8GridScene11Image)
-
-    local change8grid10Image = display.newImageRect(sceneGroup, "themables/8cell10image.png", 300, 100)
+    local change8grid10Image = display.newImageRect(sceneGroup, "themables/8cell10image.png", 300, 100) -- lowres zoomed out
     change8grid10Image.anchorX = 0
     change8grid10Image.anchorY = 0
     change8grid10Image.x = 60
-    change8grid10Image.y = 300
+    change8grid10Image.y = 100
     change8grid10Image:addEventListener("tap", SwitchTo8GridScene10Image)
 
+    local change8grid11Image = display.newImageRect(sceneGroup, "themables/8cell11image.png", 300, 100) --hires zoomed out
+    change8grid11Image.anchorX = 0
+    change8grid11Image.anchorY = 0
+    change8grid11Image.x = 390
+    change8grid11Image.y = 100
+    change8grid11Image:addEventListener("tap", SwitchTo8GridScene11Image)
 
-    local changeGrid = display.newImageRect(sceneGroup, "themables/SmallGridButton.png", 300, 100)
+    local changeGrid = display.newImageRect(sceneGroup, "themables/SmallGridButton.png", 300, 100) -- no tiles test
     changeGrid.anchorX = 0
     changeGrid.anchorY = 0
-    changeGrid.x = 390
-    changeGrid.y = 100
+    changeGrid.x = 60
+    changeGrid.y = 300
     changeGrid:addEventListener("tap", SwitchTo10GridScene)
 
-    local change10Grid11Image = display.newImageRect(sceneGroup, "themables/10cell11image.png", 300, 100)
+    local change10Grid11Image = display.newImageRect(sceneGroup, "themables/10cell11image.png", 300, 100) --hires small tiles test
     change10Grid11Image.anchorX = 0
     change10Grid11Image.anchorY = 0
     change10Grid11Image.x = 390
-    change10Grid11Image.y = 500
+    change10Grid11Image.y = 300
     change10Grid11Image:addEventListener("tap", SwitchTo10Grid11ImageScene)
 
-
-    local change10Grid10Image = display.newImageRect(sceneGroup, "themables/10cell10image.png", 300, 100)
-    change10Grid10Image.anchorX = 0
-    change10Grid10Image.anchorY = 0
-    change10Grid10Image.x = 390
-    change10Grid10Image.y = 300
-    change10Grid10Image:addEventListener("tap", SwitchTo10Grid10ImageScene)
-
-    local changeAreaControl = display.newImageRect(sceneGroup, "themables/AreaControl.png", 300, 100)
+    local changeAreaControl = display.newImageRect(sceneGroup, "themables/AreaControl.png", 300, 100) --1P area tag
     changeAreaControl.anchorX = 0
     changeAreaControl.anchorY = 0
-    changeAreaControl.x = 390
-    changeAreaControl.y = 700
+    changeAreaControl.x = 60
+    changeAreaControl.y = 500
     changeAreaControl:addEventListener("tap", SwitchToAreaControlScene)
 
-    local changeMPAreaControl = display.newImageRect(sceneGroup, "themables/MultiplayerAreaControl.png", 300, 100)
+    local changeMPAreaControl = display.newImageRect(sceneGroup, "themables/MultiplayerAreaControl.png", 300, 100) --multiplayer area tag
     changeMPAreaControl.anchorX = 0
     changeMPAreaControl.anchorY = 0
     changeMPAreaControl.x = 390
-    changeMPAreaControl.y = 900
+    changeMPAreaControl.y = 500
     changeMPAreaControl:addEventListener("tap", SwitchToMultiplayerAreaControlScene)
 
-    local changeSettings = display.newImageRect(sceneGroup, "themables/Settings.png", 300, 100)
+    local changePaintTown = display.newImageRect(sceneGroup, "themables/PaintTown.png", 300, 100) --paint the town
+    changePaintTown.anchorX = 0
+    changePaintTown.anchorY = 0
+    changePaintTown.x = 60
+    changePaintTown.y = 700
+    changePaintTown:addEventListener("tap", SwitchToPaintTownScene)
+
+    local changeSettings = display.newImageRect(sceneGroup, "themables/Settings.png", 300, 100) -- settings
     changeSettings.anchorX = 0
     changeSettings.anchorY = 0
     changeSettings.x = 390
     changeSettings.y = 1100
     changeSettings:addEventListener("tap", SwitchToSettingsScene)
-
-    local changeTurfWar = display.newImageRect(sceneGroup, "themables/TurfWar.png", 300, 100)
-    changeTurfWar.anchorX = 0
-    changeTurfWar.anchorY = 0
-    changeTurfWar.x = 60
-    changeTurfWar.y = 700
-    changeTurfWar:addEventListener("tap", SwitchToTurfWarScene)
-
-
+ 
 end
  
  

@@ -5,15 +5,6 @@
 --remember, lua requires code to be in order to reference (cant call a function that's lower in the file than the current one)
 --Remember: in LUA, if you use strings to index a table, you can't use #table to get a count accurately, but the string reference will work.
 
-
---TODO:
---implement store stuff
---allow user to set display name/nickname (or use Google Games signin? That might be faster/easier/another keyword)
---move some stuff to database for efficiency purposes?
-----EX: put colors in DB query so that i can just look up which color to draw a cell instead of checking after reading cellinfo?
-----EX: maybe move score values to DB? could theoretically make a more complicated query that automatically updates scores that way
---Do i want to protect the DB at all to stop players from directly editing data?
---change colors to be more visible outdoors (I have a lot of dark colors, probably want light colors instead)
 system.setIdleTimer(false) --disables screen auto-off.
 
 require("store")
@@ -22,18 +13,17 @@ require("gameLogic")
 require("database")
 
 print("starting network")
-serverURL = "" --moving this here so it can be changed while running.
+serverURL = "" --moving this here so it can be changed while running? TODO confirm
 require("localNetwork")
 networkResults = "down" --indicates if i am getting network data or not.
 
-
 forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
-debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
+debug = false --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugShift = false --display math for shifting PlusCodes
-debugGPS = false --display data for the GPS event and timer loop and auto-move
+debugGPS = true --display data for the GPS event and timer loop and auto-move
 debugDB = false
-debugLocal = true
+debugLocal = false
 debugNetwork = false
 --uncomment when testing to clear local data.
 --ResetDatabase()
@@ -56,6 +46,7 @@ tappedAreaMapDataId = 0
 
 tappedCell = "            "
 redrawOverlay = false
+factionID = 0 --this is apparently real critical, even if its 0
 
 typeNames = {}
 typeNames["1"] = "Water"
@@ -101,21 +92,18 @@ networkTx.anchorX = 0
 networkTx.anchorY = 0
 networkTx.isVisible = false
 
-tapData = display.newText("cell tapped:", 25, 0, native.systemFont, 20)
+tapData = display.newText("Cell Tapped:", 20, 1250, native.systemFont, 20)
 tapData.anchorX = 0
-tapData.anchorY = 0
 
 --OSM License Compliance. Do not remove this line.
 --It might be moved, but it must be visible when maptiles are.
 --TODO: link to OSM license info when tapped?
-local osmLicenseText = display.newText("© OpenStreetMap contributors", 600, 1250, native.systemFont, 14)
+local osmLicenseText = display.newText("Map Data © OpenStreetMap contributors", 530, 1250, native.systemFont, 20)
 
 print("shifting to loading scene")
 local composer = require("composer")
 composer.isDebug = debug
 composer.gotoScene("loadingScene")
---composer.gotoScene("SceneSelect")
-
 
 function gpsListener(event)
 
@@ -139,20 +127,9 @@ function gpsListener(event)
     local pluscode = tryMyEncode(eventL.latitude, eventL.longitude, 10); --only goes to 10 right now.
     if (debugGPS) then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode
-
-    --Debug/testing override location
-    --currentPlusCode = "9C6RVJ85+J8" --random UK location, should have water to the north, and a park north of that.
-    
-       --More complicated, problematic entries: (Pending possible fix for loading data missing from a file)
-       --currentPlusCode ="8FW4V75V+8R" --Eiffel Tower. ~60,000 entries.
-       --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
-       --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
-       --currentPlusCode = "85PFF56C+5P" --Old Faithful
-
     local plusCode8 = currentPlusCode:sub(0,8)
 
     --checking here. Checking for this after GrantPoints updates the visited list before this, would never load data.
-    --Note: 6-cell image download takes over a minute most times. dont use it.
     print("checking for terrain data")
     local hasData = Downloaded8Cell(plusCode8)
     print(hasData)
@@ -160,9 +137,8 @@ function gpsListener(event)
         Get8CellData(plusCode8) -- we do need terrain info here.
     end
 
-    --These seem more reasonable to use game-wise. much faster and smaller
     local plusCode8 = currentPlusCode:sub(0,8)
-    imageExists = doesFileExist(plusCode8 .. "-11.png", system.DocumentsDirectory)
+    imageExists = doesFileExist(plusCode8 .. "-11.png", system.CachesDirectory)
     if (not imageExists) then
         --pull image from server
         Get8CellImage11(plusCode8)
@@ -184,7 +160,6 @@ function gpsListener(event)
         if (os.time() ~= lastTime) then
             timeDiff = os.time() - lastTime
         end
-
 
         local currentQuery = Query("SELECT maxAltitude, maximumSpeed, minAltitude from playerData")[1]
         local cMaxalt = currentQuery[1]
@@ -215,16 +190,26 @@ function gpsListener(event)
     lastLocationEvent = eventL
 end
 
---This only shows the apps config. Useless.
--- function updateFPS()
---     fpsText.text = "FPS:" .. display.fps
--- end
+function backListener(event)
+    print("key listener got")
+    if (event.keyName == "back" and event.phase == "up") then
+        local currentScene = composer.getSceneName("current")
+        if (currentScene == "SceneSelect") then
+            return false
+        end
+        print("back to scene select")
+        local options = {effect = "flip", time = 125}
+        composer.gotoScene("SceneSelect", options)
+        return true
+    end
+    print("didn't handle this one")
+end
 
 timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)
 Runtime:addEventListener("location", gpsListener)
+Runtime:addEventListener("key", backListener)
 
 function netUp()
-    --print("network is up")
     networkResults = "up"
     networkUp.isVisible = true
     networkDown.isVisible = false
@@ -232,7 +217,6 @@ function netUp()
 end
 
 function netDown()
-    --print("network is down")
     networkResults = "down"
     networkDown.isVisible = true
     networkUp.isVisible = false
@@ -240,7 +224,6 @@ function netDown()
 end
 
 function netTransfer()
-    --print("network data in process")
     networkResults = "transfer"
     networkDown.isVisible = false
     networkUp.isVisible = false
@@ -254,4 +237,3 @@ end
 function HideLoadingPopup()
     composer.hideOverlay("overlayDL")
 end
-

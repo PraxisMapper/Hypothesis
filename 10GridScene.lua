@@ -10,9 +10,6 @@ require("localNetwork")
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
--- TODO
--- add a bounce-and-fall popup for when you gain score, add a sound effect to that too?
-
 local cellCollection = {}
 -- color codes
 local unvisitedCell = {.3, .3, .3, 1} -- medium grey
@@ -27,9 +24,8 @@ local tourismCell = {.1, .605, .822, 1}  --sky blue
 local universityCell = {.963, .936, .862, 1}  --off-white, slightly yellow-brown
 local wetlandsCell= {.111, .252, .146, 1}  --swampy green
 local historicalCell = {.7, .7, 7, 1}  --edit to.... something? Historically interesting area.
-local mallCell = {1, .7, .2, 1}  --edit to something?  Big indoor retail area. Might change to just retail.
 local trailCell = {.47, .18, .02, 1}  --Brown  A footpath or bridleway or cycleway or a path that isn't a sidewalk, in OSM terms
-local adminCell = {0,0,0,0} --None. We shouldn't draw admin cells. But the database has started tracking admin boundaries.
+local adminCell = {0,0,0,0} --None. We shouldn't draw admin cells. But the database can track admin boundaries.
 local buildingCell = {0.5,0.5,0.5,1} 
 local roadCell = {.1, .1, .1, 1} 
 
@@ -100,9 +96,6 @@ local function UpdateLocal()
                     cellCollection[square].name = ""
                     cellCollection[square].type = ""
                 end
-                --TODO: could probably set cell type to 'visited' when its marked visited
-                --as a small optimization 
-
                 -- cellCollection is a table of imageRects with a couple extra properties assigned.
                 -- now handle assigning colors
                 if (cellCollection[square].type == "") then
@@ -112,7 +105,7 @@ local function UpdateLocal()
                         cellCollection[square].fill = unvisitedCell
                     end
                 else
-                    --these are now numbers instead of strings on the server side.
+                    --these are numbers instead of strings on the server side.
                     if (cellCollection[square].type ==  "1") then --"water"
                         cellCollection[square].fill = waterCell
                     elseif (cellCollection[square].type == "3" ) then --"park"
@@ -173,25 +166,6 @@ local function UpdateLocal()
     if (debugGPS) then print("end updateLocal") end
 end
 
-local function SwitchToBigGrid()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("8GridScene", options)
-end
-
-local function SwitchToTrophy()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("trophyScene", options)
-end
-
-local function GoToStoreScene()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("storeScene", options)
-end
-
-local function GoToLeaderboardScene()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("LeaderboardScene", options)
-end
 
 local function SwitchToDebugScene()
     local options = {effect = "flip", time = 125}
@@ -225,39 +199,10 @@ function scene:create(event)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
 
-    local changeGrid = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300, 100)
-    changeGrid.anchorX = 0
-    changeGrid.anchorY = 0
-    changeGrid.x = 60
-    changeGrid.y = 1000
-
-    local changeTrophy = display.newImageRect(sceneGroup, "themables/TrophyRoom.png", 300, 100)
-    changeTrophy.anchorX = 0
-    changeTrophy.anchorY = 0
-    changeTrophy.x = 390
-    changeTrophy.y = 1000
-
-    changeGrid:addEventListener("tap", SwitchToBigGrid)
-    changeTrophy:addEventListener("tap", SwitchToTrophy)
-
     local header = display.newImageRect(sceneGroup, "themables/SmallGridButton.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)
-
-    local store = display.newImageRect(sceneGroup, "themables/StoreIcon.png", 100, 100)
-    store.anchorX = 0
-    -- store.anchorY = 0
-    store.x = 50
-    store.y = 100
-    store:addEventListener("tap", GoToStoreScene)
-
-    local leaderboard = display.newImageRect(sceneGroup, "themables/LeaderboardIcon.png", 100, 100)
-    leaderboard.anchorX = 0
-    -- leaderboard.anchorY = 0
-    leaderboard.x = 580
-    leaderboard.y = 100
-    leaderboard:addEventListener("tap", GoToLeaderboardScene)
 
     if (debug) then
         print("Creating debugText")

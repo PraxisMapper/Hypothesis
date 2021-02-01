@@ -69,7 +69,6 @@ function scene:create( event )
     bg.fill = bgFill
     textDisplay = display.newText(sceneGroup, "Claim X with Y points?", display.contentCenterX, display.contentCenterY - 150, 600, 100, native.systemFont, 30)
 
-    --need a yes and no button.
     yesButton = display.newImageRect(sceneGroup, "themables/ACYes.png", 100, 100)
     yesButton.x = display.contentCenterX - 200
     yesButton.y = display.contentCenterY + 100

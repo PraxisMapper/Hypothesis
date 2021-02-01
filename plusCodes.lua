@@ -6,7 +6,6 @@
 -- C F G H 
 -- 6 7 8 9 
 -- 2 3 4 5 
---whats the fastest way to dig through this? 
 --alter the last digit of the current cell to check neighbors, or 2nd to last cell if it overflows
 --that only matters if I use 11-digit or more codes. At the 10 digit level its still 20x20. So, same idea, but one is X and one is Y
 
@@ -51,9 +50,6 @@ function tryMyEncode(latitude, longitude, codeLength)
         long = long * GRID_COL_MULTIPLIER
     end
 
-    --if (debug) then print("calc'd lat is   " .. lat) end
-    --if (debug) then print("calc'd long is  " .. long) end 
-
     -- 10 most significant digits
     for i= 1, 5, 1 do
         local nextLongChar = (long % 20) + 1 
@@ -62,12 +58,10 @@ function tryMyEncode(latitude, longitude, codeLength)
         code = CODE_ALPHABET_:sub(nextLatChar, nextLatChar) .. CODE_ALPHABET_:sub(nextLongChar, nextLongChar) .. code
         lat = math.floor(lat / 20)
         long = math.floor(long / 20)
-        --if (debug) then print("assembled code so far is  " .. code) end
     end
 
     --11th digit is from a 4x5 grid, starting with 2 in the lower-left corner and ending with X in the upper-right, increasing left-to-right and then bottom-to-top
     if (codeLength == 11) then
-        --print("lat is " .. lat .. " lon is " .. long)
         local latGrid = lat % 5
         local lonGrid = long % 4
         local indexDigit = latGrid * GRID_COLUMNS_ + lonGrid
@@ -82,7 +76,6 @@ function shiftCellV3(pluscode, Shift, position)
     --take the current cell, move it some number of cells at some position. (Call this twice to do X and Y)
     --Shift should be under 20
     --position is which cell we're looking to shift, from 1 to 10. This function handles the plus sign by skipping it.
-   -- if (debugShift) then print("ShiftV3: " .. pluscode .. " "  .. Shift .. " " .. position) end
 
     local charPos = position
     if (position > 8) then --shift this over 1, to avoid the + in the plus code
@@ -92,37 +85,27 @@ function shiftCellV3(pluscode, Shift, position)
     local newCode = pluscode
     local currentDigit = ""
     local digitIndex = 0
-    --if (debugShift)then print ("V3shifting cell " .. pluscode) end
     --do the shift
     if (Shift ~= 0) then
-       -- if (debugShift)then print ("V3Shifting " .. Shift .. " spots in pos " .. charPos) end
 
         currentDigit = pluscode:sub(charPos, charPos)
-       -- if (debugShift)then print ("V3 curDigit is " .. currentDigit) end
         digitIndex = CODE_ALPHABET_:find(currentDigit)
         digitIndex = digitIndex + Shift
-       -- if (debugShift)then print ("V3 digitIndex is " .. digitIndex) end
 
         if (digitIndex <= 0) then
             digitIndex = 20 + digitIndex
-           -- if (debugShift) then print ("SUBSHIFT") end
             newCode = shiftCellV3(newCode, -1, position - 2) 
         end
         if (digitIndex > 20) then
             digitIndex = digitIndex - 20
-            --if (debugShift) then print ("SUBSHIFT") end
             newCode = shiftCellV3(newCode, 1, position - 2) 
         end
         currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
-    --if (debugShift) then print("new character in pos " .. charPos .. " is ".. currentDigit) end
         newCode = newCode:sub(1, charPos - 1) .. currentDigit .. newCode:sub(charPos + 1, 11)
     end
-    --if (debugShift) then print ("V3newcode final is " .. newCode) end
-
     return newCode
 end
 
 function removePlus(pluscode)
-    --return pluscode:sub(1, 8) .. pluscode:sub(10, 11) --or is gsub faster?
-    return string.gsub(pluscode, "+", "") --not sure which is faster, but i suspect this one is. TODO confirm this.
+    return string.gsub(pluscode, "+", "")
 end

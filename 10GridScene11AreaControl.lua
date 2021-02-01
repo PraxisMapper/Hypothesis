@@ -1,18 +1,11 @@
 --single player Area Control mode scene.
+--TODO: really need to switch this to the MAC2 style of tiles and tap detection. This one eats too much time loading stuff.
 local composer = require("composer")
 local scene = composer.newScene()
 
 require("UIParts")
 require("database")
-require("dataTracker") --replaced localNetwork for this scene
-
---cleanup dones:
---all variables declared are used.
-
---cleanup TODOs
---move scene switch functions to some single file instead of copying them in each scene.
---make sure cell colors, if needed, are in a central table instead of copied per scene.
---use removeplus function where necessary
+require("dataTracker") 
 
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
@@ -23,7 +16,6 @@ local bigGrid = true
 
 local cellCollection = {} --show cell area data/image tiles
 local visitedCellDisplay = {} --where we tint cells to show control.
--- color codes
 
 local unvisitedCell = {0, 0} -- completely transparent
 local visitedCell = {.529, .807, .921, .4} -- sky blue, 50% transparent
@@ -49,16 +41,6 @@ local function testDrift()
     end
 end
 
-local function SwitchToBigGrid()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("8GridScene", options)
-end
-
-local function SwitchToTrophy()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("trophyScene", options)
-end
-
 local function ToggleZoom()
     bigGrid = not bigGrid   
     local sceneGroup = scene.view
@@ -81,11 +63,6 @@ local function ToggleZoom()
     forceRedraw = true
 end
 
-local function GoToLeaderboardScene()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("LeaderboardScene", options)
-end
-
 local function GoToSceneSelect()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("SceneSelect", options)
@@ -105,7 +82,7 @@ local function UpdateLocalOptimized()
     if (debug) then debugText.text = dump(lastLocationEvent) end
 
     if (redrawOverlay) then
-        print("redrawing overlay: " .. tappedCell)
+        if (debugLocal) then print("redrawing overlay: " .. tappedCell) end
         --only do the overlay layer, because we tapped a cell.
         for square = 1, #cellCollection do
             local pc = removePlus(cellCollection[square].pluscode)
@@ -116,7 +93,7 @@ local function UpdateLocalOptimized()
             end
         end
         redrawOverlay = false
-        print("completed redrawing overlay: ")
+        if (debugLocal) then print("completed redrawing overlay: ") end
     end
 
     if (currentPlusCode ~= previousPlusCode or firstRun or forceRedraw or debugGPS) then
@@ -171,17 +148,17 @@ local function UpdateLocalOptimized()
                 
                 local imageExists = requestedMapTileCells[plusCodeNoPlus] --read from DataTracker because we want to know if we can paint the cell or not.
                 if (imageExists == nil) then
-                    imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
+                    imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
                 end
                 if (not imageExists) then
                     GetMapTile10(plusCodeNoPlus)
                 else
-                    local paint = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.DocumentsDirectory}
+                    local paint = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.CachesDirectory}
                     cellCollection[square].fill = paint
                 end
 
                 --save all this data (we already saved the visitedFill earlier)
-                cellDataCache[plusCodeNoPlus].tileFill = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.DocumentsDirectory}
+                cellDataCache[plusCodeNoPlus].tileFill = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.CachesDirectory}
                 cellDataCache[plusCodeNoPlus].name = cellCollection[square].name
                 cellDataCache[plusCodeNoPlus].type = cellCollection[square].type
                 cellDataCache[plusCodeNoPlus].MapDataId =  cellCollection[square].MapDataId
@@ -252,21 +229,6 @@ function scene:create(event)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
 
-    local changeGrid = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300, 100)
-    changeGrid.anchorX = 0
-    changeGrid.anchorY = 0
-    changeGrid.x = 60
-    changeGrid.y = 1000
-
-    local changeTrophy = display.newImageRect(sceneGroup, "themables/TrophyRoom.png", 300, 100)
-    changeTrophy.anchorX = 0
-    changeTrophy.anchorY = 0
-    changeTrophy.x = 390
-    changeTrophy.y = 1000
-
-    changeGrid:addEventListener("tap", SwitchToBigGrid)
-    changeTrophy:addEventListener("tap", SwitchToTrophy)
-
     local header = display.newImageRect(sceneGroup, "themables/AreaControl.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100
@@ -277,12 +239,6 @@ function scene:create(event)
     zoom.x = 50
     zoom.y = 100
     zoom:addEventListener("tap", ToggleZoom)
-
-    local leaderboard = display.newImageRect(sceneGroup, "themables/LeaderboardIcon.png", 100, 100)
-    leaderboard.anchorX = 0
-    leaderboard.x = 580
-    leaderboard.y = 100
-    leaderboard:addEventListener("tap", GoToLeaderboardScene)
 
     if (debug) then
         debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)

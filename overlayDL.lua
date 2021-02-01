@@ -1,13 +1,6 @@
 --This is the modal pop-up that tells a user the game is downloading data.
 --loadingScene is the part after the splash screen that sets up everything to run.
 
-
---TODO:
---get a big spinner icon.
---put big text that says Loading...
---be modal overlay, so the game is still visible behind it but you can't interact with it.
---call this with showOverlay() insead of gotoScene()
-
 local composer = require( "composer" )
 local scene = composer.newScene()
  
@@ -34,7 +27,6 @@ function scene:create( event )
     spinner.anchorY = 0.5
 
     statusText = display.newText(sceneGroup, "Loading....", display.contentCenterX, display.contentCenterY - 200, native.systemFont, 30)
-    --statusText:setFillColor(.2, .2, .2)
  
 end
  

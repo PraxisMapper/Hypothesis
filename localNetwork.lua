@@ -1,20 +1,11 @@
 -- the class for handling sending data to/from the API server
--- NOTE: naming this 'network' overrides the internal library with the same name and breaks everything.
+-- NOTE: naming this 'network' overrides the internal Solar2d library with the same name and breaks everything.
+local composer = require("composer")
 require("database")
 require("helpers") --for Split
 
---serverURL = "https://localhost:44384/GPSExplore/" -- simulator testing, on the same machine.
---serverURL = "http://192.168.50.247:64374/GPSExplore/" -- local network IISExpress, doesnt work on https due to self-signed certs.
---serverURL = "http://localhost/GPSExploreServerAPI/" -- local network IIS. works on the simulator
---serverURL = "http://192.168.50.247/GPSExploreServerAPI/" -- local network IIS, doesnt work on https due to self-signed certs.
 
 
---note: GpsExplore/" is now half of it, the other half is MapData/
---local requestedCells = "" this is now in main and global
-
---In-process change:
---look into changing from downloading a whole 6-cell to pulling areas .01 degree at at time (~4 8-cells at once)
---and request the data when it scrolls onto screen?
 networkReqPending = false
 
 function uploadListener(event)
@@ -59,7 +50,6 @@ function UploadData()
     if (debugNetwork) then print("sent") end
 end
 
---replaced by plusCode6 listener.
 function plusCode8Listener(event)
     if (debug) then print("plus code 8 event started") end
     if event.status == 200 then netUp() else netDown() end
@@ -67,7 +57,6 @@ function plusCode8Listener(event)
 
     --This one splits each 10cell via newline.
     local resultsTable = Split(event.response, "\r\n") --windows newlines
-    --if (debugNetwork) then print(dump(resultsTable)) end
     print(#resultsTable)
     --Format:
     --line1: the 8cell requested
@@ -81,9 +70,7 @@ function plusCode8Listener(event)
             local data = Split(resultsTable[i], "|") --3 data parts in order
             data[2] = string.gsub(data[2], "'", "''")--escape data[2] to allow ' in name of places.
             insertString = "INSERT INTO terrainData (plusCode, name, areatype, MapDataId) VALUES ('" .. resultsTable[1] .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "', '" .. data[4] .. "');" --insertString .. 
-            --print(insertString)
             local results = db:exec(insertString)
-            --print(results)
         end
     end
     local e2 = db:exec("END TRANSACTION")
@@ -109,10 +96,6 @@ function plusCode6Listener(event)
         return --dont' save invalid results on an error.
     end 
 
-    --tell the user we're working
-    --had to move this earlier for it to appear.
-    --ShowLoadingPopup()
-
     --This one splits each 10cell via newline.
     local resultsTable = Split(event.response, "\r\n") --windows newlines
     --print(#resultsTable)
@@ -131,16 +114,13 @@ function plusCode6Listener(event)
             local data = Split(resultsTable[i], "|") --3 data parts in order
             data[2] = string.gsub(data[2], "'", "''")--escape data[2] to allow ' in name of places.
             insertString = "INSERT INTO terrainData (plusCode, name, areatype, MapDataId) VALUES ('" .. resultsTable[1] .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "', '" .. data[4] .. "');" --insertString .. 
-            --print(insertString)
             local results = db:exec(insertString)
-            --print(results)
         end
     end
     local e2 = db:exec("END TRANSACTION")
     if(debugNetwork) then print("table done") end
 
     --save these results to the DB.
-    --TODO: fix columsn to indicate these are 6 cells that have been downloaded, not 8 cells.
     local updateCmd = "INSERT INTO dataDownloaded (pluscode8, downloadedOn) VALUES ('" .. plusCode6 .. "', " .. os.time() .. ")"
     Exec(updateCmd)
 
@@ -149,51 +129,6 @@ function plusCode6Listener(event)
     netUp()
     HideLoadingPopup()
 end
-
--- function flexListener(event)
---     if (debugNetwork) then print("flex event response status: " .. event.status) end --these are fairly large, 10k entries isnt weird.
---     if event.status == 200 then netUp() else netDown() end
---     if (event.status ~= 200) then 
---         networkReqPending = false --allow the download to retry on the next event.
---         HideLoadingPopup()
---         return --dont' save invalid results on an error.
---     end 
-
---     --This one splits each 10cell via newline.
---     local resultsTable = Split(event.response, "\r\n") --windows newlines
---     --print(#resultsTable)
---     --Format:
---     --10cell|name|typeID|size
---     --EX: 86CCXX2248=Local Park|park|12345
-  
---     local insertString = ""
---     local insertCount = 0
-
---     db:exec("BEGIN TRANSACTION") --transactions for multiple inserts are a huge performance boost.
---     for i = 1, #resultsTable do
---         if (resultsTable[i] ~= nil and resultsTable[i] ~= "") then 
---             local data = Split(resultsTable[i], "|") --3 data parts in order
---             data[2] = string.gsub(data[2], "'", "''")--escape data[2] to allow ' in name of places.
---             insertString = "INSERT INTO terrainData (plusCode, name, areatype, MapDataId) VALUES ('" .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "', '" .. data[4] .. "');" --insertString .. 
---             --print(insertString)
---             local results = db:exec(insertString)
---             --print(results)
---         end
---     end
---     local e2 = db:exec("END TRANSACTION")
---     if(debugNetwork) then print("table done") end
-
---     --save these results to the DB.
---     --TODO: fix columsn to indicate these are 6 cells that have been downloaded, not 8 cells.
---     --local updateCmd = "INSERT INTO dataDownloaded (pluscode8, downloadedOn) VALUES ('" .. plusCode6 .. "', " .. os.time() .. ")"
---     --Exec(updateCmd)
-
---     networkReqPending = false 
---     forceRedraw = true
---     netUp()
---     HideLoadingPopup()
--- end
-
  --this loads terrain data on an 8cell, loads all 10cells inside at once.
 function Get8CellData(lat, lon)
     if networkReqPending == true then return end
@@ -203,15 +138,12 @@ function Get8CellData(lat, lon)
 end
 
 function Get8CellData(code8)
-    --if networkReqPending == true then return end
     print("starting cell8 data " .. code8)
     local cellAlreadyRequested = string.find(requestedCells, code8 .. ",")
-    --print(cellAlreadyRequested)
     if (cellAlreadyRequested ~= nil) then 
-        print("or not") 
+        print(code8 .. " exists, exiting") 
         return 
     end
-    --print("found requested cell")
     networkReqPending = true
     if debugNetwork then print("network: getting 8 cell data " .. code8) end
     requestedCells = requestedCells .. code8 .. ","
@@ -231,51 +163,33 @@ function GetSurroundingData(lat, lon)
     if networkReqPending == true then return end
     networkReqPending = true
     netTransfer()
-    --ShowLoadingPopup()
     if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/LearnSurroundingFlex/" .. pluscode6) end
     network.request(serverURL .. "MapData/LearnSurroundingFlex/" .. lat .. "/" .. long .. "/.0025", "GET", flexListener)
 end
 
 function Get8CellImage10(plusCode8)
     print("trying 8cell11 download")
-    --if networkReqPending == true then return end
     networkReqPending = true
     netTransfer()
-    --ShowLoadingPopup()
-    --print("past loading popup")
     if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/DrawCell8/" .. plusCode8) end
-    local params = { response = { filename = plusCode8 .. "-10.png", baseDirectory = system.DocumentsDirectory}}
+    local params = { response = { filename = plusCode8 .. "-10.png", baseDirectory = system.CachesDirectory}}
     network.request(serverURL .. "MapData/DrawCell8/" .. plusCode8, "GET", image810Listener, params)
 end
 
 function Get8CellImage11(plusCode8)
-    --print("trying 8cell11 download")
-    --print(plusCode8)
-    --if networkReqPending == true then return end
     networkReqPending = true
     netTransfer()
-    --ShowLoadingPopup()
-    --print("past loading popup")
-    --if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/DrawCell8Highres/" .. plusCode8) end
     local params = {}
-    params.response  = {filename = plusCode8 .. "-11.png", baseDirectory = system.DocumentsDirectory}
-    --print("params set")
+    params.response  = {filename = plusCode8 .. "-11.png", baseDirectory = system.CachesDirectory}
     network.request(serverURL .. "MapData/DrawCell8Highres/" .. plusCode8, "GET", image811Listener, params)
 end
 
 function Get10CellImage11(plusCode)
-    --print("trying 10cell11 download")
     print("DL image for " .. plusCode)
-    --plusCode10 = plusCode10:sub(0, 8) .. plusCode10:sub(10, 11) -- remove the actual plus sign
-    --if networkReqPending == true then return end
     networkReqPending = true
     netTransfer()
-    --ShowLoadingPopup()
-    --print("past loading popup")
-    --if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/DrawCell10Highres/" .. plusCode8) end
     local params = {}
-    params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.DocumentsDirectory}
-    --print("params set")
+    params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
     network.request(serverURL .. "MapData/DrawCell10Highres/" .. plusCode, "GET", image1011Listener, params)
 end
 
@@ -295,22 +209,24 @@ end
 
 function image1011Listener(event)
     if (debug) then print("10cell11 listener fired:" .. event.status) end
-    --HideLoadingPopup()
     forceRedraw = true
     if event.status == 200 then netUp() else netDown() end
 end
 
---new ARea Control functions
-function GetAreaSizes()
+function GetTeamAssignment()
+    print("getting team")
+    local url = serverURL .. "PlayerContent/AssignTeam/"  .. system.getInfo("deviceID")
+    network.request(url, "GET", GetTeamAssignmentListener)
+    if (debug) then print("Team request sent to " .. url) end
 end
 
--- function GetAreaScore(mapdataid)
---     if (debug) then print("getting score for " .. mapdataid) end
---     network.request(serverURL .. "MapData/CalculateMapDataScore/" .. mapdataid, "GET", AreaSizeListener)
--- end
-
--- function AreaSizeListener(event)
---     if (debug) then print("AreaSize response: " .. event.response .. " " .. event.status) end
---     local scoreResults = Split(event.response, "|")
--- end
-
+function GetTeamAssignmentListener(event)
+    if (debug) then 
+        print("Team listener fired") 
+        print(event.status)
+    end
+    if event.status == 200 then
+        composer.setVariable("faction", event.response)
+    end
+    if (debug) then print("Team Assignment done") end
+end

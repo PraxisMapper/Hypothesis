@@ -45,8 +45,9 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
                 newSquare:addEventListener("tap", showAreaClaim) --singleplayer gameplay dialog.
             elseif (tapHandlerType == "mac") then
                 newSquare:addEventListener("tap", multiplayerAreaClaim) --multiplayer gameplay dialog.
-            elseif (tapHandlerType == "turfwar") then
+            elseif (tapHandlerType == "painttown") then
                 --no listener needed here.
+                newSquare:addEventListener("tap", paintTownTapListener) --multiplayer gameplay dialog.
             end
             cellCollection[#cellCollection + 1] = newSquare
         end
@@ -55,8 +56,14 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
     if (debug) then print("Done CreateSquareGrid") end
 end
 
+function paintTownTapListener(event)
+    --Update display debug data, but that's all.
+    tapData.text = "Cell Tapped: " .. event.target.pluscode
+    tappedCell = event.target.pluscode
+end
+
 function debuggerHelperSquare(event)
-    tapData.text = "cell tapped: " .. event.target.pluscode
+    tapData.text = "Cell Tapped: " .. event.target.pluscode
     tappedCell = event.target.pluscode
     forceRedraw = true
     print("displaying data on a cell:" .. event.target.name)
@@ -66,8 +73,7 @@ function debuggerHelperSquare(event)
 end
 
 function showAreaClaim(event)
-    tapData.text = "cell tapped: " .. event.target.pluscode
-    --print(tappedCell)
+    tapData.text = "Cell Tapped: " .. event.target.pluscode
     local noplus = removePlus(event.target.pluscode)
     tappedCell = event.target.pluscode --needs to be before this print or it screws up on the first tap
     redrawOverlay = true
@@ -76,10 +82,8 @@ function showAreaClaim(event)
         print(event.target.type)
     end
     if (event.target.type == nil or event.target.type == "") then
-        print("returning false from area claim")
         return false
     end
-    print("claim display for area cell" .. event.target.name) 
     --dont claim areas you already own
     if (CheckAreaOwned(event.target.MapDataId)) then
         return false
@@ -98,10 +102,8 @@ function showAreaClaim(event)
 end
 
 function multiplayerAreaClaim(event)
-    print("cell tapped for MAC")
-    tapData.text = "cell tapped: " .. event.target.pluscode
+    tapData.text = "Cell Tapped: " .. event.target.pluscode
     if (event.target.type == nil or event.target.type == "") then
-        print("returning false from multiplayer area claim")
         return false
     end
 
@@ -116,20 +118,4 @@ function multiplayerAreaClaim(event)
     tappedAreaScore = 0 --i don't save this locally, this requires a network call to get and update
     tappedAreaMapDataId = event.target.MapDataId
     composer.showOverlay("overlayMPAreaClaim", {isModal = true})
-end
-
-function GoToStoreScene()
-    local options = {
-        effect = "flip",
-        time = 125,
-    }
-    composer.gotoScene("storeScene", options)
-end
-
-function GoToLeaderboardScene()
-    local options = {
-        effect = "flip",
-        time = 125,
-    }
-    composer.gotoScene("LeaderboardScene", options)
 end

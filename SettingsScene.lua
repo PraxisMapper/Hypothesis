@@ -1,6 +1,7 @@
 local composer = require( "composer" )
- 
 local scene = composer.newScene()
+
+--Native controls here need removed manually on hide().
  
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
@@ -26,7 +27,7 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
-    ipTextField = native.newTextField(100, 100, 50, 500)
+    ipTextField = native.newTextField(300, 100, 500, 50)
     ipTextField:addEventListener("userInput", UpdateURL)
  
 end
@@ -43,7 +44,7 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-        ipTextField.text = "" --TODO: get value from DB
+        ipTextField.text = GetServerAddress()
  
     end
 end

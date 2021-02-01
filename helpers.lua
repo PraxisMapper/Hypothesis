@@ -14,10 +14,7 @@ function dump(o)
     end
  end
 
- --function CenterButton(button, X, Y)
-   --TODO: take in button (ImageRect) size, adjust coordinates to center on screen horizontally (if X is true) or vertically (if Y is true)
- --end
-
+ --Split a string, since there's no built in split in lua.
  function Split(s, delimiter)
    result = {};
    for match in (s..delimiter):gmatch("(.-)"..delimiter) do
@@ -26,10 +23,12 @@ function dump(o)
    return result;
 end
 
+--Math helper, for function below
 function ToRadians(degrees)
    return degrees * (math.pi / 180)
 end
 
+--a distance calculation, for an earlier attempt at calculating distance. Currently called in main.lua somewhere.
 function CalcDistance(event1, event2)
    local dlon = ToRadians(event2.longitude) - ToRadians(event1.longitude)
    local dlat = ToRadians(event2.latitude) - ToRadians(event1.latitude)--Haversine formula
@@ -53,31 +52,24 @@ function CalcDistance(event1, event2)
 end
 
 function doesFileExist( fname, path )
- 
-   local results = false
-
+    local results = false
    -- Path for the file
    local filePath = system.pathForFile( fname, path )
-
    if ( filePath ) then
        local file, errorString = io.open( filePath, "r" )
-
        if not file then
-           -- Error occurred; output the cause
-           --print( "File error: " .. errorString )
+           -- doesnt exist or an error locked it out
        else
            -- File exists!
-           --print( "File found: " .. fname )
            results = true
            -- Close the file handle
            file:close()
        end
    end
-
    return results
 end
 
---not a real sleep function but close enough.
+--not a real sleep function but close enough?
 function sleep(sec)
    sockets.select(nil, nil, sec)
 end

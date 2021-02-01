@@ -10,12 +10,8 @@ require("localNetwork")
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
--- TODO
---??
-
 local cellCollection = {}
 local visitedCellDisplay = {} --where we tint cells to show visited info
--- color codes
 
 local unvisitedCell = {0, 0} -- completely transparent
 local visitedCell = {.529, .807, .921, .4} -- sky blue, 50% transparent
@@ -30,7 +26,6 @@ local tourismCell = {.1, .605, .822, 1}  --sky blue
 local universityCell = {.963, .936, .862, 1}  --off-white, slightly yellow-brown
 local wetlandsCell= {.111, .252, .146, 1}  --swampy green
 local historicalCell = {.7, .7, 7, 1}  --edit to.... something? Historically interesting area.
-local mallCell = {1, .7, .2, 1}  --edit to something?  Big indoor retail area. Might change to just retail.
 local trailCell = {.47, .18, .02, 1}  --Brown  A footpath or bridleway or cycleway or a path that isn't a sidewalk, in OSM terms
 local adminCell = {0,0,0,0} --None. We shouldn't draw admin cells. But the database has started tracking admin boundaries.
 local buildingCell = {0.5,0.5,0.5,1} 
@@ -77,13 +72,11 @@ local function UpdateLocal()
         for square = 1, #cellCollection do -- this is slightly faster than ipairs
             -- check each spot based on current cell, modified by gridX and gridY
             local thisSquaresPluscode = currentPlusCode
-            --print (currentPlusCode)
             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 10)
             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 9)
             cellCollection[square].pluscode = thisSquaresPluscode
             local plusCodeNoPlus = thisSquaresPluscode:sub(1, 8) .. thisSquaresPluscode:sub(10, 11)
 
-            --print("updating local")
             -- apply type now if we found it.
             local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
             if (terrainInfo[4] ~= "") then -- 4 is areaType. not every area is named, so use type.
@@ -97,19 +90,16 @@ local function UpdateLocal()
             end
 
             if not cellCollection[square].isFilled then
-                --print("cell " .. square)
-                local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.DocumentsDirectory)
+                local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
                 if (not imageExists) then
                     --pull image from server
-                    --print("dl image " .. plusCodeNoPlus)
                     Get10CellImage11(plusCodeNoPlus)
                 else
-                    local paint = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.DocumentsDirectory}
+                    local paint = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.CachesDirectory}
                     cellCollection[square].fill = paint
                     cellCollection[square].isFilled = true
                 end
-                --tints the image. if I've walked into a cell. 
-                --This is Area Control mode, though, so I should apply this to areas I control.
+                --tints the image for areas I control
                  if VisitedCell(thisSquaresPluscode) then
                     visitedCellDisplay[square].fill = visitedCell
                  else
@@ -143,26 +133,6 @@ local function UpdateLocal()
     if (debugGPS) then print("end updateLocal") end
 end
 
-local function SwitchToBigGrid()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("8GridScene", options)
-end
-
-local function SwitchToTrophy()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("trophyScene", options)
-end
-
-local function GoToStoreScene()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("storeScene", options)
-end
-
-local function GoToLeaderboardScene()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("LeaderboardScene", options)
-end
-
 local function SwitchToDebugScene()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("performanceTest", options)
@@ -189,47 +159,18 @@ function scene:create(event)
     scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1250, native.systemFont, 20)
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
 
-    --CreateSquareGrid(23, 25, sceneGroup, cellCollection)
-    CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection, false) -- rectangles are different sized now. Will have to investigate sizing.
+    CreateRectangleGrid(35, 16, 20, sceneGroup, cellCollection, "painttown") -- rectangles are different sized now. Will have to investigate sizing.
     CreateRectangleGrid(35, 16, 20, sceneGroup, visitedCellDisplay, false) -- rectangular Cell11 grid  with tint for displaying where we;ve visited
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 25, 25)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
 
-    local changeGrid = display.newImageRect(sceneGroup, "themables/BigGridButton.png", 300, 100)
-    changeGrid.anchorX = 0
-    changeGrid.anchorY = 0
-    changeGrid.x = 60
-    changeGrid.y = 1000
-
-    local changeTrophy = display.newImageRect(sceneGroup, "themables/TrophyRoom.png", 300, 100)
-    changeTrophy.anchorX = 0
-    changeTrophy.anchorY = 0
-    changeTrophy.x = 390
-    changeTrophy.y = 1000
-
-    changeGrid:addEventListener("tap", SwitchToBigGrid)
-    changeTrophy:addEventListener("tap", SwitchToTrophy)
-
+    
     local header = display.newImageRect(sceneGroup, "themables/10cell11image.png", 300, 100)
     header.x = display.contentCenterX
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)
-
-    local store = display.newImageRect(sceneGroup, "themables/StoreIcon.png", 100, 100)
-    store.anchorX = 0
-    -- store.anchorY = 0
-    store.x = 50
-    store.y = 100
-    store:addEventListener("tap", GoToStoreScene)
-
-    local leaderboard = display.newImageRect(sceneGroup, "themables/LeaderboardIcon.png", 100, 100)
-    leaderboard.anchorX = 0
-    -- leaderboard.anchorY = 0
-    leaderboard.x = 580
-    leaderboard.y = 100
-    leaderboard:addEventListener("tap", GoToLeaderboardScene)
 
     if (debug) then
         print("Creating debugText")
