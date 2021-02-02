@@ -1,5 +1,5 @@
 # Hypothesis
-A test application for PraxisMapper. Connect to an instance, download area data, map tiles, and play a couple simple modes.
+A test application for PraxisMapper (https://github.com/drakewill-CRL/PraxisMapper). Connect to an instance, download area data, map tiles, and play a couple simple modes.
 
 # Compilation
 A pre-built apk for Hypothesis should be available in the Google Play Store for approx. $3.
