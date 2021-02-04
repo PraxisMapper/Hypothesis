@@ -11,17 +11,13 @@ require("store")
 require("helpers")
 require("gameLogic")
 require("database")
-
-print("starting network")
-serverURL = "" --moving this here so it can be changed while running? TODO confirm
+require("plusCodes")
 require("localNetwork")
-networkResults = "down" --indicates if i am getting network data or not.
 
 forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
 debug = false --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
-debugShift = false --display math for shifting PlusCodes
-debugGPS = true --display data for the GPS event and timer loop and auto-move
+debugGPS = false --display data for the GPS event and timer loop and auto-move
 debugDB = false
 debugLocal = false
 debugNetwork = false
@@ -29,15 +25,11 @@ debugNetwork = false
 --ResetDatabase()
 startDatabase()
 
-require("plusCodes")
 currentPlusCode = "" -- where the user is sitting now
 lastPlusCode = "" --the previously received value for the location event, may be the same as currentPlusCode
 previousPlusCode = ""  --the previous DIFFERENT pluscode value we visited.
 currentHeading = 0
-lastTime = os.time()
 lastScoreLog = ""
-lastHeadingTime = 0
-
 lastLocationEvent = ""
 
 tappedAreaName = ""
@@ -46,7 +38,7 @@ tappedAreaMapDataId = 0
 
 tappedCell = "            "
 redrawOverlay = false
-factionID = 0 --this is apparently real critical, even if its 0
+factionID = 0 --composer.getVariable(factionID) is used in some spots
 
 typeNames = {}
 typeNames["1"] = "Water"
@@ -108,7 +100,7 @@ composer.gotoScene("loadingScene")
 function gpsListener(event)
 
     print("main gps fired")
-    local eventL = event --assign it locally just in case somethings messing with the parent event object
+    local eventL = event
 
     if (debugGPS) then
         print("got GPS event")
@@ -124,24 +116,16 @@ function gpsListener(event)
          currentHeading = eventL.direction
      end
 
-    local pluscode = tryMyEncode(eventL.latitude, eventL.longitude, 10); --only goes to 10 right now.
+    local pluscode = encodeLatLon(eventL.latitude, eventL.longitude, 10); --only goes to 10 right now.
     if (debugGPS) then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode
     local plusCode8 = currentPlusCode:sub(0,8)
 
-    --checking here. Checking for this after GrantPoints updates the visited list before this, would never load data.
-    print("checking for terrain data")
-    local hasData = Downloaded8Cell(plusCode8)
-    print(hasData)
+    if (debug) then print("checking for terrain data") end
+    local hasData = DownloadedCell8(plusCode8)
+    if (debug) then print(hasData) end
     if (hasData == false) then
-        Get8CellData(plusCode8) -- we do need terrain info here.
-    end
-
-    local plusCode8 = currentPlusCode:sub(0,8)
-    imageExists = doesFileExist(plusCode8 .. "-11.png", system.CachesDirectory)
-    if (not imageExists) then
-        --pull image from server
-        Get8CellImage11(plusCode8)
+        GetCell8Data(plusCode8) -- AreaType No Tiles screen relies on this currently. Other modes usually do their own pulls
     end
 
     if (lastPlusCode ~= currentPlusCode) then
@@ -150,59 +134,25 @@ function gpsListener(event)
         lastScoreLog = "Earned " .. grantPoints(currentPlusCode) .. " points from cell " .. currentPlusCode
         lastPlusCode = currentPlusCode
     end
-    --Update data that should be handled every event.
 
-    --reducing this to one query
-    if (lastLocationEvent == "" ) then
-        --don't do any calculations yet, this is the first location event.
-    else
-        local timeDiff = 0
-        if (os.time() ~= lastTime) then
-            timeDiff = os.time() - lastTime
-        end
-
-        local currentQuery = Query("SELECT maxAltitude, maximumSpeed, minAltitude from playerData")[1]
-        local cMaxalt = currentQuery[1]
-        local cMaxSpeed = currentQuery[2]
-        local cMinalt = currentQuery[3]
-        if (eventL.altitude > cMaxalt) then
-            cMaxalt = eventL.altitude
-        end
-
-        if (eventL.altitude < cMinalt) then
-            cMinalt = eventL.altitude
-        end
-
-        if (eventL.speed > cMaxSpeed) then
-            cMaxSpeed = eventL.speed
-        end
-
-        local distance = CalcDistance(eventL, lastLocationEvent)
-
-        local cmd = "UPDATE playerData SET totalSecondsPlayed = totalSecondsPlayed + " .. timeDiff .. ", totalSpeed = totalSpeed + " .. eventL.speed
-        cmd = cmd ..  ", maxAltitude = " .. cMaxalt .. ", distanceWalked = distanceWalked + " .. distance .. ", maximumSpeed = " .. cMaxSpeed .. ", minAltitude = " .. cMinalt
-        Exec(cmd)
-    end
-
-    lastTime = os.time() 
     if(debugGPS) then print("Finished location event") end
 
     lastLocationEvent = eventL
 end
 
 function backListener(event)
-    print("key listener got")
+    if (debug) then print("key listener got")  end
     if (event.keyName == "back" and event.phase == "up") then
         local currentScene = composer.getSceneName("current")
         if (currentScene == "SceneSelect") then
             return false
         end
-        print("back to scene select")
+        if (debug) then print("back to scene select") end
         local options = {effect = "flip", time = 125}
         composer.gotoScene("SceneSelect", options)
         return true
     end
-    print("didn't handle this one")
+    if (debug) then print("didn't handle this one") end
 end
 
 timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)
@@ -210,30 +160,19 @@ Runtime:addEventListener("location", gpsListener)
 Runtime:addEventListener("key", backListener)
 
 function netUp()
-    networkResults = "up"
     networkUp.isVisible = true
     networkDown.isVisible = false
     networkTx.isVisible = false
 end
 
 function netDown()
-    networkResults = "down"
     networkDown.isVisible = true
     networkUp.isVisible = false
     networkTx.isVisible = false
 end
 
 function netTransfer()
-    networkResults = "transfer"
     networkDown.isVisible = false
     networkUp.isVisible = false
     networkTx.isVisible = true
-end
-
-function ShowLoadingPopup()
-    composer.showOverlay("overlayDL")
-end
-
-function HideLoadingPopup()
-    composer.hideOverlay("overlayDL")
 end

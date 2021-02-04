@@ -24,84 +24,6 @@ require("localNetwork")
     composer.gotoScene("SceneSelect")
  end
 
- function Get8CellDataLoading(pluscode8)
-    if networkReqPending == true then return end
-    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/LearnCell8/" .. pluscode8) end
-    --network.request(serverURL .. "MapData/LearnCell8/" .. pluscode8, "GET", plusCode8ListenerLoading)
-    LoadMapData()
-end
-
-function plusCode8ListenerLoading(event)
-    if (debugNetwork) then print("plus code 8 event response status: " .. event.status) end --these are fairly large, 10k entries isnt weird.
-    if (event.status ~= 200) then 
-        LoadMapData()
-        return --dont' save invalid results on an error.
-    end 
-
-    --tell the user we're working
-    --had to move this earlier for it to appear.
-    --ShowLoadingPopup()
-
-    --This one splits each 10cell via newline.
-    local resultsTable = Split(event.response, "\r\n") --windows newlines
-    print(#resultsTable)
-    --Format:
-    --line1: the 6cell requested
-    --remaining lines: the last 4 digits for a 10cell=name|type|mapDataID
-    --EX: 2248=Local Park|park|12345
-  
-    local insertString = ""
-    local insertCount = 0
-
-    db:exec("BEGIN TRANSACTION") --transactions for multiple inserts are a huge performance boost.
-    local plusCode6 = resultsTable[1] 
-    for i = 2, #resultsTable do
-        if (resultsTable[i] ~= nil and resultsTable[i] ~= "") then 
-            local data = Split(resultsTable[i], "|") --3 data parts in order
-            data[2] = string.gsub(data[2], "'", "''")--escape data[2] to allow ' in name of places.
-            insertString = "INSERT INTO terrainData (plusCode, name, areatype) VALUES ('" .. resultsTable[1] .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "');" --insertString .. 
-            db:exec(insertString)
-        end
-    end
-    local e2 = db:exec("END TRANSACTION")
-    if(debugNetwork) then print("table done") end
-
-    --save these results to the DB.
-    local updateCmd = "INSERT INTO dataDownloaded (pluscode8, downloadedOn) VALUES ('" .. plusCode6 .. "', " .. os.time() .. ")"
-    Exec(updateCmd)
-    LoadMapData()
-end
-
-function LoadMapData()
-    statusText.text = "Downloading map data"
-    print("getting map info")
-        if (imagecount == 0) then
-            timer.performWithDelay(50, startGame, 1)   
-        end
-end
-
-function Get10CellImage11Loading(plusCode)
-    local params = {}
-    params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
-    network.request(serverURL .. "MapData/DrawCell10Highres/" .. plusCode, "GET", imageListenerLoading, params)
-    imagecount = imagecount + 1
-end
-
-function imageListenerLoading(event)
-    imagecount = imagecount - 1;
-    if (imagecount == 0) then
-        startGame()
-    end
-end
-
-function Get8CellImage11Loading(plusCode8)
-    local params = {}
-    params.response  = {filename = plusCode8 .. "-11.png", baseDirectory = system.CachesDirectory}
-    network.request(serverURL .. "MapData/DrawCell8Highres/" .. plusCode8, "GET", imageListenerLoading, params)
-    imagecount = imagecount + 1
-end
-
-
  function loadingGpsListener(event)
     local eventL = event
 
@@ -117,19 +39,19 @@ end
 
     lat = eventL.latitude
     lon = eventL.longitude
-    local pluscode = tryMyEncode(eventL.latitude, eventL.longitude, 10); --only goes to 10 right now.
+    local pluscode = encodeLatLon(eventL.latitude, eventL.longitude, 10); --only goes to 10 right now.
     if (debugGPS) then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode
 
     --Debug/testing override location
-    --currentPlusCode = "9C6RVJ85+J8" --random UK location, should have water to the north, and a park north of that.
     
        --More complicated, problematic entries: (Pending possible fix for loading data missing from a file)
        --currentPlusCode ="8FW4V75V+8R" --Eiffel Tower. ~60,000 entries.
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
        --currentPlusCode = "85PFF56C+5P" --Old Faithful 
-
+       
+       currentPlusCode = "87G8Q2JM+F9" --central park, simulator purposes
 end
  
  
@@ -194,13 +116,13 @@ function scene:show( event )
         INSERT OR IGNORE INTO playerData(id, factionID, totalPoints) values (1, 0, 0);
         ]]
         
-        statusText.text = "Database Opened2" .. sqlite3.version() --3.19 on android and simulator.
+        statusText.text = "Database Opened "  .. sqlite3.version() --3.19 on android and simulator.
         if (debug) then 
             print("SQLite version " .. sqlite3.version())
         end
         local setupResults = Exec(tablesetup)
-        print("setup done" .. setupResults)
-        statusText.text = "setup done" .. setupResults
+        if (debug) then print("setup done " .. setupResults) end
+        statusText.text = "setup done " .. setupResults
         if (setupResults > 0) then
             print(db:errmsg())
             statusText = db:errmsg()
@@ -213,22 +135,16 @@ function scene:show( event )
         --upgrading database now, clearing data on android apparently doesn't reset table structure.
         upgradeDatabaseVersion(currentDbVersion) 
         ResetDailyWeekly()
-
         statusText.text = "Database work done!"
-        statusText.text = "Uploading current scores..."
 
-        if (pcall(UploadData)) then
-            --no errors
-            statusText.text = "Scores Sent"
-        else
-            statusText.text = "Scores Not Sent"
-        end
-
-        GetTeamAssignment()
         statusText.text = "Requesting Team Id"
+        GetTeamAssignment()
+
+        serverURL = GetServerAddress()
+        print(serverURL)
         
-        statusText.text = "Checking area data"
-        LoadMapData()
+        statusText.text = "Starting Game"
+        startGame()
     end
 end
  
@@ -242,8 +158,8 @@ function scene:hide( event )
         print("loadingScene hiding")
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
-        Runtime:removeEventListener("location", loadingGpsListener)
-        Runtime:addEventListener("location", gpsListener)
+        Runtime:removeEventListener("location", loadingGpsListener) --the local one
+        Runtime:addEventListener("location", gpsListener) --the one in main.lua
         print("loadingScene hidden, GPS on.")
     end
 end

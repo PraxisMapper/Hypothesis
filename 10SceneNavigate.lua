@@ -55,9 +55,9 @@ local rightButton = ""
 
 local function testDrift()
     if (os.time() % 2 == 0) then
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 9) -- move north
+        currentPlusCode = shiftCell(currentPlusCode, 1, 9) -- move north
     else
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 10) -- move west
+        currentPlusCode = shiftCell(currentPlusCode, 1, 10) -- move west
     end
 end
 
@@ -82,8 +82,8 @@ local function UpdateLocal()
         for square = 1, #cellCollection do -- this is slightly faster than ipairs
             -- check each spot based on current cell, modified by gridX and gridY
             local thisSquaresPluscode = currentPlusCode
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 10)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 9)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 10)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 9)
             cellCollection[square].pluscode = thisSquaresPluscode
 
             -- apply type now if we found it.
@@ -177,19 +177,19 @@ local function SwitchToDebugScene()
 end
 
 local function ShiftUp()
-    currentPlusCode = shiftCellV3(currentPlusCode,  1, 9)
+    currentPlusCode = shiftCell(currentPlusCode,  1, 9)
 end
 
 local function ShiftDown()
-    currentPlusCode = shiftCellV3(currentPlusCode,  -1, 9)
+    currentPlusCode = shiftCell(currentPlusCode,  -1, 9)
 end
 
 local function ShiftLeft()
-    currentPlusCode = shiftCellV3(currentPlusCode,  -1, 10)
+    currentPlusCode = shiftCell(currentPlusCode,  -1, 10)
 end
 
 local function ShiftRight()
-    currentPlusCode = shiftCellV3(currentPlusCode,  1, 10)
+    currentPlusCode = shiftCell(currentPlusCode,  1, 10)
 end
 
 local function GoToSceneSelect()

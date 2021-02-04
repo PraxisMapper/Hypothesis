@@ -21,12 +21,10 @@ local function yesListener()
     --check walking score, if high enough, spend points and color this area in.
     if (debug) then print("yes tapped") end
     local points = Score()
-    if (debug) then print(points) end
     if (tonumber(points) >= tonumber(tappedAreaScore)) then
         if (debug) then print("claiming") end
         ClaimMPArea()
         forceRedraw = true
-
         yesButton.isVisible = false
         noButton.isVisible = false
     end
@@ -52,7 +50,6 @@ function AreaOwnerListener(event)
     end
 
     local results = Split(event.response, "|")
-    print(results[3])
     tappedAreaScore = tonumber(results[3])
     textDisplay.text = textDisplay.text .. tappedAreaScore .. " points?"
     ownerDisplay.text = ownerDisplay.text .. " " .. results[2]
@@ -70,7 +67,6 @@ function ClaimMPArea()
 end
 
 function ClaimMPAreaListener(event)
-    print("claiming area listener fired")
     if (event.status == 200) then
         SpendPoints(tappedAreaScore)
     end
@@ -80,30 +76,26 @@ function ClaimMPAreaListener(event)
 end
 
 function FindChangedMapTiles()
-    print("finding changed map tiles")
     network.request(serverURL .. "Gameplay/FindChangedMaptiles/" .. tappedAreaMapDataId, "GET", FindMPAreaListener)
 end
 
 function FindMPAreaListener(event)
-    print("changed map tile response")
-    print(event.response)
     if (event.status == 200) then
         ClearMapTiles(event.response)
     end
 end
 
 function ClearMapTiles(cellList)
-    print("clearing map tiles" )
+    if (debug) then print("clearing map tiles" ) end
     local cellsToClear = Split(cellList, "|")
     for i = 1, #cellsToClear do
-        print("removing " .. cellsToClear[i])
         cellDataCache[cellsToClear[i]] = nil
         os.remove(system.pathForFile(cellsToClear[i] .. "-AC-11.png", system.CachesDirectory))
         requestedMapTileCells[cellsToClear[i]] = -1
     end
     forceRedraw = true
 
-    print("tiles cleared")
+    if (debug) then print("tiles cleared") end
 end
 
 -- -----------------------------------------------------------------------------------
@@ -115,7 +107,7 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
-    print("Creating MAC overlay")
+    if (debug) then print("Creating MAC overlay") end
 
     local bgFill = {.6, .6, .6, 1}
     bg = display.newRect(sceneGroup, display.contentCenterX, display.contentCenterY, 700, 500)
@@ -134,13 +126,11 @@ function scene:create( event )
     noButton.x = display.contentCenterX + 200
     noButton.y = display.contentCenterY + 100
     noButton:addEventListener("tap", noListener)
- 
 end
- 
  
 -- show()
 function scene:show( event )
-    print("Showing MAC Overlay")
+    if (debug) then print("Showing MAC Overlay") end
     local sceneGroup = self.view
     local phase = event.phase
  
@@ -153,7 +143,6 @@ function scene:show( event )
  
     end
 end
- 
  
 -- hide()
 function scene:hide( event )
@@ -169,7 +158,6 @@ function scene:hide( event )
  
     end
 end
- 
  
 -- destroy()
 function scene:destroy( event )

@@ -45,9 +45,9 @@ local locationName = ""
 
 local function testDrift()
     if (os.time() % 2 == 0) then
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 9) -- move north
+        currentPlusCode = shiftCell(currentPlusCode, 1, 9) -- move north
     else
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 10) -- move west
+        currentPlusCode = shiftCell(currentPlusCode, 1, 10) -- move west
     end
 end
 
@@ -72,8 +72,8 @@ local function UpdateLocal()
         for square = 1, #cellCollection do -- this is slightly faster than ipairs
             -- check each spot based on current cell, modified by gridX and gridY
             local thisSquaresPluscode = currentPlusCode
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 10)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 9)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 10)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 9)
             cellCollection[square].pluscode = thisSquaresPluscode
             local plusCodeNoPlus = thisSquaresPluscode:sub(1, 8) .. thisSquaresPluscode:sub(10, 11)
 
@@ -93,7 +93,7 @@ local function UpdateLocal()
                 local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
                 if (not imageExists) then
                     --pull image from server
-                    Get10CellImage11(plusCodeNoPlus)
+                    GetCell10Image11(plusCodeNoPlus)
                 else
                     local paint = {type  = "image", filename = plusCodeNoPlus .. "-11.png", baseDir = system.CachesDirectory}
                     cellCollection[square].fill = paint

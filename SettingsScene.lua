@@ -1,5 +1,6 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
+require("localNetwork")
 
 --Native controls here need removed manually on hide().
  
@@ -9,14 +10,48 @@ local scene = composer.newScene()
 -- -----------------------------------------------------------------------------------
  
  local ipTextField = ""
+ local ipLabel = ""
+ local header = ""
+ local teamButton = ""
+ local teamLabel = ""
+ local teamTimer = ""
  
- 
+ local function GoToSceneSelect()
+    local options = {effect = "flip", time = 125}
+    composer.gotoScene("SceneSelect", options)
+end
 
  local function UpdateURL(event)
-    if (event.phase == "submitted" or event.phase == "ended") then
-        --save the new URL to the database
+    SetServerAddress(event.text)    
+ end
+
+ local function TeamChangeListener(event)
+    --button clicked to change team.
+    local newTeam =0;
+    if (factionID == 0 or factionID == 3) then
+       newTeam = 1
+    elseif (factionID == 1) then
+        newTeam = 2
+    elseif (factionID == 2) then
+        newTeam = 3
+    end
+    SetTeamAssignment(newTeam)
+
+ end
+
+ local function checkTeamMembership()
+    if (factionID == 0) then
+        teamLabel.text = "Active Team: Undetermined"
+    elseif (factionID == 1) then
+            teamLabel.text = "Active Team: Red"
+    elseif (factionID == 2) then
+            teamLabel.text = "Active Team: Green"
+    elseif (factionID == 3) then
+            teamLabel.text = "Active Team: Blue"
     end
  end
+
+
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
@@ -27,9 +62,6 @@ function scene:create( event )
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
 
-    ipTextField = native.newTextField(300, 100, 500, 50)
-    ipTextField:addEventListener("userInput", UpdateURL)
- 
 end
  
  
@@ -41,11 +73,32 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
+
+    header = display.newImageRect(sceneGroup, "themables/Settings.png",300, 100)
+    header.x = display.contentCenterX
+    header.y = 100
+    header:addEventListener("tap", GoToSceneSelect)
+        
+        --native components dont play nicely like the built in OpenGL stuff does, so manage it slightly differently.
+    ipLabel = display.newText(sceneGroup, "Server URL: (Start with 'http://', end with '/')", 25, 210, 600, 50, native.systemFont, 30)
+    ipLabel.anchorX = 0
+
+    teamLabel = display.newText(sceneGroup, "Active Team: ", 25, 410, 600, 50, native.systemFont, 30)
+    teamLabel.anchorX = 0
+    teamTimer = timer.performWithDelay(500, checkTeamMembership, -1)
+
+    teamButton = display.newImageRect(sceneGroup, "themables/ChangeTeam.png",300, 100)
+    teamButton.x = display.contentCenterX
+    teamButton.y = 500
+    teamButton:addEventListener("tap", TeamChangeListener)
+
+    ipTextField = native.newTextField(350, 250, 650, 50)
+    ipTextField.placeholder = "https://YourPraxisMapper.com/"
+    ipTextField:addEventListener("userInput", UpdateURL)
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
         ipTextField.text = GetServerAddress()
- 
     end
 end
  
@@ -58,6 +111,9 @@ function scene:hide( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
+        ipTextField:removeSelf() --native components dont automatically leave the screen.
+        serverURL = GetServerAddress()
+        timer.cancel(teamTimer)
  
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen

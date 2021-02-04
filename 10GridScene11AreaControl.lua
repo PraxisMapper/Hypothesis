@@ -35,9 +35,9 @@ local locationName = ""
 
 local function testDrift()
     if (os.time() % 2 == 0) then
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 9) -- move north
+        currentPlusCode = shiftCell(currentPlusCode, 1, 9) -- move north
     else
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 10) -- move west
+        currentPlusCode = shiftCell(currentPlusCode, 1, 10) -- move west
     end
 end
 
@@ -104,8 +104,8 @@ local function UpdateLocalOptimized()
         for square = 1, #cellCollection do
             -- check each spot based on current cell, modified by gridX and gridY
             local thisSquaresPluscode = currentPlusCode
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 10)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 9)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 10)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 9)
             cellCollection[square].pluscode = thisSquaresPluscode
             local plusCodeNoPlus = removePlus(thisSquaresPluscode)
 

@@ -40,7 +40,7 @@ local GRID_ROW_MULTIPLIER = 3125
 local GRID_COL_MULTIPLIER = 1024
 
 --my own pass at the algorithm. shorter, less thorough.
-function tryMyEncode(latitude, longitude, codeLength)
+function encodeLatLon(latitude, longitude, codeLength)
     --if (debug) then print("encoding latlong") end
     local code = ""
     local lat = math.floor((latitude + 90) * 8000)
@@ -72,7 +72,7 @@ function tryMyEncode(latitude, longitude, codeLength)
     return code:sub(1,8) .. SEPARATOR_ .. code:sub(9, 10);
 end
 
-function shiftCellV3(pluscode, Shift, position)
+function shiftCell(pluscode, Shift, position)
     --take the current cell, move it some number of cells at some position. (Call this twice to do X and Y)
     --Shift should be under 20
     --position is which cell we're looking to shift, from 1 to 10. This function handles the plus sign by skipping it.
@@ -94,11 +94,11 @@ function shiftCellV3(pluscode, Shift, position)
 
         if (digitIndex <= 0) then
             digitIndex = 20 + digitIndex
-            newCode = shiftCellV3(newCode, -1, position - 2) 
+            newCode = shiftCell(newCode, -1, position - 2) 
         end
         if (digitIndex > 20) then
             digitIndex = digitIndex - 20
-            newCode = shiftCellV3(newCode, 1, position - 2) 
+            newCode = shiftCell(newCode, 1, position - 2) 
         end
         currentDigit = CODE_ALPHABET_:sub(digitIndex, digitIndex)
         newCode = newCode:sub(1, charPos - 1) .. currentDigit .. newCode:sub(charPos + 1, 11)

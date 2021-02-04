@@ -39,16 +39,16 @@ local function UpdateLocal8()
         for square = 1, #cellCollection do --this is slightly faster than ipairs
             --check each spot based on current cell, modified by gridX and gridY
             local thisSquaresPluscode= currentPlusCode8
-             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 8)
-             thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 7)
+             thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 8)
+             thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
             cellCollection[square].pluscode = thisSquaresPluscode
             
             if not cellCollection[square].isFilled then
             local imageExists = doesFileExist(thisSquaresPluscode .. "-10.png", system.CachesDirectory)
             if (not imageExists) then
                 --pull image from server
-                Get8CellImage10(thisSquaresPluscode)
-                if Visited8Cell(thisSquaresPluscode) then
+                GetCell8Image10(thisSquaresPluscode)
+                if VisitedCell8(thisSquaresPluscode) then
                     cellCollection[square].fill = visitedCell
                 else
                     cellCollection[square].fill = unvisitedCell
@@ -65,7 +65,7 @@ local function UpdateLocal8()
     if (debugGPS) then print("8grid done or skipped") end
     if (debugGPS) then print(locationText.text) end
     locationText.text = "Current 8 location:" .. currentPlusCode8
-    countText.text = "Total Explored 8 Cells: " .. TotalExplored8Cells()
+    countText.text = "Total Explored Cells8: " .. TotalExploredCell8s()
     pointText.text = "Score: " .. Score()
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading

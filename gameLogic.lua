@@ -1,21 +1,21 @@
 function grantPoints(code)
-    --new city block: 100 points!
-    --New cell: 10 points!
+    --new Cell8: 100 points!
+    --New Cell10: 10 points!
     --weekly bonus: 5 points
     --daily checkin: 1 point
     local addPoints = 0
     if(debug) then print("granting points for cell " .. code) end
 
-    --check 1: is this the first time we've entered this 8code?
+    --check 1: is this the first time we've entered this Cell8?
     query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE eightCode = '" .. code:sub(1,8) .. "'"
     for i,row in ipairs(Query(query)) do 
         if (row[1] == 0) then --we have not yet visited this cell
-            --new visit to this 8cell
+            --new visit to this cell8
             addPoints = addPoints + 100
         end
     end
 
-    --check 2: is this a brand new 10cell?
+    --check 2: is this a brand new Cell10?
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE pluscode = '" .. code .. "'"
     for i,row in ipairs(Query(query)) do 
         if (row[1] == 0) then

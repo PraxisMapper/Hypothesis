@@ -7,6 +7,7 @@ local scene = composer.newScene()
 
 require("UIParts")
 require("database")
+require("localNetwork")
 require("dataTracker") -- replaced localNetwork for this scene
 
 -- -----------------------------------------------------------------------------------
@@ -78,9 +79,9 @@ end
 
 local function testDrift()
     if (os.time() % 2 == 0) then
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 9) -- move north
+        currentPlusCode = shiftCell(currentPlusCode, 1, 9) -- move north
     else
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 10) -- move west
+        currentPlusCode = shiftCell(currentPlusCode, 1, 10) -- move west
     end
 end
 
@@ -188,14 +189,14 @@ local function UpdateLocalOptimized()
         -- check each spot based on current cell, modified by gridX and gridY
         
         local thisSquaresPluscode = currentPlusCode
-        thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 8)
-        thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 7)
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 8)
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
         if (PaintTownMapUpdateCountdown == 0) then
             GetPaintTownMapData8(plusCodeNoPlus, instanceID)
             if (arrowPainted == false) then
-                local teamID = tonumber(composer.getVariable("faction"))
+                local teamID = factionID --tonumber(composer.getVariable("faction"))
                 if (teamID == 0) then
                     GetTeamAssignment()
                 else            
@@ -235,10 +236,10 @@ local function UpdateLocalOptimized()
             local shiftChar8 = math.floor(CellTapSensors[square].gridX / 20)
             local shiftChar9 = math.floor(CellTapSensors[square].gridY % 20)
             local shiftChar10 = math.floor(CellTapSensors[square].gridX % 20)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar7, 7)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar8, 8)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar9, 9)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar10, 10)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar7, 7)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar8, 8)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar9, 9)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar10, 10)
             local idCheck = removePlus(thisSquaresPluscode)
 
             CellTapSensors[square].pluscode = thisSquaresPluscode

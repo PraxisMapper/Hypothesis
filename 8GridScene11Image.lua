@@ -13,7 +13,7 @@ if (debug) then print("8GridScene11image loading") end
 
 local cellCollection = {}
 
---color codes. 8cells dont use type-specific ones.
+--color codes. cell8s dont use type-specific ones.
 local visitedCell = {.8, .3, .3, 1}
 local unvisitedCell = {.1, .7, .7, 1}
 local timerResults8 = nil
@@ -38,8 +38,8 @@ local function UpdateLocal8()
         if (debugGPS) then print("in 8 grid loop " ..previousPlusCode8 .. " " .. currentPlusCode8) end
         for square = 1, #cellCollection do --this is slightly faster than ipairs
             local thisSquaresPluscode = currentPlusCode8
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 8)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 7)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 8)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
             cellCollection[square].pluscode = thisSquaresPluscode
 
             if (forceRedraw == false and cellDataCache[thisSquaresPluscode] ~= nil) then
@@ -67,7 +67,7 @@ local function UpdateLocal8()
     if (debugGPS) then print("8grid done or skipped") end
     if (debugGPS) then print(locationText.text) end
     locationText.text = "Current 8 location:" .. currentPlusCode8
-    countText.text = "Total Explored 8 Cells: " .. TotalExplored8Cells()
+    countText.text = "Total Explored Cell8s: " .. TotalExploredCell8s()
     pointText.text = "Score: " .. Score()
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading
@@ -99,7 +99,7 @@ function scene:create( event )
     countText = display.newText(sceneGroup, "Total Cells Explored: ?", display.contentCenterX, 240, native.systemFont, 20)
     pointText = display.newText(sceneGroup, "Score: ?", display.contentCenterX, 260, native.systemFont, 20)
 
-    --NOTE: 11-cell resolution images for 8cells are 80x100, so use the rectangle function
+    --NOTE: 11-cell resolution images for cell8s are 80x100, so use the rectangle function
     CreateRectangleGrid(7, 80, 100, sceneGroup, cellCollection, "painttown") --7 is the max that fits on screen at this image size
 
     directionArrow = display.newImageRect(sceneGroup, "themables/circle1.png", 65, 65)

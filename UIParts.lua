@@ -66,9 +66,11 @@ function debuggerHelperSquare(event)
     tapData.text = "Cell Tapped: " .. event.target.pluscode
     tappedCell = event.target.pluscode
     forceRedraw = true
-    print("displaying data on a cell:" .. event.target.name)
-    print(event.target == null)
-    print(event.target.type)
+    if (debug) then
+        print("displaying data on a cell:" .. event.target.name)
+        print(event.target == null)
+        print(event.target.type)
+    end
     native.showAlert("Cell", event.target.pluscode .. " | " .. event.target.name .. " | " .. typeNames[event.target.type])
 end
 

@@ -40,12 +40,11 @@ local arrowPainted = false
 
 local function testDrift()
     if (os.time() % 2 == 0) then
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 9) -- move north
+        currentPlusCode = shiftCell(currentPlusCode, 1, 9) -- move north
     else
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 10) -- move west
+        currentPlusCode = shiftCell(currentPlusCode, 1, 10) -- move west
     end
 end
-
 
 local function ToggleZoom()
     bigGrid = not bigGrid
@@ -130,7 +129,7 @@ local function UpdateLocalOptimized()
     previousPlusCode = currentPlusCode
     
     if (arrowPainted == false) then
-        local teamID = tonumber(composer.getVariable("faction"))
+        local teamID = factionID --tonumber(composer.getVariable("faction"))
         if (teamID == 0) then
             GetTeamAssignment()
         else            
@@ -143,8 +142,8 @@ local function UpdateLocalOptimized()
     for square = 1, #cellCollection do
         -- check each spot based on current cell, modified by gridX and gridY
         local thisSquaresPluscode = currentPlusCode
-        thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 8)
-        thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 7)
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 8)
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
 
@@ -169,8 +168,6 @@ local function UpdateLocalOptimized()
         end
     end
 
-    
-
     -- Step 2: set up event listener grid. These need Cell10s
     local baselinePlusCode = currentPlusCode:sub(1,8) .. "+FF"
     if (innerForceRedraw) then --Also no need to do all of this unless we shifted our Cell8 location.
@@ -180,10 +177,10 @@ local function UpdateLocalOptimized()
             local shiftChar8 = math.floor(CellTapSensors[square].gridX / 20)
             local shiftChar9 = math.floor(CellTapSensors[square].gridY % 20)
             local shiftChar10 = math.floor(CellTapSensors[square].gridX % 20)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar7, 7)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar8, 8)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar9, 9)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, shiftChar10, 10)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar7, 7)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar8, 8)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar9, 9)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar10, 10)
 
             if (cellDataCache[plusCodeNoPlus] ~= nil) then
                 --use cached data.
@@ -241,6 +238,7 @@ local function UpdateLocalOptimized()
     scoreText.text = "Control Score: " .. AreaControlScore()
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading
+
     --Remember, currentPlusCode has the +, so i want chars 10 and 11, not 9 and 10.
     --Shift is how many blocks to move. Multiply it by how big each block is. These offsets place the arrow in the correct Cell10.
     local shift = CODE_ALPHABET_:find(currentPlusCode:sub(11, 11)) - 11
@@ -284,7 +282,7 @@ function scene:create(event)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
     explorePointText = display.newText(sceneGroup, "Explore Points: ?", display.contentCenterX, 240, native.systemFont, 20)
     scoreText = display.newText(sceneGroup, "Control Score: ?", display.contentCenterX, 260, native.systemFont, 20)
-    scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1250, native.systemFont, 20)
+    scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1220, native.systemFont, 20)
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
 
     if (bigGrid) then

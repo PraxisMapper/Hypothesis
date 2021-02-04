@@ -23,18 +23,18 @@ requestedPaintTownCells[2] = {}
 function GetMapData8(Cell8) -- the terrain type call.
     local status = requestedDataCells[Cell8] --this can occasionally be nil if there's multiple active calls that return out of order on the first update
      if (status == nil) then --first time requesting this cell this session.
-        local dataPresent = Downloaded8Cell(Cell8)
+        local dataPresent = DownloadedCell8(Cell8)
         if (dataPresent == true) then --use local data.
             requestedDataCells[Cell8] = 1
             return
         end
         requestedDataCells[Cell8] = 0
-        Get8CellTerrainData(Cell8)
+        GetCell8TerrainData(Cell8)
      end
 
      if (status == -1) then --retry a failed download.
         requestedDataCells[Cell8] = 0
-        Get8CellTerrainData(Cell8)
+        GetCell8TerrainData(Cell8)
      end
 end
 
@@ -51,17 +51,16 @@ function GetMapTile10(Cell10)
             return
         end
         requestedMapTileCells[Cell10] = 0
-        TrackerGet10CellImage11(Cell10)
+        TrackerGetCell10Image11(Cell10)
      end
 
      if (status == -1) then --retry a failed download.
         requestedMapTileCells[Cell10] = 0
-        TrackerGet10CellImage11(Cell10)
+        TrackerGetCell10Image11(Cell10)
      end
 end
 
 function GetMapTile8(Cell8)
-    print("Getting map tile for " .. Cell8) 
     if (requestedMapTileCells[cell8] == 1) then
         --We already have this tile.
         return
@@ -74,16 +73,16 @@ function GetMapTile8(Cell8)
             return
         end
         requestedMapTileCells[Cell8] = 0
-        TrackerGet8CellImage11(Cell8)
+        TrackerGetCell8Image11(Cell8)
      end
 
      if (status == -1) then --retry a failed download.
         requestedMapTileCells[Cell8] = 0
-        TrackerGet8CellImage11(Cell8)
+        TrackerGetCell8Image11(Cell8)
      end
 end
 
-function Get8CellTerrainData(code8)
+function GetCell8TerrainData(code8)
     networkReqPending = true
     if debugNetwork then 
         print("network: getting 8 cell data " .. code8) 
@@ -102,10 +101,10 @@ function TrackplusCode8Listener(event)
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
     networkReqPending = false 
 
-    --This one splits each 10cell via newline.
+    --This one splits each Cell10 via newline.
     local resultsTable = Split(event.response, "\r\n") --windows newlines
     --Format:
-    --line1: the cell8 requested
+    --line1: the Cell8 requested
     --remaining lines: the last 2 digits in the cell10=name|typeID|mapDataID
     --EX: 48=Local Park|4|1234
 
@@ -127,7 +126,7 @@ function TrackplusCode8Listener(event)
     forceRedraw = true
 end
 
-function TrackerGet10CellImage11(plusCode)
+function TrackerGetCell10Image11(plusCode)
     networkReqPending = true
     netTransfer()
     local params = {}
@@ -148,7 +147,7 @@ function Trackerimage1011Listener(event)
     end
 end
 
-function TrackerGet8CellImage11(plusCode)
+function TrackerGetCell8Image11(plusCode)
     networkReqPending = true
     netTransfer()
     local params = {}
@@ -169,30 +168,7 @@ function Trackerimage811Listener(event)
     end
 end
 
-function GetTeamControlMapTile10(Cell10)
-    if (requestedMPMapTileCells[cell10] == 1) then
-        --We already have this tile.
-        return
-    end
-    local status = requestedMPMapTileCells[Cell10] --this can occasionally be nil if there's multiple active calls that return out of order on the first update
-     if (status == nil) then --first time requesting this cell this session.
-        local dataPresent = doesFileExist(Cell10 .. "-AC-11.png", system.CachesDirectory)
-        if (dataPresent == true) then --use local data.
-            requestedMPMapTileCells[Cell10] = 1
-            return
-        end
-        requestedMPMapTileCells[Cell10] = 0
-        TrackerGetMP10CellImage11(Cell10)
-     end
-
-     if (status == -1) then --retry a failed download.
-        requestedDataCells[Cell10] = 0
-        TrackerGetMP10CellImage11(Cell10)
-     end
-end
-
 function GetTeamControlMapTile8(Cell8)
-    print("requesting cell " .. Cell8)
     if (requestedMPMapTileCells[cell8] == 1) then
         --We already have this tile.
         return
@@ -205,25 +181,16 @@ function GetTeamControlMapTile8(Cell8)
             return
         end
         requestedMPMapTileCells[Cell8] = 0
-        TrackerGetMP8CellImage11(Cell8)
+        TrackerGetMPCell8Image11(Cell8)
      end
 
      if (status == -1) then --retry a failed download.
         requestedDataCells[Cell8] = 0
-        TrackerGetMP8CellImage11(Cell8)
+        TrackerGetMPCell8Image11(Cell8)
      end
 end
 
-function TrackerGetMP10CellImage11(plusCode)
-    networkReqPending = true
-    netTransfer()
-    local params = {}
-    params.response  = {filename = plusCode .. "-AC-11.png", baseDirectory = system.CachesDirectory}
-    network.request(serverURL .. "Gameplay/DrawFactionModeCell10HighRes/" .. plusCode, "GET", TrackerMPimage1011Listener, params)
-end
-
 function TrackerMPimage1011Listener(event)
-    print("got data for " ..  string.gsub(event.url, serverURL .. "Gameplay/DrawFactionModeCell10HighRes/", ""))
     if event.status == 200 then
         forceRedraw = true
         netUp() 
@@ -236,7 +203,7 @@ function TrackerMPimage1011Listener(event)
     end
 end
 
-function TrackerGetMP8CellImage11(plusCode)
+function TrackerGetMPCell8Image11(plusCode)
     networkReqPending = true
     netTransfer()
     local params = {}
@@ -245,7 +212,7 @@ function TrackerGetMP8CellImage11(plusCode)
 end
 
 function TrackerMPimage811Listener(event)
-    print("got data for " ..  string.gsub(event.url, serverURL .. "Gameplay/DrawFactionModeCell8HighRes/", ""))
+    if (debug) then print("got data for " ..  string.gsub(event.url, serverURL .. "Gameplay/DrawFactionModeCell8HighRes/", "")) end
     if event.status == 200 then
         forceRedraw = true
         netUp() 
@@ -264,7 +231,7 @@ function GetPaintTownMapData8(Cell8, instanceID) -- the painttown map update cal
     networkReqPending = true
     netTransfer()
     network.request(serverURL .. "PaintTown/LearnCell8/" .. instanceID .. "/" .. Cell8, "GET", PaintTownMapListener) 
-    requestedPaintTownCells = {} --clears out the display cache
+    requestedPaintTownCells = {} --clears out the display cache. this might be better placed somewhere else, but doing this in the listener seems to fail?
 end
 
 function PaintTownMapListener(event)
@@ -278,10 +245,10 @@ function PaintTownMapListener(event)
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
     networkReqPending = false 
     local instanceID = Split(string.gsub(event.url, serverURL .. "PaintTown/LearnCell8/", ""), "/")[1]
-    --This one splits each 10cell via pipe, each sub-vaule by =
+    --This one splits each Cell10 via pipe, each sub-vaule by =
     local resultsTable = Split(event.response, "|")
     --Format:
-    --cell10=TeamID|cell10=TeamID
+    --Cell10=TeamID|Cell10=TeamID
 
     for cell = 1, #resultsTable do
         local splitData = Split(resultsTable[cell], "=")

@@ -59,6 +59,7 @@ function scene:create( event )
     if (debug) then print("showing SceneSelect") end
 
     local headerText = display.newText(sceneGroup, "Hypothesis - Mode Select", display.contentCenterX, 30, native.systemFont, 50)
+    local helperText = display.newText(sceneGroup, "Tap the header in any mode to return to this screen", display.contentCenterX, 900, native.systemFont, 30)
 
     local change8grid10Image = display.newImageRect(sceneGroup, "themables/8cell10image.png", 300, 100) -- lowres zoomed out
     change8grid10Image.anchorX = 0
@@ -113,7 +114,7 @@ function scene:create( event )
     changeSettings.anchorX = 0
     changeSettings.anchorY = 0
     changeSettings.x = 390
-    changeSettings.y = 1100
+    changeSettings.y = 700
     changeSettings:addEventListener("tap", SwitchToSettingsScene)
  
 end

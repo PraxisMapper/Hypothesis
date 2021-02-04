@@ -43,9 +43,9 @@ local locationName = ""
 
 local function testDrift()
     if (os.time() % 2 == 0) then
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 9) -- move north
+        currentPlusCode = shiftCell(currentPlusCode, 1, 9) -- move north
     else
-        currentPlusCode = shiftCellV3(currentPlusCode, 1, 10) -- move west
+        currentPlusCode = shiftCell(currentPlusCode, 1, 10) -- move west
     end
 end
 
@@ -70,8 +70,8 @@ local function UpdateLocal()
         for square = 1, #cellCollection do -- this is slightly faster than ipairs
             -- check each spot based on current cell, modified by gridX and gridY
             local thisSquaresPluscode = currentPlusCode
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridX, 10)
-            thisSquaresPluscode = shiftCellV3(thisSquaresPluscode, cellCollection[square].gridY, 9)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 10)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 9)
             cellCollection[square].pluscode = thisSquaresPluscode
 
             -- apply type now if we found it.
@@ -150,8 +150,10 @@ local function UpdateLocal()
         end
     end
 
-    if (debugGPS) then print("grid done or skipped") end
-    if (debugGPS) then print(locationText.text) end
+    if (debugGPS) then 
+        print("grid done or skipped") 
+        print(locationText.text) 
+    end
     locationText.text = "Current location:" .. currentPlusCode
     countText.text = "Total Explored Cells: " .. TotalExploredCells()
     pointText.text = "Score: " .. Score()
@@ -188,7 +190,7 @@ function scene:create(event)
 
     locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
-    countText = display.newText(sceneGroup, "Total Cells Explored: ?", display.contentCenterX, 240, native.systemFont, 20)
+    countText = display.newText(sceneGroup, "Total Explored Cells: ?", display.contentCenterX, 240, native.systemFont, 20)
     pointText = display.newText(sceneGroup, "Score: ?", display.contentCenterX, 260, native.systemFont, 20)
     scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1250, native.systemFont, 20)
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)

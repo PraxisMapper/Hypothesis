@@ -96,8 +96,8 @@ function VisitedCell(pluscode)
     end
 end
 
-function Visited8Cell(pluscode)
-    if (debugDB) then print("Checking if visited current 8 cell " .. pluscode) end
+function VisitedCell8(pluscode)
+    if (debugDB) then print("Checking if visited current cell8 " .. pluscode) end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE eightCode = '" .. pluscode .. "'"
     for i,row in ipairs(Query(query)) do
         if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
@@ -108,7 +108,6 @@ function Visited8Cell(pluscode)
     end
 end
 
---should probably be a gamelogic method
 function TotalExploredCells()
     if (debugDB) then print("opening total explored cells ") end
     local query = "SELECT COUNT(*) as c FROM plusCodesVisited"
@@ -117,8 +116,8 @@ function TotalExploredCells()
     end
 end
 
-function TotalExplored8Cells()
-    if (debugDB) then print("opening total explored 8 cells ") end
+function TotalExploredCell8s()
+    if (debugDB) then print("opening total explored cell8s ") end
     local query = "SELECT COUNT(distinct eightCode) as c FROM plusCodesVisited"
     for i,row in ipairs(Query(query)) do
         return row[1]
@@ -137,17 +136,6 @@ function Score()
     end
 end
 
-function GetClientData()
-    --stuff to send up to leaderboards API
-    if (debugDB) then print("loading client data ") end
-    local query = "SELECT * from playerData P LEFT JOIN systemData S" --this gets everything, but has 2 columns named ID that should both be 1.
-    local results = Query(query) --or just return this?
-    for i,row in ipairs(results) do
-        if (debugDB) then print(dump(row)) end
-        return row --this is only the first value?
-    end 
-end
-
 function LoadTerrainData(pluscode) --plus code does not contain a + here
         if (debugDB) then print("loading terrain data ") end
     local query = "SELECT * from terrainData WHERE plusCode = '" .. pluscode .. "'"
@@ -160,26 +148,7 @@ function LoadTerrainData(pluscode) --plus code does not contain a + here
     return {} --empty table means no data found.
 end
 
-function SaveTerrainData(pluscode, name, type)
-    if (debugDB) then print("saving terrain data " .. pluscode .. " " .. name .. " " .. type) end
-    local query = "INSERT OR REPLACE INTO terrainData (plusCode, name, areatype, lastUpdated) VALUES('" .. pluscode .. "', '" .. name .. "', '" .. type .. "', " .. os.time() .. ")"
-    --Doing this locally here for a good reason. Can't upsert in this version of SQLite, so I have to check manually for dupes.
-    local dupe = db:exec(query)    
-end
-
-function Downloaded6Cell(pluscode)
-    if (debug) then print("Checking if downloaded current 6 cell " .. pluscode) end
-    local query = "SELECT COUNT(*) as c FROM dataDownloaded WHERE pluscode8 = '" .. pluscode .. "'"
-    for i,row in ipairs(Query(query)) do
-        if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
-            return true
-        else
-            return false
-        end
-    end
-end
-
-function Downloaded8Cell(pluscode)
+function DownloadedCell8(pluscode)
     local query = "SELECT COUNT(*) as c FROM dataDownloaded WHERE pluscode8 = '" .. pluscode .. "'"
     for i,row in ipairs(Query(query)) do
         if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
@@ -245,12 +214,11 @@ function GetServerAddress()
         if (#row == 1) then
             return row[1]
         else
-            return ""
+            return "noServerFound"
         end
     end
     return ""
 end
-
 
 function SetServerAddress(url)
     local cmd = "UPDATE systemData SET serverAddress = '" .. url .. "'"
