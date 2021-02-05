@@ -13,4 +13,4 @@ If you want to build your own copy, or use the app as a baseline:
 Privacy Policy:
 Short version: Ads suck. Tracking data sucks. This app uses neither.
 
-Long version: This app sends your device ID to the server you connect to, where that ID is used to assign your device to a team in-game. Your location is sent to the server to determine gameplay elements to provide to your device. No other data is collected or stored on an individual level, no activity data is aggregated, and your device ID and location are never used at the same time on a request. No data is sold or transferred off the server for non-gameplay purposes.
+Long version: This app sends your device ID to the server you connect to, where that ID is used to assign your device to a team in-game. Your location is sent to the server to determine gameplay elements to provide to your device. No other data is collected or stored on an individual level, no activity data is aggregated, and your device ID and location are never used at the same time on a request. Other users do not get data on individual activities. No data is sold or transferred off the server for non-gameplay purposes.
