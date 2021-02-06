@@ -51,10 +51,12 @@ function AreaOwnerListener(event)
 
     local results = Split(event.response, "|")
     tappedAreaScore = tonumber(results[3])
+    scoreString = results[3]
     if (tappedAreaScore == 0) then
         tappedAreaScore = 1
+        scoreString = "1"
     end
-    textDisplay.text = textDisplay.text .. tappedAreaScore .. " points?"
+    textDisplay.text = textDisplay.text .. scoreString .. " points?"
     ownerDisplay.text = ownerDisplay.text .. " " .. results[2]
 
     if (tappedAreaScore <= tonumber(Score())) then

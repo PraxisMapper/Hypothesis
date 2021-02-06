@@ -45,6 +45,7 @@ function AreaSizeListener(event)
     tappedAreaScore = tonumber(scoreResults)
     if (tappedAreaScore == 0) then
         tappedAreaScore = 1
+        scoreResults = "1"
     end
     if (debug) then print(scoreResults) print(Score()) end
     textDisplay.text = textDisplay.text .. scoreResults .. " points?"
