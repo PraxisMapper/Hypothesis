@@ -83,12 +83,12 @@ function GetMapTile8(Cell8)
 end
 
 function GetCell8TerrainData(code8)
-    networkReqPending = true
     if debugNetwork then 
         print("network: getting 8 cell data " .. code8) 
         print ("getting cell data via " .. serverURL .. "MapData/LearnCell8/" .. code8) 
     end
     network.request(serverURL .. "MapData/LearnCell8/" .. code8 , "GET", TrackplusCode8Listener)
+    netTransfer()
 end
 
 function TrackplusCode8Listener(event)
@@ -99,7 +99,6 @@ function TrackplusCode8Listener(event)
         netDown() 
     end
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
-    networkReqPending = false 
 
     --This one splits each Cell10 via newline.
     local resultsTable = Split(event.response, "\r\n") --windows newlines
@@ -127,7 +126,6 @@ function TrackplusCode8Listener(event)
 end
 
 function TrackerGetCell10Image11(plusCode)
-    networkReqPending = true
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
@@ -148,7 +146,6 @@ function Trackerimage1011Listener(event)
 end
 
 function TrackerGetCell8Image11(plusCode)
-    networkReqPending = true
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
@@ -204,7 +201,6 @@ function TrackerMPimage1011Listener(event)
 end
 
 function TrackerGetMPCell8Image11(plusCode)
-    networkReqPending = true
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-AC-11.png", baseDirectory = system.CachesDirectory}
@@ -228,7 +224,6 @@ end
 --Since Paint The Town is meant to be a much faster game mode, we won't save its state in the database, just memory.
 function GetPaintTownMapData8(Cell8, instanceID) -- the painttown map update call.
     --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
-    networkReqPending = true
     netTransfer()
     network.request(serverURL .. "PaintTown/LearnCell8/" .. instanceID .. "/" .. Cell8, "GET", PaintTownMapListener) 
     requestedPaintTownCells = {} --clears out the display cache. this might be better placed somewhere else, but doing this in the listener seems to fail?
@@ -243,7 +238,6 @@ function PaintTownMapListener(event)
         netDown() 
     end
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
-    networkReqPending = false 
     local instanceID = Split(string.gsub(event.url, serverURL .. "PaintTown/LearnCell8/", ""), "/")[1]
     --This one splits each Cell10 via pipe, each sub-vaule by =
     local resultsTable = Split(event.response, "|")
@@ -259,7 +253,6 @@ function PaintTownMapListener(event)
 end
 
 function ClaimPaintTownCell(Cell10, factionId)
-    networkReqPending = true
     netTransfer()
     network.request(serverURL .. "PaintTown/ClaimCell10/" .. factionId .. "/" .. Cell10, "GET", PaintTownClaimListener) 
 end
@@ -271,5 +264,4 @@ function PaintTownClaimListener(event) --doesnt record any data.
         print("paint the town claim failed")
         netDown() 
     end
-    networkReqPending = false 
 end

@@ -5,7 +5,6 @@ require("database")
 require("helpers") --for Split
 
 serverURL = ""
-networkReqPending = false
 
 function plusCode8Listener(event)
     if (debug) then print("plus code 8 event started") end
@@ -38,7 +37,6 @@ function plusCode8Listener(event)
     requestedCells = requestedCells:gsub(plusCode6 .. ",", "")
 
     netUp()
-    networkReqPending = false 
 end
 
 function GetCell8Data(code8)
@@ -46,15 +44,14 @@ function GetCell8Data(code8)
     if (cellAlreadyRequested ~= nil) then 
         return 
     end
-    networkReqPending = true
     if debugNetwork then print("network: getting 8 cell data " .. code8) end
     requestedCells = requestedCells .. code8 .. ","
     if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/LearnCell8/" .. code8) end
     network.request(serverURL .. "MapData/LearnCell8/" .. code8, "GET", plusCode8Listener)
+    netTransfer()
 end
 
 function GetCell8Image10(plusCode8)
-    networkReqPending = true
     netTransfer()
     if (debugNetwork) then print ("getting cell image data via " .. serverURL .. "MapData/DrawCell8/" .. plusCode8) end
     local params = { response = { filename = plusCode8 .. "-10.png", baseDirectory = system.CachesDirectory}}
@@ -62,7 +59,6 @@ function GetCell8Image10(plusCode8)
 end
 
 function GetCell8Image11(plusCode8)
-    networkReqPending = true
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode8 .. "-11.png", baseDirectory = system.CachesDirectory}
@@ -70,7 +66,6 @@ function GetCell8Image11(plusCode8)
 end
 
 function GetCell10Image11(plusCode)
-    networkReqPending = true
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
@@ -96,6 +91,7 @@ function GetTeamAssignment()
     local url = serverURL .. "PlayerContent/AssignTeam/"  .. system.getInfo("deviceID")
     if (debug) then print("Team request sent to " .. url) end
     network.request(url, "GET", GetTeamAssignmentListener)
+    netTransfer()
 end
 
 function GetTeamAssignmentListener(event)
@@ -106,6 +102,9 @@ function GetTeamAssignmentListener(event)
     if event.status == 200 then
         composer.setVariable("faction", event.response)
         factionID = tonumber(event.response)
+        netUp()
+    else
+        netDown()
     end
     if (debug) then print("Team Assignment done") end
 end
@@ -114,4 +113,5 @@ function SetTeamAssignment(teamId)
     local url = serverURL .. "PlayerContent/SetTeam/"  .. system.getInfo("deviceID") .. "/" .. teamId
     network.request(url, "GET", GetTeamAssignmentListener) --recycled, since the results are the same.
     if (debug) then print("Team change sent to " .. url) end
+    netTransfer()
 end
