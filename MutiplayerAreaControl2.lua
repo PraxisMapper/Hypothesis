@@ -247,8 +247,8 @@ local function UpdateLocalOptimized()
         directionArrow.x = display.contentCenterX + (shift * 16)
         directionArrow.y = display.contentCenterY - (shift2 * 20)
     else
-        directionArrow.x = display.contentCenterX + (shift * 4)
-        directionArrow.y = display.contentCenterY - (shift2 * 5)
+        directionArrow.x = display.contentCenterX + (shift * 8)
+        directionArrow.y = display.contentCenterY - (shift2 * 10)
     end
     scoreLog.text = lastScoreLog
 
@@ -291,7 +291,7 @@ function scene:create(event)
     else
         -- original values, but too small to interact with.
         CreateRectangleGrid(3, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(60, 5, 4, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        CreateRectangleGrid(60, 8, 10, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
     end  
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 16, 20)
@@ -312,13 +312,14 @@ function scene:create(event)
     zoom.x = 50
     zoom.y = 100
     zoom:addEventListener("tap", ToggleZoom)
-    zoom:toFront()
+    
 
     if (debug) then
         debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
         debugText:toFront()
     end
     ctsGroup:toFront()
+    zoom:toFront()
     if (debug) then print("created AreaControl scene") end
 end
 

@@ -35,6 +35,8 @@ local directionArrow = ""
 local scoreLog = ""
 local debugText = {}
 local locationName = ""
+local header= ""
+local zoom = ""
 
 local function testDrift()
     if (os.time() % 2 == 0) then
@@ -50,6 +52,9 @@ local function ToggleZoom()
 
     for i = 1, #cellCollection do
         cellCollection[i]:removeSelf()
+    end
+
+    for i = 1, #visitedCellDisplay do
         visitedCellDisplay[i]:removeSelf()
     end
     cellCollection = {}
@@ -58,12 +63,25 @@ local function ToggleZoom()
     if (bigGrid) then
         CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(60, 16, 20, ctsGroup, visitedCellDisplay, "ac") -- rectangular Cell11 grid  with event for area control
+        ctsGroup.x = -8
+        ctsGroup.y = 10
     else
         CreateRectangleGrid(3, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(60, 5, 4, ctsGroup, visitedCellDisplay, "ac") -- rectangular Cell11 grid  with event for area control
+        CreateRectangleGrid(60, 8, 10, ctsGroup, visitedCellDisplay, "ac") -- rectangular Cell11 grid  with event for area control
+        ctsGroup.x = -4
+        ctsGroup.y = 5
     end
+    
+    ctsGroup:toFront()
+    header:toFront()
+    locationText:toFront()
+    explorePointText:toFront()
+    scoreText:toFront()
+    timeText:toFront()
     directionArrow:toFront()
-    ctsGroup:toFront();
+    scoreLog:toFront()
+    zoom:toFront()
+
     forceRedraw = true
     return true
 end
@@ -221,8 +239,8 @@ local function UpdateLocalOptimized()
         directionArrow.x = display.contentCenterX + (shift * 16)
         directionArrow.y = display.contentCenterY - (shift2 * 20)
     else
-        directionArrow.x = display.contentCenterX + (shift * 4)
-        directionArrow.y = display.contentCenterY - (shift2 * 5)
+        directionArrow.x = display.contentCenterX + (shift * 8)
+        directionArrow.y = display.contentCenterY - (shift2 * 10)
     end
 
     if (debugLocal) then print("grid done or skipped") end
@@ -273,12 +291,12 @@ function scene:create(event)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
 
-    local header = display.newImageRect(sceneGroup, "themables/AreaControl.png",300, 100)
+    header = display.newImageRect(sceneGroup, "themables/AreaControl.png",300, 100)
     header.x = display.contentCenterX
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)
 
-    local zoom = display.newImageRect(sceneGroup, "themables/ToggleZoom.png", 100, 100)
+    zoom = display.newImageRect(sceneGroup, "themables/ToggleZoom.png", 100, 100)
     zoom.anchorX = 0
     zoom.x = 50
     zoom.y = 100

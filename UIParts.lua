@@ -77,7 +77,6 @@ function debuggerHelperSquare(event)
 end
 
 function showAreaClaim(event)
-    print("boop")
     tapData.text = "Cell Tapped: " .. event.target.pluscode
     local noplus = removePlus(event.target.pluscode)
     tappedCell = event.target.pluscode --needs to be before this print or it screws up on the first tap
@@ -86,12 +85,12 @@ function showAreaClaim(event)
         print("showareaclaim clicked")
     end
     if (event.target.type == nil or event.target.type == "") then
-        print("returning false, not showing area claim")
+        if (debug) then print("returning false, not showing area claim") end
         return false
     end
     --dont claim areas you already own
     if (CheckAreaOwned(event.target.MapDataId)) then
-        print("returning false, already owned")
+        if (debug) then print("returning false, already owned") end
         return false
     end
 

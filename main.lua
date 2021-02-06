@@ -16,7 +16,7 @@ require("localNetwork")
 
 forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
-debug = false --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
+debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugGPS = false --display data for the GPS event and timer loop and auto-move
 debugDB = false
 debugLocal = false
