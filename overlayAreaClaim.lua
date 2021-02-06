@@ -17,6 +17,7 @@ local noButton = ""
 
 local function yesListener()
     --check walking score, if high enough, spend points and color this area in.
+
     if (debug) then print("yes tapped") end
     local points = Score()
     if (debug) then print(points) end
@@ -42,6 +43,9 @@ function AreaSizeListener(event)
     if (debug) then print("AreaSize local response: " .. event.response .. " " .. event.status) end
     local scoreResults = Split(event.response, "|")[2]
     tappedAreaScore = tonumber(scoreResults)
+    if (tappedAreaScore == 0) then
+        tappedAreaScore = 1
+    end
     if (debug) then print(scoreResults) print(Score()) end
     textDisplay.text = textDisplay.text .. scoreResults .. " points?"
     if (tappedAreaScore <= tonumber(Score())) then

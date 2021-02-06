@@ -137,11 +137,11 @@ function scene:show( event )
         ResetDailyWeekly()
         statusText.text = "Database work done!"
 
-        statusText.text = "Requesting Team Id"
-        GetTeamAssignment()
-
         serverURL = GetServerAddress()
         print(serverURL)
+
+        statusText.text = "Requesting Team Id"
+        GetTeamAssignment()        
         
         statusText.text = "Starting Game"
         startGame()

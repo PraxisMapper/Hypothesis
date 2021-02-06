@@ -94,8 +94,8 @@ end
 
 function GetTeamAssignment()
     local url = serverURL .. "PlayerContent/AssignTeam/"  .. system.getInfo("deviceID")
-    network.request(url, "GET", GetTeamAssignmentListener)
     if (debug) then print("Team request sent to " .. url) end
+    network.request(url, "GET", GetTeamAssignmentListener)
 end
 
 function GetTeamAssignmentListener(event)

@@ -1,4 +1,5 @@
 local composer = require("composer")
+require("helpers")
 
 function CreateSquareGrid(gridSize, cellSize, gridGroup, cellCollection)
     --size is square, X by Y size. Must be odd so that i can have a center square. Even values get treated as one larger to be made odd.
@@ -36,6 +37,7 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
             newSquare.gridY = -y --invert this so cells get identified top-to-bottom, rather than bottom-to-top
             newSquare.name = "" --added for terrain/location support
             newSquare.type = ""--added for terrain/location support
+            newSquare.pluscode = "" --to potentially be filled in by the game mode
             newSquare.MapDataId = 0 --for area control mode
             newSquare.fill = {1, .01} --default to transparent, but using 0, 0 means they don't register at all?
             --newSquare.fill = {math.random(), .5} --Uncomment this to make the grid visible for debug/layout purposes
@@ -47,7 +49,7 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
                 newSquare:addEventListener("tap", multiplayerAreaClaim) --multiplayer gameplay dialog.
             elseif (tapHandlerType == "painttown") then
                 --no listener needed here.
-                newSquare:addEventListener("tap", paintTownTapListener) --multiplayer gameplay dialog.
+                newSquare:addEventListener("tap", paintTownTapListener)
             end
             cellCollection[#cellCollection + 1] = newSquare
         end
@@ -75,19 +77,21 @@ function debuggerHelperSquare(event)
 end
 
 function showAreaClaim(event)
+    print("boop")
     tapData.text = "Cell Tapped: " .. event.target.pluscode
     local noplus = removePlus(event.target.pluscode)
     tappedCell = event.target.pluscode --needs to be before this print or it screws up on the first tap
     redrawOverlay = true
     if (debug) then 
         print("showareaclaim clicked")
-        print(event.target.type)
     end
     if (event.target.type == nil or event.target.type == "") then
+        print("returning false, not showing area claim")
         return false
     end
     --dont claim areas you already own
     if (CheckAreaOwned(event.target.MapDataId)) then
+        print("returning false, already owned")
         return false
     end
 

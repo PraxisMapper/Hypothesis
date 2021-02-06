@@ -137,7 +137,7 @@ function Score()
 end
 
 function LoadTerrainData(pluscode) --plus code does not contain a + here
-        if (debugDB) then print("loading terrain data ") end
+    if (debugDB) then print("loading terrain data ") end
     local query = "SELECT * from terrainData WHERE plusCode = '" .. pluscode .. "'"
     local results = Query(query) 
     
@@ -162,8 +162,10 @@ end
 
 function ClaimAreaLocally(mapdataid, name, score)
     if (debug) then print("claiming area " .. mapdataid) end
+    name = string.gsub(name, "'", "''")
     local cmd = "INSERT INTO areasOwned (mapDataId, name, points) VALUES (" .. mapdataid .. ", '" .. name .. "'," .. score ..")"
-    db:exec(cmd)
+    --db:exec(cmd)
+    Exec(cmd)
 end
 
 function CheckAreaOwned(mapdataid)
