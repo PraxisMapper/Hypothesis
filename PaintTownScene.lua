@@ -102,7 +102,7 @@ local function ToggleZoom()
         ctsGroup.x = -8
         ctsGroup.y = 10
     else
-        CreateRectangleGrid(3, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(60, 8, 10, ctsGroup, CellTapSensors, "painttown") -- rectangular Cell11 grid  with a color fill
         ctsGroup.x = -4
         ctsGroup.y = 5
@@ -297,11 +297,20 @@ function scene:create(event)
 
     sceneGroup:insert(ctsGroup)
 
+    contrastSquare = display.newRect(sceneGroup, display.contentCenterX, 250, 400, 200)
+    contrastSquare:setFillColor(.8, .8, .8, .7)
+    
+
     locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
     scoreText = display.newText(sceneGroup, "Leaderboards: ?", display.contentCenterX, 260, native.systemFont, 20)
     scoreText.anchorY = 0
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 240, native.systemFont, 20)
+
+    locationText:setFillColor(0, 0, 0);
+    timeText:setFillColor(0, 0, 0);
+    scoreText:setFillColor(0, 0, 0);
+    locationName:setFillColor(0, 0, 0);
 
     if (bigGrid) then
         CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
@@ -341,8 +350,12 @@ function scene:create(event)
 
     if (debug) then
         debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
+        debugText:setFillColor(0, 0, 0);
         debugText:toFront()
     end
+    
+    --reorderUI()
+    contrastSquare:toFront()
 
     if (debug) then print("created PaintTown scene") end
 end

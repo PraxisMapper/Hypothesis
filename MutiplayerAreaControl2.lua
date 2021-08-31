@@ -285,6 +285,13 @@ function scene:create(event)
     scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1220, native.systemFont, 20)
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
 
+    locationText:setFillColor(0, 0, 0);
+    timeText:setFillColor(0, 0, 0);
+    explorePointText:setFillColor(0, 0, 0);
+    scoreText:setFillColor(0, 0, 0);
+    scoreLog:setFillColor(0, 0, 0);
+    locationName:setFillColor(0, 0, 0);
+
     if (bigGrid) then
         CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(60, 16, 20, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control

@@ -100,7 +100,9 @@ function scene:create( event )
     pointText = display.newText(sceneGroup, "Score: ?", display.contentCenterX, 260, native.systemFont, 20)
 
     --NOTE: 11-cell resolution images for cell8s are 80x100, so use the rectangle function
-    CreateRectangleGrid(7, 80, 100, sceneGroup, cellCollection, "painttown") --7 is the max that fits on screen at this image size
+    --I've since doubled their resolution, so they can get set up to 160x200.
+    --CreateRectangleGrid(7, 80, 100, sceneGroup, cellCollection, "painttown") --7 is the max that fits on screen at this image size
+    CreateRectangleGrid(4, 160, 200, sceneGroup, cellCollection, "painttown") --7 is the max that fits on screen at this image size
 
     directionArrow = display.newImageRect(sceneGroup, "themables/circle1.png", 65, 65)
     directionArrow.x = display.contentCenterX

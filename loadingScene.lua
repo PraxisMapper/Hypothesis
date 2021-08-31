@@ -51,7 +51,7 @@ require("localNetwork")
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
        --currentPlusCode = "85PFF56C+5P" --Old Faithful 
        
-       currentPlusCode = "87G8Q2JM+F9" --central park, simulator purposes
+       
 end
  
  
@@ -112,7 +112,7 @@ function scene:show( event )
         CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
         CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
         CREATE INDEX IF NOT EXISTS indexOwnedMapIds on areasOwned(mapDataId);
-        INSERT OR IGNORE INTO systemData(id, dbVersionID, serverAddress) values (1, ]] .. currentDbVersion .. [[, '');
+        INSERT OR IGNORE INTO systemData(id, dbVersionID, serverAddress) values (1, ]] .. currentDbVersion .. [[, 'https://us.praxismapper.org/praxismapper/');
         INSERT OR IGNORE INTO playerData(id, factionID, totalPoints) values (1, 0, 0);
         ]]
         
@@ -139,6 +139,11 @@ function scene:show( event )
 
         serverURL = GetServerAddress()
         print(serverURL)
+
+        --Debug setup
+        if (debug) then
+            serverURL = "http://localhost/praxismapper/"
+        end
 
         statusText.text = "Requesting Team Id"
         GetTeamAssignment()        
