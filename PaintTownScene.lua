@@ -1,7 +1,5 @@
 --Paint The Town  Mode
---Simplified area control mode: walk into a Cell10, claim it for your team.
---(Teams get assigned by the server randomly)
---auto-resets on a scheduled basis, can have multiple scoreboards/instances going.
+--TODO: rework this to the new non-competitive mode
 local composer = require("composer")
 local scene = composer.newScene()
 
@@ -50,31 +48,14 @@ local swapInstance = ""
 local instanceID = 1 --1 is weekly, 2 is permanent
 local arrowPainted = false
 
-local function GetScoreboard()
-    --local instanceID = "1"
-    local url = serverURL .. "PaintTown/Scoreboard/" .. instanceID
-    network.request(url, "GET", GetScoreboardListener)
-    if (debug) then print("scoreboard request sent to " .. url) end
-end
-
-function GetScoreboardListener(event) --these listeners can't be local.
-    if (debug) then  print("scoreboard listener fired") end
-    if event.status == 200 then
-        if (debug) then 
-            print("got Scoreboard")
-            print(event.response)
-        end
-        local results = Split(event.response, "|")
-        local setText = ""
-        --line 1 is instanceName#time.
-        --every other line is teamName=Score, need to iterate those.
-        setText = Split(results[1], "#")[1] .. "\n"
-        for i = 2, #results do
-            setText = setText .. results[i] .. "\n"
-        end
-        scoreText.text = setText
-    end
-    if (debug) then print("scoreboard text done") end
+local function convertColor(colorString)
+    --colors are #AARRGGBB
+    local alphaHex = tonumber('0x' .. colorString:sub(2,3))
+    local redHex = tonumber('0x' .. colorString:sub(4,5))
+    local greenHex = tonumber('0x' .. colorString:sub(6,7))
+    local blueHex = tonumber('0x' .. colorString:sub(8,9))
+    
+    return {redHex / 255, greenHex / 255, blueHex / 255, alphaHex / 255}
 end
 
 local function testDrift()
@@ -171,7 +152,7 @@ local function UpdateLocalOptimized()
     firstRun = false
     forceRedraw = false
     if currentPlusCode ~= previousPlusCode then
-        ClaimPaintTownCell(plusCodeNoPlus, tonumber(composer.getVariable("faction")))
+        ClaimPaintTownCell(plusCodeNoPlus)
     end
     previousPlusCode = currentPlusCode
 
@@ -194,15 +175,15 @@ local function UpdateLocalOptimized()
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
         if (PaintTownMapUpdateCountdown == 0) then
-            GetPaintTownMapData8(plusCodeNoPlus, instanceID)
-            if (arrowPainted == false) then
-                local teamID = factionID --tonumber(composer.getVariable("faction"))
-                if (teamID == 0) then
-                    GetTeamAssignment()
-                else            
-                    tintArrow(teamID)
-                end
-            end
+            GetPaintTownMapData8(plusCodeNoPlus)
+            -- if (arrowPainted == false) then
+            --     local teamID = factionID --tonumber(composer.getVariable("faction"))
+            --     if (teamID == 0) then
+            --         GetTeamAssignment()
+            --     else            
+            --         tintArrow(teamID)
+            --     end
+            -- end
         end
             GetMapData8(plusCodeNoPlus)
             local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
@@ -244,14 +225,14 @@ local function UpdateLocalOptimized()
 
             CellTapSensors[square].pluscode = thisSquaresPluscode
             if (requestedPaintTownCells[idCheck] ~= nil) then
-                local teamIDThisSpace = requestedPaintTownCells[idCheck]
-                CellTapSensors[square].fill = TeamColors[tonumber(teamIDThisSpace)]
+                local colorCell = requestedPaintTownCells[idCheck]
+                CellTapSensors[square].fill = convertColor(colorCell) --TeamColors[tonumber(teamIDThisSpace)]
             end
         end
     end
 
     if PaintTownMapUpdateCountdown == 0 then
-        PaintTownMapUpdateCountdown = 8
+        PaintTownMapUpdateCountdown = 60
     end
 
     if (timerResults ~= nil) then timer.resume(timerResults) end
@@ -378,7 +359,7 @@ function scene:show(event)
     elseif (phase == "did") then
         -- Code here runs when the scene is entirely on screen 
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
-        timerResultsScoreboard = timer.performWithDelay(2500, GetScoreboard, -1)
+        --timerResultsScoreboard = timer.performWithDelay(2500, GetScoreboard, -1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
         reorderUI()
         GetTeamAssignment()

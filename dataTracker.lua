@@ -222,11 +222,11 @@ function TrackerMPimage811Listener(event)
 end
 
 --Since Paint The Town is meant to be a much faster game mode, we won't save its state in the database, just memory.
-function GetPaintTownMapData8(Cell8, instanceID) -- the painttown map update call.
+function GetPaintTownMapData8(Cell8) -- the painttown map update call.
     --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
     netTransfer()
-    network.request(serverURL .. "PaintTown/LearnCell8/" .. instanceID .. "/" .. Cell8, "GET", PaintTownMapListener) 
-    requestedPaintTownCells = {} --clears out the display cache. this might be better placed somewhere else, but doing this in the listener seems to fail?
+    network.request(serverURL .. "PaintTown/LearnCell8/"  .. Cell8, "GET", PaintTownMapListener) 
+    --requestedPaintTownCells = {} --clears out the display cache. this might be better placed somewhere else, but doing this in the listener seems to fail?
 end
 
 function PaintTownMapListener(event)
@@ -242,7 +242,7 @@ function PaintTownMapListener(event)
     --This one splits each Cell10 via pipe, each sub-vaule by =
     local resultsTable = Split(event.response, "|")
     --Format:
-    --Cell10=TeamID|Cell10=TeamID
+    --Cell10=#color|Cell10=#color
 
     for cell = 1, #resultsTable do
         local splitData = Split(resultsTable[cell], "=")
@@ -252,9 +252,9 @@ function PaintTownMapListener(event)
     forceRedraw = true
 end
 
-function ClaimPaintTownCell(Cell10, factionId)
+function ClaimPaintTownCell(Cell10)
     netTransfer()
-    network.request(serverURL .. "PaintTown/ClaimCell10/" .. factionId .. "/" .. Cell10, "GET", PaintTownClaimListener) 
+    network.request(serverURL .. "PaintTown/ClaimCell10/" .. Cell10, "GET", PaintTownClaimListener) 
 end
 
 function PaintTownClaimListener(event) --doesnt record any data.
