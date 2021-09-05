@@ -45,3 +45,13 @@ end
 function sleep(sec)
    sockets.select(nil, nil, sec)
 end
+
+function convertColor(colorString)
+   --colors are #AARRGGBB
+   local alphaHex = tonumber('0x' .. colorString:sub(2,3))
+   local redHex = tonumber('0x' .. colorString:sub(4,5))
+   local greenHex = tonumber('0x' .. colorString:sub(6,7))
+   local blueHex = tonumber('0x' .. colorString:sub(8,9))
+   
+   return {redHex / 255, greenHex / 255, blueHex / 255, alphaHex / 255}
+end

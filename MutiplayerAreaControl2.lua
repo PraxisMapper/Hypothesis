@@ -64,8 +64,8 @@ local function ToggleZoom()
         ctsGroup.x = -8
         ctsGroup.y = 10
     else
-        CreateRectangleGrid(3, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(60, 8, 10, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(80, 8, 10, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
         ctsGroup.x = -4
         ctsGroup.y = 5
     end
@@ -111,6 +111,7 @@ local function UpdateLocalOptimized()
     -- This needs to be 2 loops, because the cell tables are different sizes.
     -- First loop for map tiles
     -- Then loop for touch event rectangles.
+    --TODO: figure out how/when to reload tiles from server.
     if (debugLocal) then print("start UpdateLocalOptimized") end
     if (currentPlusCode == "") then
         if timerResults == nil then
@@ -278,6 +279,9 @@ function scene:create(event)
     -- Code here runs when the scene is first created but has not yet appeared on screen
     sceneGroup:insert(ctsGroup)
 
+    contrastSquare = display.newRect(sceneGroup, display.contentCenterX, 270, 400, 200)
+    contrastSquare:setFillColor(.8, .8, .8, .7)
+
     locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
     explorePointText = display.newText(sceneGroup, "Explore Points: ?", display.contentCenterX, 240, native.systemFont, 20)
@@ -297,8 +301,8 @@ function scene:create(event)
         CreateRectangleGrid(60, 16, 20, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
     else
         -- original values, but too small to interact with.
-        CreateRectangleGrid(3, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(60, 8, 10, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
+        CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(80, 8, 10, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
     end  
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 16, 20)
@@ -327,6 +331,7 @@ function scene:create(event)
     end
     ctsGroup:toFront()
     zoom:toFront()
+    contrastSquare:toFront()
     if (debug) then print("created AreaControl scene") end
 end
 

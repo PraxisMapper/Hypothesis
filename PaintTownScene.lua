@@ -26,37 +26,19 @@ local unvisitedCell = {0, 0} -- completely transparent
 local visitedCell = {.529, .807, .921, .4} -- sky blue, 50% transparent
 local selectedCell = {.8, .2, .2, .4} -- red, 50% transparent
 
-local TeamColors = {}
-TeamColors[1] = {1, 0, 0, .6}
-TeamColors[2] = {0, 1, 0, .6}
-TeamColors[3] = {.1, .605, .822, .6} --sky blue for team 3.
-
 local timerResults = nil
-local timerResultsScoreboard = nil
 local PaintTownMapUpdateCountdown = 8 --wait this many loops over the main update before doing a network call. 
 local firstRun = true
 
 local locationText = ""
-local scoreText = ""
 local directionArrow = ""
 local debugText = {}
 local locationName = ""
 
 local zoom = ""
-local swapInstance = ""
 
 local instanceID = 1 --1 is weekly, 2 is permanent
 local arrowPainted = false
-
-local function convertColor(colorString)
-    --colors are #AARRGGBB
-    local alphaHex = tonumber('0x' .. colorString:sub(2,3))
-    local redHex = tonumber('0x' .. colorString:sub(4,5))
-    local greenHex = tonumber('0x' .. colorString:sub(6,7))
-    local blueHex = tonumber('0x' .. colorString:sub(8,9))
-    
-    return {redHex / 255, greenHex / 255, blueHex / 255, alphaHex / 255}
-end
 
 local function testDrift()
     if (os.time() % 2 == 0) then
@@ -84,7 +66,7 @@ local function ToggleZoom()
         ctsGroup.y = 10
     else
         CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(60, 8, 10, ctsGroup, CellTapSensors, "painttown") -- rectangular Cell11 grid  with a color fill
+        CreateRectangleGrid(90, 8, 10, ctsGroup, CellTapSensors, "painttown") -- rectangular Cell11 grid  with a color fill
         ctsGroup.x = -4
         ctsGroup.y = 5
     end
@@ -110,20 +92,8 @@ local function switchMode()
     else
         instanceID =1
     end
-    scoreText.text = "Loading...."
     forceRedraw = true
     requestedPaintTownCells = {} --clears out the display cache
-end
-
-local function tintArrow(teamID)
-    if (teamID == 1) then
-        directionArrow:setFillColor(1, 0, 0, .5)
-    elseif (teamID == 2) then
-        directionArrow:setFillColor(0, 1, 0, .5)
-    elseif (teamID == 3) then
-        directionArrow:setFillColor(0, 0, 1, .5) 
-    end
-    arrowPainted = true
 end
 
 local function GoToSceneSelect()
@@ -176,14 +146,6 @@ local function UpdateLocalOptimized()
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
         if (PaintTownMapUpdateCountdown == 0) then
             GetPaintTownMapData8(plusCodeNoPlus)
-            -- if (arrowPainted == false) then
-            --     local teamID = factionID --tonumber(composer.getVariable("faction"))
-            --     if (teamID == 0) then
-            --         GetTeamAssignment()
-            --     else            
-            --         tintArrow(teamID)
-            --     end
-            -- end
         end
             GetMapData8(plusCodeNoPlus)
             local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
@@ -226,13 +188,13 @@ local function UpdateLocalOptimized()
             CellTapSensors[square].pluscode = thisSquaresPluscode
             if (requestedPaintTownCells[idCheck] ~= nil) then
                 local colorCell = requestedPaintTownCells[idCheck]
-                CellTapSensors[square].fill = convertColor(colorCell) --TeamColors[tonumber(teamIDThisSpace)]
+                CellTapSensors[square].fill = colorCell 
             end
         end
     end
 
     if PaintTownMapUpdateCountdown == 0 then
-        PaintTownMapUpdateCountdown = 60
+        PaintTownMapUpdateCountdown = 30 -- 60 loops is roughly 10 seconds of time passing. 30 = 5s
     end
 
     if (timerResults ~= nil) then timer.resume(timerResults) end
@@ -252,11 +214,9 @@ local function UpdateLocalOptimized()
     end
 
     locationText:toFront()
-    scoreText:toFront()
     timeText:toFront()
     directionArrow:toFront()
     locationName:toFront()
-    swapInstance:toFront()
 
     if timerResults == nil then
         if (debugLocal) then print("setting timer") end
@@ -278,19 +238,15 @@ function scene:create(event)
 
     sceneGroup:insert(ctsGroup)
 
-    contrastSquare = display.newRect(sceneGroup, display.contentCenterX, 250, 400, 200)
+    contrastSquare = display.newRect(sceneGroup, display.contentCenterX, 220, 400, 100)
     contrastSquare:setFillColor(.8, .8, .8, .7)
     
-
     locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
-    scoreText = display.newText(sceneGroup, "Leaderboards: ?", display.contentCenterX, 260, native.systemFont, 20)
-    scoreText.anchorY = 0
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 240, native.systemFont, 20)
 
     locationText:setFillColor(0, 0, 0);
     timeText:setFillColor(0, 0, 0);
-    scoreText:setFillColor(0, 0, 0);
     locationName:setFillColor(0, 0, 0);
 
     if (bigGrid) then
@@ -321,13 +277,6 @@ function scene:create(event)
     zoom.y = 100
     zoom:addEventListener("tap", ToggleZoom)
     zoom:toFront()
-
-    swapInstance = display.newImageRect(sceneGroup, "themables/SwitchMode.png", 100, 100)
-    swapInstance.anchorX = 0
-    swapInstance.x = 550
-    swapInstance.y = 100
-    swapInstance:addEventListener("tap", switchMode)
-    swapInstance:toFront()
 
     if (debug) then
         debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
@@ -375,8 +324,6 @@ function scene:hide(event)
     if (phase == "will") then
         timer.cancel(timerResults)
         timerResults = nil
-        timer.cancel(timerResultsScoreboard)
-        timerResultsScoreboard = nil
     elseif (phase == "did") then
         -- Code here runs immediately after the scene goes entirely off screen
     end

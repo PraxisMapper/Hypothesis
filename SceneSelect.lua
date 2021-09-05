@@ -61,12 +61,12 @@ function scene:create( event )
     local headerText = display.newText(sceneGroup, "Hypothesis - Mode Select", display.contentCenterX, 30, native.systemFont, 50)
     local helperText = display.newText(sceneGroup, "Tap the header in any mode to return to this screen", display.contentCenterX, 900, native.systemFont, 30)
 
-    local change8grid10Image = display.newImageRect(sceneGroup, "themables/8cell10image.png", 300, 100) -- lowres zoomed out
-    change8grid10Image.anchorX = 0
-    change8grid10Image.anchorY = 0
-    change8grid10Image.x = 60
-    change8grid10Image.y = 100
-    change8grid10Image:addEventListener("tap", SwitchTo8GridScene10Image)
+    -- local change8grid10Image = display.newImageRect(sceneGroup, "themables/8cell10image.png", 300, 100) -- lowres zoomed out
+    -- change8grid10Image.anchorX = 0
+    -- change8grid10Image.anchorY = 0
+    -- change8grid10Image.x = 60
+    -- change8grid10Image.y = 100
+    -- change8grid10Image:addEventListener("tap", SwitchTo8GridScene10Image)
 
     local change8grid11Image = display.newImageRect(sceneGroup, "themables/8cell11image.png", 300, 100) --hires zoomed out
     change8grid11Image.anchorX = 0
@@ -82,19 +82,19 @@ function scene:create( event )
     changeGrid.y = 300
     changeGrid:addEventListener("tap", SwitchTo10GridScene)
 
-    local change10Grid11Image = display.newImageRect(sceneGroup, "themables/10cell11image.png", 300, 100) --hires small tiles test
-    change10Grid11Image.anchorX = 0
-    change10Grid11Image.anchorY = 0
-    change10Grid11Image.x = 390
-    change10Grid11Image.y = 300
-    change10Grid11Image:addEventListener("tap", SwitchTo10Grid11ImageScene)
+    -- local change10Grid11Image = display.newImageRect(sceneGroup, "themables/10cell11image.png", 300, 100) --hires small tiles test
+    -- change10Grid11Image.anchorX = 0
+    -- change10Grid11Image.anchorY = 0
+    -- change10Grid11Image.x = 390
+    -- change10Grid11Image.y = 300
+    -- change10Grid11Image:addEventListener("tap", SwitchTo10Grid11ImageScene)
 
-    local changeAreaControl = display.newImageRect(sceneGroup, "themables/AreaControl.png", 300, 100) --1P area tag
-    changeAreaControl.anchorX = 0
-    changeAreaControl.anchorY = 0
-    changeAreaControl.x = 60
-    changeAreaControl.y = 500
-    changeAreaControl:addEventListener("tap", SwitchToAreaControlScene)
+    -- local changeAreaControl = display.newImageRect(sceneGroup, "themables/AreaControl.png", 300, 100) --1P area tag
+    -- changeAreaControl.anchorX = 0
+    -- changeAreaControl.anchorY = 0
+    -- changeAreaControl.x = 60
+    -- changeAreaControl.y = 500
+    -- changeAreaControl:addEventListener("tap", SwitchToAreaControlScene)
 
     local changeMPAreaControl = display.newImageRect(sceneGroup, "themables/MultiplayerAreaControl.png", 300, 100) --multiplayer area tag
     changeMPAreaControl.anchorX = 0
@@ -107,7 +107,7 @@ function scene:create( event )
     changePaintTown.anchorX = 0
     changePaintTown.anchorY = 0
     changePaintTown.x = 60
-    changePaintTown.y = 700
+    changePaintTown.y = 500
     changePaintTown:addEventListener("tap", SwitchToPaintTownScene)
 
     local changeSettings = display.newImageRect(sceneGroup, "themables/Settings.png", 300, 100) -- settings

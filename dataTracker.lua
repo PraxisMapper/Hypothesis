@@ -3,6 +3,7 @@
 --by minimizing duplicate work/network calls/etc.
 
 require("localNetwork") --for serverURL.
+require("helpers") --colorConvert
 
 --this process:
 --these tables have a string key for each relevant cell
@@ -226,7 +227,6 @@ function GetPaintTownMapData8(Cell8) -- the painttown map update call.
     --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
     netTransfer()
     network.request(serverURL .. "PaintTown/LearnCell8/"  .. Cell8, "GET", PaintTownMapListener) 
-    --requestedPaintTownCells = {} --clears out the display cache. this might be better placed somewhere else, but doing this in the listener seems to fail?
 end
 
 function PaintTownMapListener(event)
@@ -247,9 +247,12 @@ function PaintTownMapListener(event)
     for cell = 1, #resultsTable do
         local splitData = Split(resultsTable[cell], "=")
         local key = splitData[1]
-        requestedPaintTownCells[key] = splitData[2]
+        if (splitData[2] ~= nil) then
+            requestedPaintTownCells[key] = convertColor(splitData[2])
+        end
     end
     forceRedraw = true
+    if(debug) then print("paint town map event ended") end
 end
 
 function ClaimPaintTownCell(Cell10)
