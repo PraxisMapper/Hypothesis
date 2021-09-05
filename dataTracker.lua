@@ -205,11 +205,11 @@ function TrackerGetMPCell8Image11(plusCode)
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-AC-11.png", baseDirectory = system.CachesDirectory}
-    network.request(serverURL .. "AreaControl/DrawFactionModeCell8HighRes/" .. plusCode, "GET", TrackerMPimage811Listener, params)
+    network.request(serverURL .. "AreaControl/DrawFactionModeCell8/" .. plusCode, "GET", TrackerMPimage811Listener, params)
 end
 
 function TrackerMPimage811Listener(event)
-    if (debug) then print("got data for " ..  string.gsub(event.url, serverURL .. "AreaControl/DrawFactionModeCell8HighRes/", "")) end
+    if (debug) then print("got data for " ..  string.gsub(event.url, serverURL .. "AreaControl/DrawFactionModeCell8/", "")) end
     if event.status == 200 then
         forceRedraw = true
         netUp() 
