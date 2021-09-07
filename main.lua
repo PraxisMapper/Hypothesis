@@ -13,6 +13,7 @@ require("gameLogic")
 require("database")
 require("plusCodes")
 require("localNetwork")
+local lfs = require( "lfs" )
 
 forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
@@ -155,7 +156,18 @@ function backListener(event)
     if (debug) then print("didn't handle this one") end
 end
 
+function clearMACcache()
+    print("clearing MAC tile cache")
+    local temp_path = system.pathForFile( "", system.TemporaryDirectory )
+    print(temp_path)
+    for file in lfs.dir( temp_path ) do
+        print("file " .. file)
+        os.remove(system.pathForFile( file, system.TemporaryDirectory ))
+    end
+end
+
 timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)
+timer.performWithDelay(60000, clearMACcache, -1)
 Runtime:addEventListener("location", gpsListener)
 Runtime:addEventListener("key", backListener)
 

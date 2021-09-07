@@ -128,30 +128,31 @@ function TrackerGetCell8Image11(plusCode)
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
-    network.request(serverURL .. "MapData/DrawCell8Highres/" .. plusCode, "GET", Trackerimage811Listener, params)
+    network.request(serverURL .. "MapTile/DrawPlusCode/" .. plusCode, "GET", Trackerimage811Listener, params)
 end
 
 function Trackerimage811Listener(event)
     if event.status == 200 then
         forceRedraw = true
         netUp() 
-        local filename = string.gsub(event.url, serverURL .. "MapData/DrawCell8Highres/", "")
+        local filename = string.gsub(event.url, serverURL .. "MapTile/DrawPlusCode/", "")
         requestedMapTileCells[filename] = 1
     else 
         netDown() 
-        local filename = string.gsub(event.url, serverURL .. "MapData/DrawCell8Highres/", "")
+        local filename = string.gsub(event.url, serverURL .. "MapTile/DrawPlusCode/", "")
         requestedMapTileCells[filename] = -1
     end
 end
 
 function GetTeamControlMapTile8(Cell8)
+    --print("getting AC tile " .. Cell8)
     if (requestedMPMapTileCells[cell8] == 1) then
         --We already have this tile.
         return
     end
     local status = requestedMPMapTileCells[Cell8] --this can occasionally be nil if there's multiple active calls that return out of order on the first update
      if (status == nil) then --first time requesting this cell this session.
-        local dataPresent = doesFileExist(Cell8 .. "-AC-11.png", system.CachesDirectory)
+        local dataPresent = doesFileExist(Cell8 .. "-AC-11.png", system.TemporaryDirectory)
         if (dataPresent == true) then --use local data.
             requestedMPMapTileCells[Cell8] = 1
             return
@@ -166,37 +167,24 @@ function GetTeamControlMapTile8(Cell8)
      end
 end
 
-function TrackerMPimage1011Listener(event)
-    if event.status == 200 then
-        forceRedraw = true
-        netUp() 
-        local filename = string.gsub(event.url, serverURL .. "AreaControl/DrawFactionModeCell10HighRes/", "")
-        requestedMPMapTileCells[filename] = 1
-    else 
-        netDown() 
-        local filename = string.gsub(event.url, serverURL .. "AreaControl/DrawFactionModeCell10HighRes/", "")
-        requestedMPMapTileCells[filename] = -1
-    end
-end
 
 function TrackerGetMPCell8Image11(plusCode)
     netTransfer()
     local params = {}
-    params.response  = {filename = plusCode .. "-AC-11.png", baseDirectory = system.CachesDirectory}
-    network.request(serverURL .. "AreaControl/DrawFactionModeCell8/" .. plusCode, "GET", TrackerMPimage811Listener, params)
+    params.response  = {filename = plusCode .. "-AC-11.png", baseDirectory = system.TemporaryDirectory}
+    network.request(serverURL .. "MapTile/DrawPlusCodeCustomElements/" .. plusCode .. "/teamColor/teamColor", "GET", TrackerMPimage811Listener, params)
 end
 
 function TrackerMPimage811Listener(event)
-    if (debug) then print("got data for " ..  string.gsub(event.url, serverURL .. "AreaControl/DrawFactionModeCell8/", "")) end
+    local plusCode = string.gsub(string.gsub(event.url, serverURL .. "MapTile/DrawPlusCodeCustomElements/", ""), "/teamColor/teamColor", "")
+    if (debug) then print("got data for " ..  plusCode) end
     if event.status == 200 then
         forceRedraw = true
         netUp() 
-        local filename = string.gsub(event.url, serverURL .. "AreaControl/DrawFactionModeCell8HighRes/", "")
-        requestedMPMapTileCells[filename] = 1
+        requestedMPMapTileCells[plusCode] = 1
     else 
         netDown() 
-        local filename = string.gsub(event.url, serverURL .. "AreaControl/DrawFactionModeCell8HighRes/", "")
-        requestedMPMapTileCells[filename] = -1
+        requestedMPMapTileCells[plusCode] = -1
     end
 end
 
@@ -204,7 +192,7 @@ end
 function GetPaintTownMapData8(Cell8) -- the painttown map update call.
     --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
     netTransfer()
-    network.request(serverURL .. "PaintTown/LearnCell8/"  .. Cell8, "GET", PaintTownMapListener) 
+    network.request(serverURL .. "Data/GetAllDataInPlusCode/" .. Cell8, "GET", PaintTownMapListener) 
 end
 
 function PaintTownMapListener(event)
@@ -216,17 +204,15 @@ function PaintTownMapListener(event)
         netDown() 
     end
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
-    local instanceID = Split(string.gsub(event.url, serverURL .. "PaintTown/LearnCell8/", ""), "/")[1]
-    --This one splits each Cell10 via pipe, each sub-vaule by =
-    local resultsTable = Split(event.response, "|")
     --Format:
-    --Cell10=#color|Cell10=#color
-
+    --Cell10|dataTag|dataValue\r\n
+    local resultsTable = Split(event.response, "\r\n")
+    
     for cell = 1, #resultsTable do
-        local splitData = Split(resultsTable[cell], "=")
+        local splitData = Split(resultsTable[cell], "|")
         local key = splitData[1]
-        if (splitData[2] ~= nil) then
-            requestedPaintTownCells[key] = convertColor(splitData[2])
+        if (splitData[2] == "color") then
+            requestedPaintTownCells[key] = convertColor(splitData[3])
         end
     end
     forceRedraw = true
@@ -235,7 +221,9 @@ end
 
 function ClaimPaintTownCell(Cell10)
     netTransfer()
-    network.request(serverURL .. "PaintTown/ClaimCell10/" .. Cell10, "GET", PaintTownClaimListener) 
+    local randomColorSkiaFormat = "#42"
+    randomColorSkiaFormat = randomColorSkiaFormat ..  string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255))
+    network.request(serverURL .. "Data/SetPlusCodeData/" .. Cell10 .. "/color/" .. randomColorSkiaFormat, "GET", PaintTownClaimListener) 
 end
 
 function PaintTownClaimListener(event) --doesnt record any data.

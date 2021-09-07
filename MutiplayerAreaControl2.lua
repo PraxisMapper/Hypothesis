@@ -13,7 +13,8 @@ require("dataTracker") -- replaced localNetwork for this scene
 
 local bigGrid = true
 
-local cellCollection = {} -- show cell area data/image tiles
+local cellCollection = {} -- main background map tiles
+local overlayCollection = {} -- AreaControl map tiles, translucent
 local CellTapSensors = {} -- this is for tapping an area to claim, but needs renamed.
 local ctsGroup = display.newGroup()
 ctsGroup.x = -8
@@ -53,18 +54,22 @@ local function ToggleZoom()
     timer.pause(timerResults)
 
     for i = 1, #cellCollection do cellCollection[i]:removeSelf() end
+    for i = 1, #overlayCollection do overlayCollection[i]:removeSelf() end
     for i = 1, #CellTapSensors do CellTapSensors[i]:removeSelf() end
 
     cellCollection = {}
+    overlayCollection = {}
     CellTapSensors = {}
 
     if (bigGrid) then
         CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with area control overlay
         CreateRectangleGrid(61, 16, 20, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
         ctsGroup.x = -8
         ctsGroup.y = 10
     else
         CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(5, 160, 200, sceneGroup, overlayCollection) -- rectangular Cell11 grid with area control overlay
         CreateRectangleGrid(80, 8, 10, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
         ctsGroup.x = -4
         ctsGroup.y = 5
@@ -73,6 +78,11 @@ local function ToggleZoom()
     for square = 1, #CellTapSensors do
         -- check each spot based on current cell, modified by gridX and gridY
         CellTapSensors[square]:toBack()
+    end
+
+    for square = 1, #overlayCollection do
+        -- check each spot based on current cell, modified by gridX and gridY
+        overlayCollection[square]:toBack()
     end
 
     for square = 1, #cellCollection do
@@ -150,24 +160,52 @@ local function UpdateLocalOptimized()
 
              GetMapData8(plusCodeNoPlus)
             local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
-            local imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.CachesDirectory)
+            local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
             if (imageRequested == nil) then 
-                imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.CachesDirectory)
+                imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
             end
  
             if (imageExists == false or imageExists == nil) then 
-                 GetTeamControlMapTile8(plusCodeNoPlus)
+                 GetMapTile8(plusCodeNoPlus)
             else
                 cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
                 local paint = {
                     type = "image",
-                    filename = plusCodeNoPlus .. "-AC-11.png",
+                    filename = plusCodeNoPlus .. "-11.png",
                     baseDir = system.CachesDirectory
                 }
                 cellCollection[square].fill = paint
             end
         end
     end
+
+    -- Step 1.5: set up overlay MAC tiles. More or less same as above, but these tiles refresh more often.
+    for square = 1, #overlayCollection do
+        -- check each spot based on current cell, modified by gridX and gridY
+        local thisSquaresPluscode = currentPlusCode
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, overlayCollection[square].gridX, 8)
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, overlayCollection[square].gridY, 7)
+        overlayCollection[square].pluscode = thisSquaresPluscode
+        local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
+
+            local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
+            local imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
+            if (imageRequested == nil) then 
+                imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
+            end
+ 
+            if (imageExists == false or imageExists == nil) then 
+                 GetTeamControlMapTile8(plusCodeNoPlus)
+            else
+                overlayCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
+                local paint = {
+                    type = "image",
+                    filename = plusCodeNoPlus .. "-AC-11.png",
+                    baseDir = system.TemporaryDirectory
+                }
+                overlayCollection[square].fill = paint
+            end
+        end
 
     -- Step 2: set up event listener grid. These need Cell10s
     local baselinePlusCode = currentPlusCode:sub(1,8) .. "+FF"
@@ -298,10 +336,12 @@ function scene:create(event)
 
     if (bigGrid) then
         CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(60, 16, 20, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
     else
         -- original values, but too small to interact with.
         CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(5, 160, 200, sceneGroup, overlayCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(80, 8, 10, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
     end  
 
