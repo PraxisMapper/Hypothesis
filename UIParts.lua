@@ -109,6 +109,7 @@ end
 function multiplayerAreaClaim(event)
     tapData.text = "Cell Tapped: " .. event.target.pluscode
     if (event.target.type == nil or event.target.type == "") then
+        print("cell has no data")
         return false
     end
 

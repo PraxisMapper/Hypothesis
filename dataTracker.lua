@@ -39,28 +39,6 @@ function GetMapData8(Cell8) -- the terrain type call.
      end
 end
 
-function GetMapTile10(Cell10)
-    if (requestedMapTileCells[cell10] == 1) then
-        --We already have this tile.
-        return
-    end
-    local status = requestedMapTileCells[Cell10] --this can occasionally be nil if there's multiple active calls that return out of order on the first update
-     if (status == nil) then --first time requesting this cell this session.
-        local dataPresent = doesFileExist(Cell10 .. "-11.png", system.CachesDirectory)
-        if (dataPresent == true) then --use local data.
-            requestedMapTileCells[Cell10] = 1
-            return
-        end
-        requestedMapTileCells[Cell10] = 0
-        TrackerGetCell10Image11(Cell10)
-     end
-
-     if (status == -1) then --retry a failed download.
-        requestedMapTileCells[Cell10] = 0
-        TrackerGetCell10Image11(Cell10)
-     end
-end
-
 function GetMapTile8(Cell8)
     if (requestedMapTileCells[cell8] == 1) then
         --We already have this tile.

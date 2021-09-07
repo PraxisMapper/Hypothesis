@@ -137,7 +137,7 @@ function Score()
 end
 
 function LoadTerrainData(pluscode) --plus code does not contain a + here
-    if (debugDB) then print("loading terrain data ") end
+    if (debugDB) then print("loading terrain data for " .. pluscode) end
     local query = "SELECT * from terrainData WHERE plusCode = '" .. pluscode .. "'"
     local results = Query(query) 
     

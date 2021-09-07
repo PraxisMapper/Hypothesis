@@ -37,7 +37,7 @@ local function noListener()
 end
 
 function GetAreaOwner(mapDataId)
-    network.request(serverURL .. "Gameplay/AreaOwners/" .. mapDataId, "GET", AreaOwnerListener)
+    network.request(serverURL .. "AreaControl/AreaOwners/" .. mapDataId, "GET", AreaOwnerListener)
 end
 
 function AreaOwnerListener(event)
@@ -67,8 +67,8 @@ end
 
 function ClaimMPArea()
     local teamID = GetTeamID()
-    print(serverURL .. "Gameplay/ClaimArea/" .. tappedAreaMapDataId .. "/" .. teamID)
-    network.request(serverURL .. "Gameplay/ClaimArea/" .. tappedAreaMapDataId .. "/" .. teamID, "GET", ClaimMPAreaListener)
+    print(serverURL .. "AreaControl/ClaimArea/" .. tappedAreaMapDataId .. "/" .. teamID)
+    network.request(serverURL .. "AreaControl/ClaimArea/" .. tappedAreaMapDataId .. "/" .. teamID, "GET", ClaimMPAreaListener)
 end
 
 function ClaimMPAreaListener(event)
@@ -81,7 +81,7 @@ function ClaimMPAreaListener(event)
 end
 
 function FindChangedMapTiles()
-    network.request(serverURL .. "Gameplay/FindChangedMaptiles/" .. tappedAreaMapDataId, "GET", FindMPAreaListener)
+    network.request(serverURL .. "AreaControl/FindChangedMaptiles/" .. tappedAreaMapDataId, "GET", FindMPAreaListener)
 end
 
 function FindMPAreaListener(event)
