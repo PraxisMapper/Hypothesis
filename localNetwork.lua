@@ -46,7 +46,7 @@ function GetCell8Data(code8)
     end
     if debugNetwork then print("network: getting 8 cell data " .. code8) end
     requestedCells = requestedCells .. code8 .. ","
-    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "MapData/LearnCell8/" .. code8) end
+    if (debugNetwork) then print ("getting cell data via " .. serverURL .. "Data/GetPlusCodeTerrainData/" .. code8) end
     network.request(serverURL .. "MapData/LearnCell8/" .. code8, "GET", plusCode8Listener)
     netTransfer()
 end
@@ -65,13 +65,6 @@ function GetCell8Image11(plusCode8)
     network.request(serverURL .. "MapData/DrawCell8Highres/" .. plusCode8, "GET", image811Listener, params)
 end
 
-function GetCell10Image11(plusCode)
-    netTransfer()
-    local params = {}
-    params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
-    network.request(serverURL .. "MapData/DrawCell10Highres/" .. plusCode, "GET", image1011Listener, params)
-end
-
 function image810Listener(event)
     forceRedraw = true
     if event.status == 200 then netUp() else netDown() end
@@ -85,33 +78,4 @@ end
 function image1011Listener(event)
     forceRedraw = true
     if event.status == 200 then netUp() else netDown() end
-end
-
-function GetTeamAssignment()
-    local url = serverURL .. "PlayerContent/AssignTeam/"  .. system.getInfo("deviceID")
-    if (debug) then print("Team request sent to " .. url) end
-    network.request(url, "GET", GetTeamAssignmentListener)
-    netTransfer()
-end
-
-function GetTeamAssignmentListener(event)
-    if (debug) then 
-        print("Team listener fired") 
-        print(event.status)
-    end
-    if event.status == 200 then
-        composer.setVariable("faction", event.response)
-        factionID = tonumber(event.response)
-        netUp()
-    else
-        netDown()
-    end
-    if (debug) then print("Team Assignment done") end
-end
-
-function SetTeamAssignment(teamId)
-    local url = serverURL .. "PlayerContent/SetTeam/"  .. system.getInfo("deviceID") .. "/" .. teamId
-    network.request(url, "GET", GetTeamAssignmentListener) --recycled, since the results are the same.
-    if (debug) then print("Team change sent to " .. url) end
-    netTransfer()
 end

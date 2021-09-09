@@ -4,6 +4,8 @@
 
 require("localNetwork") --for serverURL.
 require("helpers") --colorConvert
+local composer = require( "composer" ) --for storing variables
+
 
 --this process:
 --these tables have a string key for each relevant cell
@@ -20,6 +22,10 @@ PaintTownInstanceIDs ={} --list of int ids.
 
 requestedPaintTownCells[1] = {}
 requestedPaintTownCells[2] = {}
+
+defaultQueryString = "?PraxisAuthKey=testingKey"
+headers = {}
+headers["PraxisAuthKey"] = "testingKey"
 
 function GetMapData8(Cell8) -- the terrain type call.
     local status = requestedDataCells[Cell8] --this can occasionally be nil if there's multiple active calls that return out of order on the first update
@@ -64,9 +70,9 @@ end
 function GetCell8TerrainData(code8)
     if debugNetwork then 
         print("network: getting 8 cell data " .. code8) 
-        print ("getting cell data via " .. serverURL .. "MapData/LearnCell8/" .. code8) 
+        print ("getting cell data via " .. serverURL .. "Data/GetPlusCodeTerrainData/" .. code8) 
     end
-    network.request(serverURL .. "MapData/LearnCell8/" .. code8 , "GET", TrackplusCode8Listener)
+    network.request(serverURL .. "Data/GetPlusCodeTerrainData/" .. code8 .. defaultQueryString , "GET", TrackplusCode8Listener)
     netTransfer()
 end
 
@@ -87,12 +93,12 @@ function TrackplusCode8Listener(event)
     --EX: 48=Local Park|4|1234
 
     db:exec("BEGIN TRANSACTION") --transactions for multiple inserts are a huge performance boost.
-    local plusCode8 = resultsTable[1] 
-    for i = 2, #resultsTable do
+    --local plusCode8 = resultsTable[1] 
+    for i = 1, #resultsTable do
         if (resultsTable[i] ~= nil and resultsTable[i] ~= "") then 
             local data = Split(resultsTable[i], "|") --4 data parts in order
             data[2] = string.gsub(data[2], "'", "''")--escape data[2] to allow ' in name of places.
-            insertString = "INSERT INTO terrainData (plusCode, name, areatype, MapDataId) VALUES ('" .. resultsTable[1] .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "', '" .. data[4] .. "');" 
+            insertString = "INSERT INTO terrainData (plusCode, name, areatype, MapDataId) VALUES ('" .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "', '" .. data[4] .. "');" 
             local results = db:exec(insertString)
         end
     end
@@ -104,31 +110,11 @@ function TrackplusCode8Listener(event)
     forceRedraw = true
 end
 
-function TrackerGetCell10Image11(plusCode)
-    netTransfer()
-    local params = {}
-    params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
-    network.request(serverURL .. "MapData/DrawCell10Highres/" .. plusCode, "GET", Trackerimage1011Listener, params)
-end
-
-function Trackerimage1011Listener(event)
-    if event.status == 200 then
-        forceRedraw = true
-        netUp() 
-        local filename = string.gsub(event.url, serverURL .. "MapData/DrawCell10Highres/", "")
-        requestedMapTileCells[filename] = 1
-    else 
-        netDown() 
-        local filename = string.gsub(event.url, serverURL .. "MapData/DrawCell10Highres/", "")
-        requestedMapTileCells[filename] = -1
-    end
-end
-
 function TrackerGetCell8Image11(plusCode)
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
-    network.request(serverURL .. "MapTile/DrawPlusCode/" .. plusCode, "GET", Trackerimage811Listener, params)
+    network.request(serverURL .. "MapTile/DrawPlusCode/" .. plusCode .. defaultQueryString, "GET", Trackerimage811Listener, params)
 end
 
 function Trackerimage811Listener(event)
@@ -145,7 +131,7 @@ function Trackerimage811Listener(event)
 end
 
 function GetTeamControlMapTile8(Cell8)
-    --print("getting AC tile " .. Cell8)
+    print("getting AC tile " .. Cell8)
     if (requestedMPMapTileCells[cell8] == 1) then
         --We already have this tile.
         return
@@ -162,7 +148,7 @@ function GetTeamControlMapTile8(Cell8)
      end
 
      if (status == -1) then --retry a failed download.
-        requestedDataCells[Cell8] = 0
+        requestedMPMapTileCells[Cell8] = 0
         TrackerGetMPCell8Image11(Cell8)
      end
 end
@@ -172,7 +158,7 @@ function TrackerGetMPCell8Image11(plusCode)
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-AC-11.png", baseDirectory = system.TemporaryDirectory}
-    network.request(serverURL .. "MapTile/DrawPlusCodeCustomElements/" .. plusCode .. "/teamColor/teamColor", "GET", TrackerMPimage811Listener, params)
+    network.request(serverURL .. "MapTile/DrawPlusCodeCustomElements/" .. plusCode .. "/teamColor/teamColor" .. defaultQueryString, "GET", TrackerMPimage811Listener, params)
 end
 
 function TrackerMPimage811Listener(event)
@@ -184,6 +170,7 @@ function TrackerMPimage811Listener(event)
         requestedMPMapTileCells[plusCode] = 1
     else 
         netDown() 
+        print(plusCode .. " errored on MAC tile: " .. event.status)
         requestedMPMapTileCells[plusCode] = -1
     end
 end
@@ -192,7 +179,7 @@ end
 function GetPaintTownMapData8(Cell8) -- the painttown map update call.
     --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
     netTransfer()
-    network.request(serverURL .. "Data/GetAllDataInPlusCode/" .. Cell8, "GET", PaintTownMapListener) 
+    network.request(serverURL .. "Data/GetAllDataInPlusCode/" .. Cell8 .. defaultQueryString, "GET", PaintTownMapListener) 
 end
 
 function PaintTownMapListener(event)
@@ -223,7 +210,7 @@ function ClaimPaintTownCell(Cell10)
     netTransfer()
     local randomColorSkiaFormat = "#42"
     randomColorSkiaFormat = randomColorSkiaFormat ..  string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255))
-    network.request(serverURL .. "Data/SetPlusCodeData/" .. Cell10 .. "/color/" .. randomColorSkiaFormat, "GET", PaintTownClaimListener) 
+    network.request(serverURL .. "Data/SetPlusCodeData/" .. Cell10 .. "/color/" .. randomColorSkiaFormat .. defaultQueryString, "GET", PaintTownClaimListener) 
 end
 
 function PaintTownClaimListener(event) --doesnt record any data.
@@ -234,3 +221,39 @@ function PaintTownClaimListener(event) --doesnt record any data.
         netDown() 
     end
 end
+
+function GetTeamAssignment()
+    local url = serverURL .. "Data/GetPlayerData/"  .. system.getInfo("deviceID") .. "/team" .. defaultQueryString
+    if (debug) then print("Team request sent to " .. url) end
+    network.request(url, "GET", GetTeamAssignmentListener)
+    netTransfer()
+end
+
+function GetTeamAssignmentListener(event)
+    if (debug) then 
+        print("Team listener fired") 
+        print(event.status)
+    end
+    if event.status == 200 then
+        factionID = tonumber(event.response)
+        if (factionID == 0 or factionID == nil) then
+            factionID = math.random(1, 3)
+            SetTeamAssignment(factionID)
+        end
+        print("setting faction to " .. factionID)
+        composer.setVariable("faction", factionID)
+        print(composer.getVariable("faction"))
+        netUp()
+    else
+        netDown()
+    end
+    if (debug) then print("Team Assignment done") end
+end
+
+function SetTeamAssignment(teamId)
+    local url = serverURL .. "Data/SetPlayerData/"  .. system.getInfo("deviceID") .. "/team/" .. teamId .. defaultQueryString
+    network.request(url, "GET", nil) --I don't need a result from this.
+    if (debug) then print("Team change sent to " .. url) end
+    netTransfer()
+end
+

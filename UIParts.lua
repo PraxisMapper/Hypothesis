@@ -95,14 +95,14 @@ function showAreaClaim(event)
     end
 
     if (event.target.name == "") then
-        tappedAreaName = typeNames[event.target.type]
+        tappedAreaName = event.target.type
     else
         tappedAreaName = event.target.name
     end
 
     tappedAreaScore = 0 --i don't save this locally, this requires a network call to get and update
     tappedAreaMapDataId = event.target.MapDataId
-    composer.showOverlay("overlayAreaClaim", {isModal = true})
+    --composer.showOverlay("overlayAreaClaim", {isModal = true})
     return false
 end
 
@@ -114,7 +114,7 @@ function multiplayerAreaClaim(event)
     end
 
     if (event.target.name == "") then
-        tappedAreaName = typeNames[event.target.type]
+        tappedAreaName = event.target.type
     else
         tappedAreaName = event.target.name
     end

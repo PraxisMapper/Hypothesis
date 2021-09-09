@@ -198,17 +198,17 @@ function SpendPoints(points)
     db:exec(cmd)
 end
 
-function GetTeamID()
-    local query = "SELECT factionID FROM playerData"
-    for i,row in ipairs(Query(query)) do
-        if (#row == 1) then
-            return row[1]
-        else
-            return 0
-        end
-    end
-    return 0
-end
+-- function GetTeamID()
+--     local query = "SELECT factionID FROM playerData"
+--     for i,row in ipairs(Query(query)) do
+--         if (#row == 1) then
+--             return row[1]
+--         else
+--             return 0
+--         end
+--     end
+--     return 0
+-- end
 
 function GetServerAddress()
     local query = "SELECT serverAddress FROM systemData"

@@ -36,7 +36,6 @@ local directionArrow = ""
 local scoreLog = ""
 local debugText = {}
 local locationName = ""
-
 local arrowPainted = false
 
 local function testDrift()
@@ -157,7 +156,6 @@ local function UpdateLocalOptimized()
         thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
-
              GetMapData8(plusCodeNoPlus)
             local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
             local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
@@ -176,20 +174,9 @@ local function UpdateLocalOptimized()
                 }
                 cellCollection[square].fill = paint
             end
-        end
-    end
 
-    -- Step 1.5: set up overlay MAC tiles. More or less same as above, but these tiles refresh more often.
-    for square = 1, #overlayCollection do
-        -- check each spot based on current cell, modified by gridX and gridY
-        local thisSquaresPluscode = currentPlusCode
-        thisSquaresPluscode = shiftCell(thisSquaresPluscode, overlayCollection[square].gridX, 8)
-        thisSquaresPluscode = shiftCell(thisSquaresPluscode, overlayCollection[square].gridY, 7)
-        overlayCollection[square].pluscode = thisSquaresPluscode
-        local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
-
-            local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
-            local imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
+            imageRequested = requestedMPMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
+            imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
             if (imageRequested == nil) then 
                 imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
             end
@@ -206,6 +193,35 @@ local function UpdateLocalOptimized()
                 overlayCollection[square].fill = paint
             end
         end
+    end
+
+    -- Step 1.5: set up overlay MAC tiles. More or less same as above, but these tiles refresh more often.
+    -- for square = 1, #overlayCollection do
+    --     -- check each spot based on current cell, modified by gridX and gridY
+    --     local thisSquaresPluscode = currentPlusCode
+    --     thisSquaresPluscode = shiftCell(thisSquaresPluscode, overlayCollection[square].gridX, 8)
+    --     thisSquaresPluscode = shiftCell(thisSquaresPluscode, overlayCollection[square].gridY, 7)
+    --     overlayCollection[square].pluscode = thisSquaresPluscode
+    --     local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
+
+    --         local imageRequested2 = requestedMPMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
+    --         local imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
+    --         if (imageRequested2 == nil) then 
+    --             imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
+    --         end
+ 
+    --         if (imageExists == false or imageExists == nil) then 
+    --              GetTeamControlMapTile8(plusCodeNoPlus)
+    --         else
+    --             overlayCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
+    --             local paint = {
+    --                 type = "image",
+    --                 filename = plusCodeNoPlus .. "-AC-11.png",
+    --                 baseDir = system.TemporaryDirectory
+    --             }
+    --             overlayCollection[square].fill = paint
+    --         end
+    --     end
 
     -- Step 2: set up event listener grid. These need Cell10s
     local baselinePlusCode = currentPlusCode:sub(1,8) .. "+FF"

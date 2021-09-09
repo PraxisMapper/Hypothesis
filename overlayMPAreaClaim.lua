@@ -2,7 +2,7 @@
 --Spend points == size or length of the whole area/path.
 local composer = require( "composer" )
 require("database")
-require("localNetwork")
+--require("localNetwork")
 require("dataTracker") --for requestedMapTileCells
 local scene = composer.newScene()
  
@@ -37,7 +37,9 @@ local function noListener()
 end
 
 function GetAreaOwner(mapDataId)
-    network.request(serverURL .. "AreaControl/AreaOwners/" .. mapDataId, "GET", AreaOwnerListener)
+    --network.request(serverURL .. "AreaControl/AreaOwners/" .. mapDataId, "GET", AreaOwnerListener)
+    --print(serverURL .. "Data/GetElementData/" .. tappedAreaMapDataId .. "/teamColor" .. defaultQueryString)
+    network.request(serverURL .. "Data/GetElementData/" .. tappedAreaMapDataId .. "/teamColor" .. defaultQueryString, "GET", AreaOwnerListener)
 end
 
 function AreaOwnerListener(event)
@@ -48,16 +50,54 @@ function AreaOwnerListener(event)
         netDown()  
         textDisplay.text = "Error getting info"
     end
-
-    local results = Split(event.response, "|")
-    tappedAreaScore = tonumber(results[3])
-    scoreString = results[3]
-    if (tappedAreaScore == 0) then
-        tappedAreaScore = 1
-        scoreString = "1"
+    print(event.response)
+    --local results = Split(event.response, "|")
+    -- tappedAreaScore = tonumber(results[3])
+    -- scoreString = results[3]
+    -- if (tappedAreaScore == 0) then
+    --     tappedAreaScore = 1
+    --     scoreString = "1"
+    -- end
+    -- textDisplay.text = textDisplay.text .. scoreString .. " points?"
+    if event.response ~= "" then
+        ownerDisplay.text = ownerDisplay.text .. " " .. factions[tonumber(event.response)].name
+    else
+        ownerDisplay.text = ownerDisplay.text .. " Nobody"
     end
-    textDisplay.text = textDisplay.text .. scoreString .. " points?"
-    ownerDisplay.text = ownerDisplay.text .. " " .. results[2]
+
+    -- if (tappedAreaScore <= tonumber(Score())) then
+    --     yesButton.isVisible = true
+    -- else
+    -- end
+end
+
+function GetAreaScore(mapDataId)
+    --network.request(serverURL .. "AreaControl/AreaOwners/" .. mapDataId, "GET", AreaOwnerListener)
+    --print(serverURL .. "Data/GetElementData/" .. tappedAreaMapDataId .. "/teamColor" .. defaultQueryString)
+    network.request(serverURL .. "Data/GetScoreForArea/" .. tappedAreaMapDataId .. defaultQueryString, "GET", AreaScoreListener)
+end
+
+function AreaScoreListener(event)
+    if (debug) then print("Area Score listener fired:" .. event.status) end
+    if event.status == 200 then 
+        netUp() 
+    else 
+        netDown()  
+        textDisplay.text = "Error getting info"
+        return
+    end
+    --print(event.response)
+    --local results = Split(event.response, "|")
+    if (event.response == "") then
+        event.response = "1"
+    end
+     tappedAreaScore = tonumber(event.response)
+    -- scoreString = results[3]
+    -- if (tappedAreaScore == 0) then
+    --     tappedAreaScore = 1
+    --     scoreString = "1"
+    -- end
+     textDisplay.text = textDisplay.text .. event.response .. " points?"
 
     if (tappedAreaScore <= tonumber(Score())) then
         yesButton.isVisible = true
@@ -66,9 +106,14 @@ function AreaOwnerListener(event)
 end
 
 function ClaimMPArea()
-    local teamID = GetTeamID()
-    print(serverURL .. "AreaControl/ClaimArea/" .. tappedAreaMapDataId .. "/" .. teamID)
-    network.request(serverURL .. "AreaControl/ClaimArea/" .. tappedAreaMapDataId .. "/" .. teamID, "GET", ClaimMPAreaListener)
+    local teamID = composer.getVariable("faction") --GetTeamID()
+    --print(teamID)
+    -- print(serverURL .. "AreaControl/ClaimArea/" .. tappedAreaMapDataId .. "/" .. teamID)
+    -- network.request(serverURL .. "AreaControl/ClaimArea/" .. tappedAreaMapDataId .. "/" .. teamID, "GET", ClaimMPAreaListener)
+
+    --TODO: do 2 increment calls, 1 for my teams' score, 1 for original owner team's score with negative value.
+    network.request(serverURL .. "Data/SetElementData/" .. tappedAreaMapDataId .. "/teamColor/" .. teamID .. defaultQueryString, "GET", ClaimMPAreaListener)
+
 end
 
 function ClaimMPAreaListener(event)
@@ -143,6 +188,7 @@ function scene:show( event )
         -- Code here runs when the scene is still off screen (but is about to come on screen)
         textDisplay.text = "Claim " .. tappedAreaName .. " with "
         GetAreaOwner(tappedAreaMapDataId)
+        GetAreaScore(tappedAreaMapDataId)
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
  

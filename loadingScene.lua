@@ -6,7 +6,7 @@ local composer = require( "composer" )
 local scene = composer.newScene()
 
 require("database")
-require("localNetwork")
+require("dataTracker")
 
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
@@ -50,7 +50,6 @@ require("localNetwork")
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
        --currentPlusCode = "85PFF56C+5P" --Old Faithful 
-       
        
 end
  

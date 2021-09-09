@@ -5,7 +5,7 @@ local scene = composer.newScene()
 
 require("UIParts")
 require("database")
-require("localNetwork")
+--require("localNetwork")
 require("dataTracker") -- replaced localNetwork for this scene
 
 -- -----------------------------------------------------------------------------------
@@ -311,7 +311,7 @@ function scene:show(event)
         --timerResultsScoreboard = timer.performWithDelay(2500, GetScoreboard, -1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
         reorderUI()
-        GetTeamAssignment()
+        --GetTeamAssignment()
     end
     if (debug) then print("showed painttown scene") end
 end

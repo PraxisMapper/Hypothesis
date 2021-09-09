@@ -41,6 +41,7 @@ tappedCell = "            "
 redrawOverlay = false
 factionID = 0 --composer.getVariable(factionID) is used in some spots
 
+--TODO: these are outsdated, remove this {}
 typeNames = {}
 typeNames["1"] = "Water"
 typeNames["2"] = "Wetlands"
@@ -63,6 +64,18 @@ typeNames["100"] = "Server-Generated"
 requestedCells = ""
 
 cellDataCache = {}
+
+factions = {}
+factions[1] = {}
+factions[1].id = 1
+factions[1].name = "Red Team"
+factions[2] = {}
+factions[2].id = 2
+factions[2].name = "Green Team"
+factions[3] = {}
+factions[3].id = 3
+factions[3].name = "Blue Team"
+
 
 --making the network indicator persist through all scenes
 networkDown = display.newImageRect("themables/networkDown.png", 25, 25)
@@ -157,11 +170,12 @@ function backListener(event)
 end
 
 function clearMACcache()
-    print("clearing MAC tile cache")
+    --print("clearing MAC tile cache")
+    requestedMPMapTileCells = {}
     local temp_path = system.pathForFile( "", system.TemporaryDirectory )
-    print(temp_path)
+    --print(temp_path)
     for file in lfs.dir( temp_path ) do
-        print("file " .. file)
+        --print("file " .. file)
         os.remove(system.pathForFile( file, system.TemporaryDirectory ))
     end
 end
