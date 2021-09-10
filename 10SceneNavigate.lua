@@ -3,7 +3,6 @@ local scene = composer.newScene()
 
 require("UIParts")
 require("database")
-require("localNetwork")
 
 --This is an alternate, debug version of this scene that lets you navigate around in the simulator
 --via on screen buttons.

@@ -31,12 +31,36 @@ local firstRun = true
 local locationText = ""
 local explorePointText = ""
 local scoreText = ""
+local teamScoreText = ""
 local timeText = ""
 local directionArrow = ""
 local scoreLog = ""
 local debugText = {}
 local locationName = ""
 local arrowPainted = false
+
+local scoreCheckCounter = 0
+local team1Score = "0"
+local team2Score = "0"
+local team3Score = "0"
+
+function team1ScoreListener(event)
+    if (event.status == 200) then       
+        team1Score = event.response
+    end
+end
+
+function team2ScoreListener(event)
+    if (event.status == 200) then
+        team2Score = event.response
+    end
+end
+
+function team3ScoreListener(event)
+    if (event.status == 200) then
+        team3Score = event.response
+    end
+end
 
 local function testDrift()
     if (os.time() % 2 == 0) then
@@ -93,11 +117,6 @@ local function ToggleZoom()
     forceRedraw = true
     timer.resume(timerResults)
     return true
-end
-
-local function GoToLeaderboardScene()
-    local options = {effect = "flip", time = 125}
-    composer.gotoScene("LeaderboardScene", options)
 end
 
 local function GoToSceneSelect()
@@ -195,34 +214,6 @@ local function UpdateLocalOptimized()
         end
     end
 
-    -- Step 1.5: set up overlay MAC tiles. More or less same as above, but these tiles refresh more often.
-    -- for square = 1, #overlayCollection do
-    --     -- check each spot based on current cell, modified by gridX and gridY
-    --     local thisSquaresPluscode = currentPlusCode
-    --     thisSquaresPluscode = shiftCell(thisSquaresPluscode, overlayCollection[square].gridX, 8)
-    --     thisSquaresPluscode = shiftCell(thisSquaresPluscode, overlayCollection[square].gridY, 7)
-    --     overlayCollection[square].pluscode = thisSquaresPluscode
-    --     local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
-
-    --         local imageRequested2 = requestedMPMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
-    --         local imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
-    --         if (imageRequested2 == nil) then 
-    --             imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
-    --         end
- 
-    --         if (imageExists == false or imageExists == nil) then 
-    --              GetTeamControlMapTile8(plusCodeNoPlus)
-    --         else
-    --             overlayCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
-    --             local paint = {
-    --                 type = "image",
-    --                 filename = plusCodeNoPlus .. "-AC-11.png",
-    --                 baseDir = system.TemporaryDirectory
-    --             }
-    --             overlayCollection[square].fill = paint
-    --         end
-    --     end
-
     -- Step 2: set up event listener grid. These need Cell10s
     local baselinePlusCode = currentPlusCode:sub(1,8) .. "+FF"
     if (innerForceRedraw) then --Also no need to do all of this unless we shifted our Cell8 location.
@@ -286,11 +277,23 @@ local function UpdateLocalOptimized()
         end
     end
 
+    --update team scores
+    
+    scoreCheckCounter = scoreCheckCounter - 1
+    if (scoreCheckCounter <= 0) then
+        GetMyScore()
+        network.request(serverURL .. "Data/GetGlobalData/scoreTeam1" .. defaultQueryString, "GET", team1ScoreListener)
+        network.request(serverURL .. "Data/GetGlobalData/scoreTeam2" .. defaultQueryString, "GET", team2ScoreListener)
+        network.request(serverURL .. "Data/GetGlobalData/scoreTeam3" .. defaultQueryString, "GET", team3ScoreListener)
+        scoreCheckCounter = 24
+    end
+
     if (timerResults ~= nil) then timer.resume(timerResults) end
     if (debugLocal) then print("grid done or skipped") end
     locationText.text = "Current location:" .. currentPlusCode
     explorePointText.text = "Explore Points: " .. Score()
-    scoreText.text = "Control Score: " .. AreaControlScore()
+    scoreText.text = "Control Score: " .. composer.getVariable("myScore")
+    teamScoreText.text = "Red Team: " .. team1Score   .. "\nGreen Team: " .. team2Score .. "\nBlue Team: " .. team3Score
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading
 
@@ -310,6 +313,7 @@ local function UpdateLocalOptimized()
     locationText:toFront()
     explorePointText:toFront()
     scoreText:toFront()
+    teamScoreText:toFront()
     timeText:toFront()
     directionArrow:toFront()
     scoreLog:toFront()
@@ -328,6 +332,8 @@ end
 
 function scene:create(event)
 
+    composer.setVariable("myScore", "0")
+
     if (debug) then print("creating MPAreaControlScene2") end
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
@@ -340,13 +346,16 @@ function scene:create(event)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
     explorePointText = display.newText(sceneGroup, "Explore Points: ?", display.contentCenterX, 240, native.systemFont, 20)
     scoreText = display.newText(sceneGroup, "Control Score: ?", display.contentCenterX, 260, native.systemFont, 20)
+    teamScoreText = display.newText(sceneGroup, "Team Scores", display.contentCenterX, 280, native.systemFont, 20)
+    teamScoreText.anchorY = 0
     scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1220, native.systemFont, 20)
-    locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
+    locationName = display.newText(sceneGroup, "", display.contentCenterX, 300, native.systemFont, 20)
 
     locationText:setFillColor(0, 0, 0);
     timeText:setFillColor(0, 0, 0);
     explorePointText:setFillColor(0, 0, 0);
     scoreText:setFillColor(0, 0, 0);
+    teamScoreText:setFillColor(0, 0, 0);
     scoreLog:setFillColor(0, 0, 0);
     locationName:setFillColor(0, 0, 0);
 

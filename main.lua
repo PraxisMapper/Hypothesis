@@ -26,6 +26,8 @@ debugNetwork = false
 --ResetDatabase()
 startDatabase()
 
+serverURL = ""
+
 currentPlusCode = "" -- where the user is sitting now
 lastPlusCode = "" --the previously received value for the location event, may be the same as currentPlusCode
 previousPlusCode = ""  --the previous DIFFERENT pluscode value we visited.
@@ -170,18 +172,16 @@ function backListener(event)
 end
 
 function clearMACcache()
-    --print("clearing MAC tile cache")
+    print("clearing tile cache")
     requestedMPMapTileCells = {}
     local temp_path = system.pathForFile( "", system.TemporaryDirectory )
-    --print(temp_path)
     for file in lfs.dir( temp_path ) do
-        --print("file " .. file)
         os.remove(system.pathForFile( file, system.TemporaryDirectory ))
     end
 end
 
 timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)
-timer.performWithDelay(60000, clearMACcache, -1)
+timer.performWithDelay(20000, clearMACcache, -1)
 Runtime:addEventListener("location", gpsListener)
 Runtime:addEventListener("key", backListener)
 

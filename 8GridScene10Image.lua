@@ -4,7 +4,6 @@ local scene = composer.newScene()
 --TODO: update this to load an image file for each square, request if not found.
 require("UIParts")
 require("database")
-require("localNetwork")
  
 if (debug) then print("8GridScene11image loading") end
 -- -----------------------------------------------------------------------------------

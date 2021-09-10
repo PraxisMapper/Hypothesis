@@ -3,7 +3,7 @@ local scene = composer.newScene()
 
 require("UIParts")
 require("database")
-require("dataTracker") --replaced localNetwork for this scene
+require("dataTracker")
  
 if (debug) then print("8GridScene11image loading") end
 -- -----------------------------------------------------------------------------------

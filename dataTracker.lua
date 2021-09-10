@@ -77,7 +77,7 @@ function GetCell8TerrainData(code8)
 end
 
 function TrackplusCode8Listener(event)
-    if (debug) then print("plus code 8 event started") end
+    --if (debug) then print("plus code 8 event started") end
     if event.status == 200 then 
         netUp() 
     else 
@@ -131,7 +131,7 @@ function Trackerimage811Listener(event)
 end
 
 function GetTeamControlMapTile8(Cell8)
-    print("getting AC tile " .. Cell8)
+    --print("getting AC tile " .. Cell8)
     if (requestedMPMapTileCells[cell8] == 1) then
         --We already have this tile.
         return
@@ -163,7 +163,7 @@ end
 
 function TrackerMPimage811Listener(event)
     local plusCode = string.gsub(string.gsub(event.url, serverURL .. "MapTile/DrawPlusCodeCustomElements/", ""), "/teamColor/teamColor", "")
-    if (debug) then print("got data for " ..  plusCode) end
+    --if (debug) then print("got data for " ..  plusCode) end
     if event.status == 200 then
         forceRedraw = true
         netUp() 
@@ -257,3 +257,17 @@ function SetTeamAssignment(teamId)
     netTransfer()
 end
 
+function GetMyScore()
+    local url = serverURL .. "Data/GetPlayerData/"  .. system.getInfo("deviceID") .. "/score" .. defaultQueryString
+    network.request(url, "GET", GetMyScoreListener) 
+    netTransfer()
+end
+
+function GetMyScoreListener(event)
+    if (event.status == 200) then
+        composer.setVariable("myScore", event.response)
+        netUp()
+    else
+        netDown()
+    end
+end

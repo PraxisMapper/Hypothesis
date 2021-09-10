@@ -3,7 +3,6 @@ local scene = composer.newScene()
 
 require("UIParts")
 require("database")
-require("localNetwork")
 
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
