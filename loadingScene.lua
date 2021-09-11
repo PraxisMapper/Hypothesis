@@ -51,6 +51,7 @@ require("dataTracker")
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
        --currentPlusCode = "85PFF56C+5P" --Old Faithful 
        
+       
 end
  
  
@@ -99,7 +100,7 @@ function scene:show( event )
         local currentDbVersion = 10;
 
         local tablesetup =
-        [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, lastVisitedOn, totalVisits, eightCode);
+        [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, nextScoreTime, totalVisits, eightCode);
         CREATE TABLE IF NOT EXISTS playerData(id INTEGER PRIMARY KEY, factionID, totalPoints);
         CREATE TABLE IF NOT EXISTS systemData(id INTEGER PRIMARY KEY, dbVersionID, serverAddress);
         CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
@@ -141,7 +142,8 @@ function scene:show( event )
 
         --Debug setup
         if (debug) then
-            serverURL = "http://localhost/praxismapper/"
+            --serverURL = "http://localhost/praxismapper/"
+            serverURL = "http://192.168.50.247/praxismapper/"
         end
 
         statusText.text = "Requesting Team Id"

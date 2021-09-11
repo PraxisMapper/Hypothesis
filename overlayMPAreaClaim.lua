@@ -49,7 +49,7 @@ function AreaOwnerListener(event)
     if event.status == 200 then 
         netUp() 
     else 
-        netDown()  
+        netDown(event)  
         textDisplay.text = "Error getting info"
     end
     print(event.response)
@@ -76,7 +76,7 @@ function AreaScoreListener(event)
     if event.status == 200 then 
         netUp() 
     else 
-        netDown()  
+        netDown(event)  
         textDisplay.text = "Error getting info"
         return
     end

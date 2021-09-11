@@ -17,7 +17,7 @@ local lfs = require( "lfs" )
 
 forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
-debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
+debug = false --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugGPS = false --display data for the GPS event and timer loop and auto-move
 debugDB = false
 debugLocal = false
@@ -114,7 +114,6 @@ composer.isDebug = debug
 composer.gotoScene("loadingScene")
 
 function gpsListener(event)
-
     print("main gps fired")
     local eventL = event
 
@@ -139,9 +138,8 @@ function gpsListener(event)
 
     if (debug) then print("checking for terrain data") end
     local hasData = DownloadedCell8(plusCode8)
-    if (debug) then print(hasData) end
     if (hasData == false) then
-        GetCell8Data(plusCode8) -- AreaType No Tiles screen relies on this currently. Other modes usually do their own pulls
+        GetMapData8(plusCode8) -- AreaType No Tiles screen relies on this currently. Other modes usually do their own pulls
     end
 
     if (lastPlusCode ~= currentPlusCode) then
@@ -191,10 +189,13 @@ function netUp()
     networkTx.isVisible = false
 end
 
-function netDown()
+function netDown(event)
     networkDown.isVisible = true
     networkUp.isVisible = false
     networkTx.isVisible = false
+    if (event ~= nil and debug) then
+        native.showAlert("net error",  event.status .. " | " .. string.gsub(event.url, serverURL, "") .. " |"  .. event.response)
+    end
 end
 
 function netTransfer()

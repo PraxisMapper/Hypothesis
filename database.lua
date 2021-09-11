@@ -193,6 +193,11 @@ function AreaControlScore()
     return 0
 end
 
+function AddPoints(points)
+    local cmd = "UPDATE playerData SET totalPoints = totalPoints + " .. points
+    db:exec(cmd)
+end
+
 function SpendPoints(points)
     local cmd = "UPDATE playerData SET totalPoints = totalPoints - " .. points
     db:exec(cmd)

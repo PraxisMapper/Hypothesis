@@ -348,7 +348,7 @@ function scene:create(event)
     scoreText = display.newText(sceneGroup, "Control Score: ?", display.contentCenterX, 260, native.systemFont, 20)
     teamScoreText = display.newText(sceneGroup, "Team Scores", display.contentCenterX, 280, native.systemFont, 20)
     teamScoreText.anchorY = 0
-    scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1220, native.systemFont, 20)
+    scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1220, native.systemFont, 20) --was 1220
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 300, native.systemFont, 20)
 
     locationText:setFillColor(0, 0, 0);

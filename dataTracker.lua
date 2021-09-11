@@ -81,7 +81,7 @@ function TrackplusCode8Listener(event)
     if event.status == 200 then 
         netUp() 
     else 
-        netDown() 
+        netDown(event) 
     end
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
 
@@ -124,7 +124,7 @@ function Trackerimage811Listener(event)
         local filename = string.gsub(event.url, serverURL .. "MapTile/DrawPlusCode/", "")
         requestedMapTileCells[filename] = 1
     else 
-        netDown() 
+        netDown(event) 
         local filename = string.gsub(event.url, serverURL .. "MapTile/DrawPlusCode/", "")
         requestedMapTileCells[filename] = -1
     end
@@ -169,7 +169,7 @@ function TrackerMPimage811Listener(event)
         netUp() 
         requestedMPMapTileCells[plusCode] = 1
     else 
-        netDown() 
+        netDown(event) 
         print(plusCode .. " errored on MAC tile: " .. event.status)
         requestedMPMapTileCells[plusCode] = -1
     end
@@ -187,8 +187,9 @@ function PaintTownMapListener(event)
     if event.status == 200 then 
         netUp() 
     else 
+        native.showAlert("net error",  event.status .. " | " .. event.url .. " |"  .. event.response)
         print("paint the town map listener failed")
-        netDown() 
+        netDown(event) 
     end
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
     --Format:
@@ -208,17 +209,19 @@ end
 
 function ClaimPaintTownCell(Cell10)
     netTransfer()
-    local randomColorSkiaFormat = "#42"
+    local randomColorSkiaFormat = "42"
     randomColorSkiaFormat = randomColorSkiaFormat ..  string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255))
-    network.request(serverURL .. "Data/SetPlusCodeData/" .. Cell10 .. "/color/" .. randomColorSkiaFormat .. defaultQueryString, "GET", PaintTownClaimListener) 
+    local url = serverURL .. "Data/SetPlusCodeData/" .. Cell10 .. "/color/" .. randomColorSkiaFormat .. defaultQueryString
+    network.request(url, "GET", PaintTownClaimListener) 
 end
 
 function PaintTownClaimListener(event) --doesnt record any data.
     if event.status == 200 then 
         netUp() 
     else 
+        native.showAlert("net error",  event.status .. " | " .. event.url .. " |"  .. event.response)
         print("paint the town claim failed")
-        netDown() 
+        netDown(event) 
     end
 end
 
@@ -245,7 +248,8 @@ function GetTeamAssignmentListener(event)
         print(composer.getVariable("faction"))
         netUp()
     else
-        netDown()
+        native.showAlert("net error",  event.status .. " | " .. event.url .. " |"  .. event.response)
+        netDown(event)
     end
     if (debug) then print("Team Assignment done") end
 end
@@ -268,6 +272,7 @@ function GetMyScoreListener(event)
         composer.setVariable("myScore", event.response)
         netUp()
     else
-        netDown()
+        native.showAlert("net error",  event.status .. " | " .. event.url .. " |"  .. event.response)
+        netDown(event)
     end
 end

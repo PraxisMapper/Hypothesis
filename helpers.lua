@@ -47,11 +47,11 @@ function sleep(sec)
 end
 
 function convertColor(colorString)
-   --colors are #AARRGGBB
-   local alphaHex = tonumber('0x' .. colorString:sub(2,3))
-   local redHex = tonumber('0x' .. colorString:sub(4,5))
-   local greenHex = tonumber('0x' .. colorString:sub(6,7))
-   local blueHex = tonumber('0x' .. colorString:sub(8,9))
+   --colors are AARRGGBB
+   local alphaHex = tonumber('0x' .. colorString:sub(1,2))
+   local redHex = tonumber('0x' .. colorString:sub(3,4))
+   local greenHex = tonumber('0x' .. colorString:sub(5,6))
+   local blueHex = tonumber('0x' .. colorString:sub(7,8))
    
    return {redHex / 255, greenHex / 255, blueHex / 255, alphaHex / 255}
 end
