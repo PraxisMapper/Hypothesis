@@ -1,11 +1,10 @@
 --the popup to claim an area in the app for Multiplayer mode.
 --Spend points == size or length of the whole area/path.
 local composer = require( "composer" )
-require("database")
---require("localNetwork")
-require("dataTracker") --for requestedMapTileCells
 local scene = composer.newScene()
- 
+require("database")
+require("dataTracker") --for requestedMapTileCells
+
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
@@ -25,7 +24,7 @@ local function yesListener()
     --check walking score, if high enough, spend points and color this area in.
     if (debug) then print("yes tapped") end
     local points = Score()
-    if (tonumber(points) >= tonumber(tappedAreaScore)) then
+    if (tonumber(points) >= tappedAreaScore) then
         if (debug) then print("claiming") end
         ClaimMPArea()
         forceRedraw = true
@@ -52,7 +51,6 @@ function AreaOwnerListener(event)
         netDown(event)  
         textDisplay.text = "Error getting info"
     end
-    print(event.response)
     
     if event.response ~= "" then
         ownerDisplay.text = ownerDisplay.text .. " " .. factions[tonumber(event.response)].name
@@ -92,7 +90,6 @@ function AreaScoreListener(event)
      end
 
      yesButton.isVisible = (hasPoints and isDifferentTeam)
-    
 end
 
 function ClaimMPArea()
@@ -106,15 +103,6 @@ function ClaimMPArea()
     SpendPoints(tappedAreaScore)
     composer.hideOverlay("overlayMPAreaClaim")
 end
-
--- function ClaimMPAreaListener(event)
---     if (event.status == 200) then
-        
---     end
---     --this call chains to another one, to find which map tiles to update.
---     --timer.performWithDelay(2000, FindChangedMapTiles, 1)
-    
--- end
 
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -131,7 +119,6 @@ function scene:create( event )
     bg = display.newRect(sceneGroup, display.contentCenterX, display.contentCenterY, 700, 500)
     bg.fill = bgFill
     textDisplay = display.newText(sceneGroup, "Claim X with Y points?", display.contentCenterX, display.contentCenterY - 150, 600, 100, native.systemFont, 30)
-
     ownerDisplay = display.newText(sceneGroup, "Owned by: ", display.contentCenterX, display.contentCenterY, 600, 100, native.systemFont, 30)
 
     yesButton = display.newImageRect(sceneGroup, "themables/ACYes.png", 100, 100)
@@ -158,34 +145,27 @@ function scene:show( event )
         GetAreaOwner(tappedAreaMapDataId)
         GetAreaScore(tappedAreaMapDataId)
     elseif ( phase == "did" ) then
-        -- Code here runs when the scene is entirely on screen
- 
+        -- Code here runs when the scene is entirely on screen 
     end
 end
  
 -- hide()
 function scene:hide( event )
- 
-    local sceneGroup = self.view
+     local sceneGroup = self.view
     local phase = event.phase
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is on screen (but is about to go off screen)
- 
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
- 
     end
 end
  
 -- destroy()
 function scene:destroy( event )
- 
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view
- 
 end
- 
  
 -- -----------------------------------------------------------------------------------
 -- Scene event function listeners

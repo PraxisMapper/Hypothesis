@@ -7,12 +7,10 @@
 
 system.setIdleTimer(false) --disables screen auto-off.
 
-require("store")
 require("helpers")
 require("gameLogic")
 require("database")
 require("plusCodes")
-require("localNetwork")
 local lfs = require( "lfs" )
 
 forceRedraw = false --used to tell the screen to redraw even if we havent moved.
@@ -43,29 +41,10 @@ tappedCell = "            "
 redrawOverlay = false
 factionID = 0 --composer.getVariable(factionID) is used in some spots
 
---TODO: these are outsdated, remove this {}
-typeNames = {}
-typeNames["1"] = "Water"
-typeNames["2"] = "Wetlands"
-typeNames["3"] = "Park"
-typeNames["4"] = "Beach"
-typeNames["5"] = "University"
-typeNames["6"] = "Nature Reserve"
-typeNames["7"] = "Cemetery"
---typeNames["8"] = "Retail" --old mall entry, should never appear
-typeNames["9"] = "Retail"
-typeNames["10"] = "Tourism"
-typeNames["11"] = "Historical"
-typeNames["12"] = "Trail"
---typeNames["13"] = "" --admin entry, should never appear
-typeNames["14"] = "Building"
-typeNames["15"] = "Road"
-typeNames["16"] = "Parking"
-typeNames["100"] = "Server-Generated"
-
 requestedCells = ""
 
-cellDataCache = {}
+--It looks like this only gets written, never read from.
+--cellDataCache = {}
 
 factions = {}
 factions[1] = {}
@@ -77,7 +56,6 @@ factions[2].name = "Green Team"
 factions[3] = {}
 factions[3].id = 3
 factions[3].name = "Blue Team"
-
 
 --making the network indicator persist through all scenes
 networkDown = display.newImageRect("themables/networkDown.png", 25, 25)
@@ -115,43 +93,41 @@ composer.gotoScene("loadingScene")
 
 function gpsListener(event)
     print("main gps fired")
-    local eventL = event
 
     if (debugGPS) then
         print("got GPS event")
-        if (eventL.errorCode ~= nil) then
-            print("GPS Error " .. eventL.errorCode)
+        if (event.errorCode ~= nil) then
+            print("GPS Error " .. event.errorCode)
             return
         end
 
-        print("Coords " .. eventL.latitude .. " " ..eventL.longitude)
+        print("Coords " .. event.latitude .. " " ..event.longitude)
     end
 
-    if (eventL.direction ~= 0) then
-         currentHeading = eventL.direction
+    if (event.direction ~= 0) then
+         currentHeading = event.direction
      end
 
-    local pluscode = encodeLatLon(eventL.latitude, eventL.longitude, 10); --only goes to 10 right now.
+    local pluscode = encodeLatLon(event.latitude, event.longitude, 10); --only goes to 10 right now.
     if (debugGPS) then print ("Plus Code: " .. pluscode) end
     currentPlusCode = pluscode
     local plusCode8 = currentPlusCode:sub(0,8)
 
-    if (debug) then print("checking for terrain data") end
-    local hasData = DownloadedCell8(plusCode8)
-    if (hasData == false) then
-        GetMapData8(plusCode8) -- AreaType No Tiles screen relies on this currently. Other modes usually do their own pulls
-    end
+    -- if (debug) then print("checking for terrain data") end
+    -- local hasData = DownloadedCell8(plusCode8)
+    -- if (hasData == false) then
+    --     GetMapData8(plusCode8)
+    -- end
 
     if (lastPlusCode ~= currentPlusCode) then
-        --update score stuff, we moved a cell.  Other stuff needs to process as usual.
+        --update score stuff, we moved a cell.
         if(debugGPS) then print("calculating score") end
         lastScoreLog = "Earned " .. grantPoints(currentPlusCode) .. " points from cell " .. currentPlusCode
         lastPlusCode = currentPlusCode
     end
 
     if(debugGPS) then print("Finished location event") end
-
-    lastLocationEvent = eventL
+    lastLocationEvent = event
 end
 
 function backListener(event)
@@ -178,7 +154,6 @@ function clearMACcache()
     end
 end
 
-timer.performWithDelay(60000 * 5, ResetDailyWeekly, -1)
 timer.performWithDelay(20000, clearMACcache, -1)
 Runtime:addEventListener("location", gpsListener)
 Runtime:addEventListener("key", backListener)

@@ -1,5 +1,3 @@
-local sockets = require("socket")
-
 --debugging helper function
 function dump(o)
     if type(o) == 'table' then
@@ -41,13 +39,8 @@ function doesFileExist( fname, path )
    return results
 end
 
---not a real sleep function but close enough?
-function sleep(sec)
-   sockets.select(nil, nil, sec)
-end
-
 function convertColor(colorString)
-   --colors are AARRGGBB
+   --skiasharp colors used on the server are AARRGGBB
    local alphaHex = tonumber('0x' .. colorString:sub(1,2))
    local redHex = tonumber('0x' .. colorString:sub(3,4))
    local greenHex = tonumber('0x' .. colorString:sub(5,6))

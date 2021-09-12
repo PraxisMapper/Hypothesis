@@ -1,7 +1,5 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
-require("localNetwork")
-
 --Native controls here need removed manually on hide().
  
 -- -----------------------------------------------------------------------------------
@@ -61,13 +59,10 @@ function scene:create( event )
  
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
-
-end
- 
+end 
  
 -- show()
 function scene:show( event )
- 
     local sceneGroup = self.view
     local phase = event.phase
  
@@ -102,10 +97,8 @@ function scene:show( event )
     end
 end
  
- 
 -- hide()
 function scene:hide( event )
- 
     local sceneGroup = self.view
     local phase = event.phase
  
@@ -114,22 +107,16 @@ function scene:hide( event )
         ipTextField:removeSelf() --native components dont automatically leave the screen.
         serverURL = GetServerAddress()
         timer.cancel(teamTimer)
- 
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
- 
     end
 end
  
- 
 -- destroy()
 function scene:destroy( event )
- 
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view
- 
 end
- 
  
 -- -----------------------------------------------------------------------------------
 -- Scene event function listeners
@@ -139,5 +126,4 @@ scene:addEventListener( "show", scene )
 scene:addEventListener( "hide", scene )
 scene:addEventListener( "destroy", scene )
 -- -----------------------------------------------------------------------------------
- 
 return scene

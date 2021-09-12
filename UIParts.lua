@@ -24,8 +24,8 @@ function CreateSquareGrid(gridSize, cellSize, gridGroup, cellCollection)
 end
 
 function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellCollection, tapHandlerType)
-    --size is rectangular, X by Y size. Must be odd so that i can have a center square. Even values get treated as one larger to be made odd.
-    if (debug) then print("Starting CreateSquareGrid") end
+    --size is rectangular, X by Y size. Must be odd so that i can have a center square. Even values get treated as the next largest odd number.
+    if (debug) then print("Starting CreateRectangleGrid") end
     local padding = 1 --space between cells.
     local range = math.floor(gridSize / 2) -- 7 becomes 3, which is right. 6 also becomes 3.
 
@@ -43,8 +43,6 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
             --newSquare.fill = {math.random(), .5} --Uncomment this to make the grid visible for debug/layout purposes
             if (tapHandlerType == "debug") then
                 newSquare:addEventListener("tap", debuggerHelperSquare) --for debugging display grid, show the cell's plus code by click/tap
-            elseif (tapHandlerType == "ac") then
-                newSquare:addEventListener("tap", showAreaClaim) --singleplayer gameplay dialog.
             elseif (tapHandlerType == "mac") then
                 newSquare:addEventListener("tap", multiplayerAreaClaim) --multiplayer gameplay dialog.
             elseif (tapHandlerType == "painttown") then
@@ -55,7 +53,7 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
         end
     end
 
-    if (debug) then print("Done CreateSquareGrid") end
+    if (debug) then print("Done CreateRectangleGrid") end
 end
 
 function paintTownTapListener(event)
@@ -73,37 +71,7 @@ function debuggerHelperSquare(event)
         print(event.target == null)
         print(event.target.type)
     end
-    native.showAlert("Cell", event.target.pluscode .. " | " .. event.target.name .. " | " .. typeNames[event.target.type])
-end
-
-function showAreaClaim(event)
-    tapData.text = "Cell Tapped: " .. event.target.pluscode
-    local noplus = removePlus(event.target.pluscode)
-    tappedCell = event.target.pluscode --needs to be before this print or it screws up on the first tap
-    redrawOverlay = true
-    if (debug) then 
-        print("showareaclaim clicked")
-    end
-    if (event.target.type == nil or event.target.type == "") then
-        if (debug) then print("returning false, not showing area claim") end
-        return false
-    end
-    --dont claim areas you already own
-    if (CheckAreaOwned(event.target.MapDataId)) then
-        if (debug) then print("returning false, already owned") end
-        return false
-    end
-
-    if (event.target.name == "") then
-        tappedAreaName = event.target.type
-    else
-        tappedAreaName = event.target.name
-    end
-
-    tappedAreaScore = 0 --i don't save this locally, this requires a network call to get and update
-    tappedAreaMapDataId = event.target.MapDataId
-    --composer.showOverlay("overlayAreaClaim", {isModal = true})
-    return false
+    native.showAlert("Cell", event.target.pluscode .. " | " .. event.target.name .. " | " .. event.target.type)
 end
 
 function multiplayerAreaClaim(event)

@@ -1,8 +1,6 @@
 --a single shared file for specifically handling downloading map tiles and cell data
---This is an attempt to make updating a bigger grid faster, such as the 35x35 area control map.
---by minimizing duplicate work/network calls/etc.
+--This is an attempt to make updating a bigger grid faster by minimizing duplicate work/network calls/etc.
 
-require("localNetwork") --for serverURL.
 require("helpers") --colorConvert
 local composer = require( "composer" ) --for storing variables
 
@@ -18,14 +16,10 @@ requestedDataCells = {} --these should be Cell8
 requestedMapTileCells = {} --these should be Cell10
 requestedMPMapTileCells = {} --these should be Cell10, separate because they can change quickly.
 requestedPaintTownCells = {} --Should be a table by instance types, since multiple PaintTheTowns could run at once.
-PaintTownInstanceIDs ={} --list of int ids.
 
-requestedPaintTownCells[1] = {}
-requestedPaintTownCells[2] = {}
-
-defaultQueryString = "?PraxisAuthKey=testingKey"
+defaultQueryString = "?PraxisAuthKey=testingKey" --lazy easier way to authenticate
 headers = {}
-headers["PraxisAuthKey"] = "testingKey"
+headers["PraxisAuthKey"] = "testingKey" --the proper way to authenticate
 
 function GetMapData8(Cell8) -- the terrain type call.
     local status = requestedDataCells[Cell8] --this can occasionally be nil if there's multiple active calls that return out of order on the first update
@@ -88,12 +82,10 @@ function TrackplusCode8Listener(event)
     --This one splits each Cell10 via newline.
     local resultsTable = Split(event.response, "\r\n") --windows newlines
     --Format:
-    --line1: the Cell8 requested
-    --remaining lines: the last 2 digits in the cell10=name|typeID|mapDataID
-    --EX: 48=Local Park|4|1234
+    --cell10|name|typeID|mapDataID
+    --EX: 82HHWG48=Local Park|4|1234
 
     db:exec("BEGIN TRANSACTION") --transactions for multiple inserts are a huge performance boost.
-    --local plusCode8 = resultsTable[1] 
     for i = 1, #resultsTable do
         if (resultsTable[i] ~= nil and resultsTable[i] ~= "") then 
             local data = Split(resultsTable[i], "|") --4 data parts in order
@@ -187,8 +179,7 @@ function PaintTownMapListener(event)
     if event.status == 200 then 
         netUp() 
     else 
-        native.showAlert("net error",  event.status .. " | " .. event.url .. " |"  .. event.response)
-        print("paint the town map listener failed")
+        if (debug) then print("paint the town map listener failed") end
         netDown(event) 
     end
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
@@ -209,7 +200,7 @@ end
 
 function ClaimPaintTownCell(Cell10)
     netTransfer()
-    local randomColorSkiaFormat = "42"
+    local randomColorSkiaFormat = "42" --start with a fixed alpha value
     randomColorSkiaFormat = randomColorSkiaFormat ..  string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255))
     local url = serverURL .. "Data/SetPlusCodeData/" .. Cell10 .. "/color/" .. randomColorSkiaFormat .. defaultQueryString
     network.request(url, "GET", PaintTownClaimListener) 
@@ -219,8 +210,7 @@ function PaintTownClaimListener(event) --doesnt record any data.
     if event.status == 200 then 
         netUp() 
     else 
-        native.showAlert("net error",  event.status .. " | " .. event.url .. " |"  .. event.response)
-        print("paint the town claim failed")
+        if (debug) then print("paint the town claim failed") end
         netDown(event) 
     end
 end
@@ -243,12 +233,9 @@ function GetTeamAssignmentListener(event)
             factionID = math.random(1, 3)
             SetTeamAssignment(factionID)
         end
-        print("setting faction to " .. factionID)
         composer.setVariable("faction", factionID)
-        print(composer.getVariable("faction"))
         netUp()
     else
-        native.showAlert("net error",  event.status .. " | " .. event.url .. " |"  .. event.response)
         netDown(event)
     end
     if (debug) then print("Team Assignment done") end
@@ -272,7 +259,6 @@ function GetMyScoreListener(event)
         composer.setVariable("myScore", event.response)
         netUp()
     else
-        native.showAlert("net error",  event.status .. " | " .. event.url .. " |"  .. event.response)
         netDown(event)
     end
 end

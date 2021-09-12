@@ -97,7 +97,7 @@ function scene:show( event )
         statusText.text = "Database Opened"
         print("database started")
 
-        local currentDbVersion = 10;
+        local currentDbVersion = 1;
 
         local tablesetup =
         [[CREATE TABLE IF NOT EXISTS plusCodesVisited(id INTEGER PRIMARY KEY, pluscode, lat, long, firstVisitedOn, nextScoreTime, totalVisits, eightCode);
@@ -134,7 +134,6 @@ function scene:show( event )
 
         --upgrading database now, clearing data on android apparently doesn't reset table structure.
         upgradeDatabaseVersion(currentDbVersion) 
-        ResetDailyWeekly()
         statusText.text = "Database work done!"
 
         serverURL = GetServerAddress()
@@ -145,9 +144,6 @@ function scene:show( event )
             --serverURL = "http://localhost/praxismapper/"
             serverURL = "http://192.168.50.247/praxismapper/"
         end
-
-        statusText.text = "Requesting Team Id"
-        GetTeamAssignment()        
         
         statusText.text = "Starting Game"
         startGame()

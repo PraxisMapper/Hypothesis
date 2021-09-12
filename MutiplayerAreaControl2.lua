@@ -4,8 +4,7 @@ local scene = composer.newScene()
 
 require("UIParts")
 require("database")
-require("dataTracker") -- replaced localNetwork for this scene
-
+require("dataTracker") 
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
@@ -15,15 +14,10 @@ local bigGrid = true
 
 local cellCollection = {} -- main background map tiles
 local overlayCollection = {} -- AreaControl map tiles, translucent
-local CellTapSensors = {} -- this is for tapping an area to claim, but needs renamed.
+local CellTapSensors = {} -- this is for tapping an area to claim, but needs renamed. TODO: find a way to replace this with a single sensor?
 local ctsGroup = display.newGroup()
 ctsGroup.x = -8
 ctsGroup.y = 10
-
--- color codes
-local unvisitedCell = {0, 0} -- completely transparent
-local visitedCell = {.529, .807, .921, .4} -- sky blue, 50% transparent
-local selectedCell = {.8, .2, .2, .4} -- red, 50% transparent
 
 local timerResults = nil
 local firstRun = true
@@ -139,7 +133,6 @@ local function UpdateLocalOptimized()
     -- This needs to be 2 loops, because the cell tables are different sizes.
     -- First loop for map tiles
     -- Then loop for touch event rectangles.
-    --TODO: figure out how/when to reload tiles from server.
     if (debugLocal) then print("start UpdateLocalOptimized") end
     if (currentPlusCode == "") then
         if timerResults == nil then
@@ -158,7 +151,7 @@ local function UpdateLocalOptimized()
     previousPlusCode = currentPlusCode
     
     if (arrowPainted == false) then
-        local teamID = factionID --tonumber(composer.getVariable("faction"))
+        local teamID = factionID 
         if (teamID == 0) then
             GetTeamAssignment()
         else            
@@ -166,7 +159,7 @@ local function UpdateLocalOptimized()
         end
     end
 
-    -- Step 1: set background MAC map tiles for the Cell8. Should be much simpler than old loop.
+    -- Step 1: set background MAC map tiles for the Cell8.
     if (innerForceRedraw == false) then -- none of this needs to get processed if we haven't moved and there's no new maptiles to refresh.
     for square = 1, #cellCollection do
         -- check each spot based on current cell, modified by gridX and gridY
@@ -228,13 +221,12 @@ local function UpdateLocalOptimized()
             thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar9, 9)
             thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar10, 10)
 
-            if (cellDataCache[plusCodeNoPlus] ~= nil) then
-                --use cached data.
-                cellDataCache[plusCodeNoPlus].name = CellTapSensors[square].name
-                cellDataCache[plusCodeNoPlus].type = CellTapSensors[square].type
-                cellDataCache[plusCodeNoPlus].MapDataId = CellTapSensors[square].MapDataId
-                cellDataCache[plusCodeNoPlus].lastRefresh = os.time()
-            else
+            -- if (cellDataCache[plusCodeNoPlus] ~= nil) then
+            --     --use cached data.
+            --     cellDataCache[plusCodeNoPlus].name = CellTapSensors[square].name
+            --     cellDataCache[plusCodeNoPlus].type = CellTapSensors[square].type
+            --     cellDataCache[plusCodeNoPlus].MapDataId = CellTapSensors[square].MapDataId
+            -- else
                 CellTapSensors[square].pluscode = thisSquaresPluscode
                 local plusCodeNoPlus = removePlus(thisSquaresPluscode)
                 local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
@@ -249,36 +241,25 @@ local function UpdateLocalOptimized()
                     CellTapSensors[square].type = ""
                 end
 
-                if (currentPlusCode == thisSquaresPluscode) then
-                    if (debugLocal) then print("setting name") end
-                    -- draw this place's name on screen, or an empty string if its not a place.
-                    locationName.text = CellTapSensors[square].name
-                    if (locationName.text == "" and CellTapSensors[square].type ~= 0) then
-                        locationName.text = typeNames[CellTapSensors[square].type]
-                    end
+                -- cellDataCache[plusCodeNoPlus] = {}
+                -- cellDataCache[plusCodeNoPlus].name = CellTapSensors[square].name
+                -- cellDataCache[plusCodeNoPlus].type = CellTapSensors[square].type
+                -- cellDataCache[plusCodeNoPlus].MapDataId = CellTapSensors[square].MapDataId
+            --end
+            
+            --This gets sets whether data was cached or not.
+            if (currentPlusCode == thisSquaresPluscode) then
+                if (debugLocal) then print("setting name") end
+                -- draw this place's name on screen, or an empty string if its not a place.
+                locationName.text = CellTapSensors[square].name
+                if (locationName.text == "") then
+                    locationName.text = CellTapSensors[square].type
                 end
-
-                cellDataCache[plusCodeNoPlus] = {}
-                cellDataCache[plusCodeNoPlus].name = CellTapSensors[square].name
-                cellDataCache[plusCodeNoPlus].type = CellTapSensors[square].type
-                cellDataCache[plusCodeNoPlus].MapDataId = CellTapSensors[square].MapDataId
-                cellDataCache[plusCodeNoPlus].lastRefresh = os.time()
             end
         end
-    end
-
-    --these checks happens either way.
-    if (currentPlusCode == thisSquaresPluscode) then
-        if (debugLocal) then print("setting name") end
-        -- draw this place's name on screen, or an empty string if its not a place.
-        locationName.text = cellCollection[square].name
-        if (locationName.text == ""  and cellCollection[square].type ~= 0) then
-            locationName.text = typeNames[cellCollection[square].type]
-        end
-    end
+    end  
 
     --update team scores
-    
     scoreCheckCounter = scoreCheckCounter - 1
     if (scoreCheckCounter <= 0) then
         GetMyScore()
@@ -317,6 +298,7 @@ local function UpdateLocalOptimized()
     timeText:toFront()
     directionArrow:toFront()
     scoreLog:toFront()
+    locationName:toFront()
 
     if timerResults == nil then
         if (debugLocal) then print("setting timer") end
@@ -331,7 +313,6 @@ end
 -- -----------------------------------------------------------------------------------
 
 function scene:create(event)
-
     composer.setVariable("myScore", "0")
 
     if (debug) then print("creating MPAreaControlScene2") end
@@ -346,10 +327,10 @@ function scene:create(event)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
     explorePointText = display.newText(sceneGroup, "Explore Points: ?", display.contentCenterX, 240, native.systemFont, 20)
     scoreText = display.newText(sceneGroup, "Control Score: ?", display.contentCenterX, 260, native.systemFont, 20)
-    teamScoreText = display.newText(sceneGroup, "Team Scores", display.contentCenterX, 280, native.systemFont, 20)
+    locationName = display.newText(sceneGroup, "", display.contentCenterX, 280, native.systemFont, 20)
+    teamScoreText = display.newText(sceneGroup, "Team Scores", display.contentCenterX, 300, native.systemFont, 20)
     teamScoreText.anchorY = 0
-    scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1220, native.systemFont, 20) --was 1220
-    locationName = display.newText(sceneGroup, "", display.contentCenterX, 300, native.systemFont, 20)
+    scoreLog = display.newText(sceneGroup, "", display.contentCenterX, 1220, native.systemFont, 20)    
 
     locationText:setFillColor(0, 0, 0);
     timeText:setFillColor(0, 0, 0);
@@ -364,7 +345,6 @@ function scene:create(event)
         CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(60, 16, 20, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
     else
-        -- original values, but too small to interact with.
         CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(5, 160, 200, sceneGroup, overlayCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(80, 8, 10, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control

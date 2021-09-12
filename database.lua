@@ -3,7 +3,7 @@ require("helpers")
 
 local sqlite3 = require("sqlite3") 
 db = "" 
-local dbVersionID = 10
+local dbVersionID = 1
 
 function startDatabase()
     -- Open "data.db". If the file doesn't exist, it will be created
@@ -73,57 +73,6 @@ function Exec(sql)
      return resultCode
 end
 
-function ResetDailyWeekly()
-    --checks for daily and weekly reset times.
-    --if oldest date in daily/weekly table is over 22/(24 * 6.9) hours old, delete everything in the table.
-    local timeDiffDaily = os.time() - (60 * 60 * 22) --22 hours, converted to seconds.
-    local cmd = "DELETE FROM dailyVisited WHERE VisitedOn < " .. timeDiffDaily
-    Exec(cmd)
-    local timeDiffWeekly = os.time() - math.floor(60 * 60 * 24 * 6.9) -- 6.9 days, converted to seconds
-    cmd = "DELETE FROM weeklyVisited WHERE VisitedOn < " .. timeDiffWeekly
-    Exec(cmd)
-end
-
-function VisitedCell(pluscode)
-    if (debugDB) then print("Checking if visited current cell " .. pluscode) end
-    local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE pluscode = '" .. pluscode .. "'"
-    for i,row in ipairs(Query(query)) do
-        if (row[1] == 1) then
-            return true
-        else
-            return false
-        end
-    end
-end
-
-function VisitedCell8(pluscode)
-    if (debugDB) then print("Checking if visited current cell8 " .. pluscode) end
-    local query = "SELECT COUNT(*) as c FROM plusCodesVisited WHERE eightCode = '" .. pluscode .. "'"
-    for i,row in ipairs(Query(query)) do
-        if (row[1] >= 1) then --any number of entries over 1 means this block was visited.
-            return true
-        else
-            return false
-        end
-    end
-end
-
-function TotalExploredCells()
-    if (debugDB) then print("opening total explored cells ") end
-    local query = "SELECT COUNT(*) as c FROM plusCodesVisited"
-    for i,row in ipairs(Query(query)) do
-        return row[1]
-    end
-end
-
-function TotalExploredCell8s()
-    if (debugDB) then print("opening total explored cell8s ") end
-    local query = "SELECT COUNT(distinct eightCode) as c FROM plusCodesVisited"
-    for i,row in ipairs(Query(query)) do
-        return row[1]
-    end
-end
-
 function Score()
     local query = "SELECT totalPoints as p from playerData"
     local qResults = Query(query)
@@ -160,60 +109,10 @@ function DownloadedCell8(pluscode)
     return false
 end
 
-function ClaimAreaLocally(mapdataid, name, score)
-    if (debug) then print("claiming area " .. mapdataid) end
-    name = string.gsub(name, "'", "''")
-    local cmd = "INSERT INTO areasOwned (mapDataId, name, points) VALUES (" .. mapdataid .. ", '" .. name .. "'," .. score ..")"
-    --db:exec(cmd)
-    Exec(cmd)
-end
-
-function CheckAreaOwned(mapdataid)
-    if (mapdataid == null) then return false end
-    local query = "SELECT COUNT(*) as c FROM areasOwned WHERE MapDataId = "  .. mapdataid
-    for i,row in ipairs(Query(query)) do
-        if (row[1] >= 1) then --any number of entries over 1 means this entry is owned
-            return true
-        else
-            return false
-        end
-    end
-    return false
-end
-
-function AreaControlScore()
-    local query = "SELECT SUM(points) FROM areasOwned"
-    for i,row in ipairs(Query(query)) do
-        if (#row == 1) then
-            return row[1]
-        else
-            return 0
-        end
-    end
-    return 0
-end
-
-function AddPoints(points)
-    local cmd = "UPDATE playerData SET totalPoints = totalPoints + " .. points
-    db:exec(cmd)
-end
-
 function SpendPoints(points)
     local cmd = "UPDATE playerData SET totalPoints = totalPoints - " .. points
     db:exec(cmd)
 end
-
--- function GetTeamID()
---     local query = "SELECT factionID FROM playerData"
---     for i,row in ipairs(Query(query)) do
---         if (#row == 1) then
---             return row[1]
---         else
---             return 0
---         end
---     end
---     return 0
--- end
 
 function GetServerAddress()
     local query = "SELECT serverAddress FROM systemData"
@@ -229,10 +128,5 @@ end
 
 function SetServerAddress(url)
     local cmd = "UPDATE systemData SET serverAddress = '" .. url .. "'"
-    db:exec(cmd)
-end
-
-function SetFactionId(teamId)
-    local cmd = "UPDATE playerData SET factionID = " .. teamId .. ""
     db:exec(cmd)
 end

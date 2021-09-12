@@ -5,14 +5,12 @@ local scene = composer.newScene()
 
 require("UIParts")
 require("database")
---require("localNetwork")
-require("dataTracker") -- replaced localNetwork for this scene
+require("dataTracker")
 
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
-
 local bigGrid = true
 
 local cellCollection = {} -- show cell area data/image tiles
@@ -20,11 +18,6 @@ local CellTapSensors = {} -- Not detecting taps in this mode. This is the highli
 local ctsGroup = display.newGroup()
 ctsGroup.x = -8
 ctsGroup.y = 10
--- color codes
-
-local unvisitedCell = {0, 0} -- completely transparent
-local visitedCell = {.529, .807, .921, .4} -- sky blue, 50% transparent
-local selectedCell = {.8, .2, .2, .4} -- red, 50% transparent
 
 local timerResults = nil
 local PaintTownMapUpdateCountdown = 8 --wait this many loops over the main update before doing a network call. 
@@ -36,8 +29,6 @@ local debugText = {}
 local locationName = ""
 
 local zoom = ""
-
-local instanceID = 1 --1 is weekly, 2 is permanent
 local arrowPainted = false
 
 local function testDrift()
@@ -86,16 +77,6 @@ local function ToggleZoom()
     timer.resume(timerResults)
 end
 
-local function switchMode()
-    if (instanceID == 1) then
-        instanceID = 2
-    else
-        instanceID =1
-    end
-    forceRedraw = true
-    requestedPaintTownCells = {} --clears out the display cache
-end
-
 local function GoToSceneSelect()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("SceneSelect", options)
@@ -104,7 +85,7 @@ end
 local function UpdateLocalOptimized()
     -- This now needs to be 2 loops, because the cell tables are different sizes.
     -- First loop for map tiles
-    -- Then loop for touch event rectangles.
+    -- Then loop for touch event rectangles that get shaded.
     if (debugLocal) then print("start UpdateLocalOptimized") end
     if (currentPlusCode == "") then
         if timerResults == nil then
@@ -130,49 +111,48 @@ local function UpdateLocalOptimized()
     local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
     locationName.text = terrainInfo[3]; --name
     if locationName.text == "" then
-        locationName.text = typeNames[terrainInfo[4]] --area type name
+        locationName.text = terrainInfo[4] --area type name
     end
 
     PaintTownMapUpdateCountdown = PaintTownMapUpdateCountdown -1
     -- Step 1: set background MAC map tiles for the Cell8. Should be much simpler than old loop.
     if (innerForceRedraw == false) then -- none of this needs to get processed if we haven't moved and there's no new maptiles to refresh.
-    for square = 1, #cellCollection do
-        -- check each spot based on current cell, modified by gridX and gridY
-        
-        local thisSquaresPluscode = currentPlusCode
-        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 8)
-        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
-        cellCollection[square].pluscode = thisSquaresPluscode
-        local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
-        if (PaintTownMapUpdateCountdown == 0) then
-            GetPaintTownMapData8(plusCodeNoPlus)
-        end
-            GetMapData8(plusCodeNoPlus)
-            local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
-            local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
-            if (imageRequested == nil) then -- or imageExists == 0 --if I check for 0, this is always nil? if I check for nil, this is true when images are present?
-                imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
+        for square = 1, #cellCollection do
+            -- check each spot based on current cell, modified by gridX and gridY    
+            local thisSquaresPluscode = currentPlusCode
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 8)
+            thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
+            cellCollection[square].pluscode = thisSquaresPluscode
+            local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
+            if (PaintTownMapUpdateCountdown == 0) then
+                GetPaintTownMapData8(plusCodeNoPlus)
             end
-            if (imageExists == false or imageExists == nil) then -- not sure why this is true when file is found and 0 when its not? -- or imageExists == 0
-                 cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
-                 GetMapTile8(plusCodeNoPlus)
-            else
-                cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
-                local paint = {
-                    type = "image",
-                    filename = plusCodeNoPlus .. "-11.png",
-                    baseDir = system.CachesDirectory
-                }
-                cellCollection[square].fill = paint
+                GetMapData8(plusCodeNoPlus)
+                local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
+                local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
+                if (imageRequested == nil) then -- or imageExists == 0 --if I check for 0, this is always nil? if I check for nil, this is true when images are present?
+                    imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
+                end
+                if (imageExists == false or imageExists == nil) then -- not sure why this is true when file is found and 0 when its not? -- or imageExists == 0
+                    cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
+                    GetMapTile8(plusCodeNoPlus)
+                else
+                    cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
+                    local paint = {
+                        type = "image",
+                        filename = plusCodeNoPlus .. "-11.png",
+                        baseDir = system.CachesDirectory
+                    }
+                    cellCollection[square].fill = paint
+                end
             end
         end
-    end
 
     if (debug) then  print("done with map cells") end
     -- Step 2: set up event listener grid. These need Cell10s
     local baselinePlusCode = currentPlusCode:sub(1,8) .. "+FF"
     if (innerForceRedraw) then --Also no need to do all of this unless we shifted our Cell8 location.
-    for square = 1, #CellTapSensors do
+        for square = 1, #CellTapSensors do
             CellTapSensors[square].fill = {0, 0}
             local thisSquaresPluscode = baselinePlusCode
             local shiftChar7 = math.floor(CellTapSensors[square].gridY / 20)
@@ -187,8 +167,7 @@ local function UpdateLocalOptimized()
 
             CellTapSensors[square].pluscode = thisSquaresPluscode
             if (requestedPaintTownCells[idCheck] ~= nil) then
-                local colorCell = requestedPaintTownCells[idCheck]
-                CellTapSensors[square].fill = colorCell 
+                CellTapSensors[square].fill = requestedPaintTownCells[idCheck]
             end
         end
     end
@@ -231,7 +210,6 @@ end
 -- -----------------------------------------------------------------------------------
 
 function scene:create(event)
-
     if (debug) then print("creating painttown scene") end
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
@@ -283,8 +261,7 @@ function scene:create(event)
         debugText:setFillColor(0, 0, 0);
         debugText:toFront()
     end
-    
-    --reorderUI()
+
     contrastSquare:toFront()
 
     if (debug) then print("created PaintTown scene") end
@@ -308,10 +285,8 @@ function scene:show(event)
     elseif (phase == "did") then
         -- Code here runs when the scene is entirely on screen 
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
-        --timerResultsScoreboard = timer.performWithDelay(2500, GetScoreboard, -1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
         reorderUI()
-        --GetTeamAssignment()
     end
     if (debug) then print("showed painttown scene") end
 end
