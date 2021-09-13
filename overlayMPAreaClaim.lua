@@ -56,6 +56,7 @@ function AreaOwnerListener(event)
         oldTeam = tonumber(event.response)
         ownerDisplay.text = ownerDisplay.text .. " " .. factions[oldTeam].name
     else
+        oldTeam = 0;
         ownerDisplay.text = ownerDisplay.text .. " Nobody"
     end
 
