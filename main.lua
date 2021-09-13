@@ -113,12 +113,6 @@ function gpsListener(event)
     currentPlusCode = pluscode
     local plusCode8 = currentPlusCode:sub(0,8)
 
-    -- if (debug) then print("checking for terrain data") end
-    -- local hasData = DownloadedCell8(plusCode8)
-    -- if (hasData == false) then
-    --     GetMapData8(plusCode8)
-    -- end
-
     if (lastPlusCode ~= currentPlusCode) then
         --update score stuff, we moved a cell.
         if(debugGPS) then print("calculating score") end
@@ -177,4 +171,12 @@ function netTransfer()
     networkDown.isVisible = false
     networkUp.isVisible = false
     networkTx.isVisible = true
+end
+
+function DefaultNetCallHandler(event)
+    if (debug and event.status ~= 200) then
+        netDown(event)
+    else
+        netUp()
+    end
 end
