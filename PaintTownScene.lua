@@ -86,13 +86,18 @@ local function UpdateLocalOptimized()
     -- This now needs to be 2 loops, because the cell tables are different sizes.
     -- First loop for map tiles
     -- Then loop for touch event rectangles that get shaded.
+    if timerResults == nil then
+        timerResults = timer.performWithDelay(150, UpdateLocalOptimized, -1)
+    end
+
     if (debugLocal) then print("start UpdateLocalOptimized") end
     if (currentPlusCode == "") then
-        if timerResults == nil then
-            timerResults = timer.performWithDelay(150, UpdateLocalOptimized, -1)
-        end
         if (debugLocal) then print("skipping, no location.") end
         return
+    end
+
+     if (not playerInBounds) then
+         return
     end
 
     if (debug) then debugText.text = dump(lastLocationEvent) end
@@ -196,11 +201,6 @@ local function UpdateLocalOptimized()
     timeText:toFront()
     directionArrow:toFront()
     locationName:toFront()
-
-    if timerResults == nil then
-        if (debugLocal) then print("setting timer") end
-        timerResults = timer.performWithDelay(150, UpdateLocalOptimized, -1)
-    end
 
     if (debugLocal) then print("end updateLocalOptimized") end
 end

@@ -50,7 +50,30 @@ require("dataTracker")
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
        --currentPlusCode = "85PFF56C+5P" --Old Faithful 
-           
+       
+end
+
+--These 2 are mostly duplicates of the ones in dataTracker, but I want to stop the loading process until I get the server bounds.
+function GetServerBoundsStartup()
+    local url = serverURL .. "Data/GetServerBounds" .. defaultQueryString
+    network.request(url, "GET", GetServerBoundsListenerStartup) 
+    netTransfer()
+end
+
+function GetServerBoundsListenerStartup(event)
+    if (event.status == 200) then
+        local boundValues = Split(event.response, "|") --in clockwise order, S/W/N/E
+        serverBounds["south"] = tonumber(boundValues[1])
+        serverBounds["west"] = tonumber(boundValues[2])
+        serverBounds["north"] = tonumber(boundValues[3])
+        serverBounds["east"] = tonumber(boundValues[4])
+        netUp()
+        statusText.text = "Starting Game"
+        startGame()
+    else
+        statusText = "Failed to get server bounds, retrying....."
+        GetServerBoundsStartup()
+    end
 end
  
  
@@ -105,12 +128,13 @@ function scene:show( event )
         CREATE TABLE IF NOT EXISTS weeklyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS dailyVisited(id INTEGER PRIMARY KEY, pluscode, VisitedOn);
         CREATE TABLE IF NOT EXISTS terrainData (id INTEGER PRIMARY KEY, pluscode UNIQUE, name, areatype, lastUpdated, MapDataId);
-        CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode);
+        CREATE TABLE IF NOT EXISTS bounds(id INTEGER PRIMARY KEY, south, west, north, east);
         CREATE TABLE IF NOT EXISTS dataDownloaded(id INTEGER PRIMARY KEY, pluscode8, downloadedOn);
         CREATE TABLE IF NOT EXISTS areasOwned(id INTEGER PRIMARY KEY, mapDataId, name, points);
         CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
         CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
         CREATE INDEX IF NOT EXISTS indexOwnedMapIds on areasOwned(mapDataId);
+        CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode);
         INSERT OR IGNORE INTO systemData(id, dbVersionID, serverAddress) values (1, ]] .. currentDbVersion .. [[, 'https://us.praxismapper.org/praxismapper/');
         INSERT OR IGNORE INTO playerData(id, factionID, totalPoints) values (1, 0, 0);
         ]]
@@ -143,9 +167,9 @@ function scene:show( event )
             --serverURL = "http://localhost/praxismapper/"
             serverURL = "http://192.168.50.247/praxismapper/"
         end
-        
-        statusText.text = "Starting Game"
-        startGame()
+
+        statusText.text = "Getting server boundaries..."
+        GetServerBoundsStartup() --Startup process continues in the event handler for this.
     end
 end
  

@@ -262,3 +262,22 @@ function GetMyScoreListener(event)
         netDown(event)
     end
 end
+
+function GetServerBounds()
+    local url = serverURL .. "Data/GetServerBounds" .. defaultQueryString
+    network.request(url, "GET", GetServerBoundsListener) 
+    netTransfer()
+end
+
+function GetServerBoundsListener(event)
+    if (event.status == 200) then
+        local boundValues = Split(event.response, "|") --in clockwise order, S/W/N/E
+        serverBounds["south"] = tonumber(boundValues[1])
+        serverBounds["west"] = tonumber(boundValues[2])
+        serverBounds["north"] = tonumber(boundValues[3])
+        serverBounds["east"] = tonumber(boundValues[4])
+        netUp()
+    else
+        netDown(event)
+    end
+end

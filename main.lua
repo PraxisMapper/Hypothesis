@@ -15,7 +15,7 @@ local lfs = require( "lfs" )
 
 forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
-debug = false --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
+debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 debugGPS = false --display data for the GPS event and timer loop and auto-move
 debugDB = false
 debugLocal = false
@@ -43,9 +43,24 @@ factionID = 0 --composer.getVariable(factionID) is used in some spots
 
 requestedCells = ""
 
---It looks like this only gets written, never read from.
---cellDataCache = {}
+--store server bounds in memory on startup.
+serverBounds = {}
+serverBounds["south"] = -90
+serverBounds["west"] = -180
+serverBounds["north"] = 90
+serverBounds["east"] = 180
+playerInBounds = false
 
+function InBounds(lat, lon)
+    if (lat >= serverBounds["south"] and lat <= serverBounds["north"]) then
+        if (lon >= serverBounds["west"] and lon <= serverBounds["east"]) then
+            return true
+        end
+    end
+    return false
+end
+
+--Game specific common data for Area Tag.
 factions = {}
 factions[1] = {}
 factions[1].id = 1
@@ -92,10 +107,8 @@ composer.isDebug = debug
 composer.gotoScene("loadingScene")
 
 function gpsListener(event)
-    print("main gps fired")
-
     if (debugGPS) then
-        print("got GPS event")
+        print("main gps fired")
         if (event.errorCode ~= nil) then
             print("GPS Error " .. event.errorCode)
             return
@@ -103,6 +116,15 @@ function gpsListener(event)
 
         print("Coords " .. event.latitude .. " " ..event.longitude)
     end
+
+    if not InBounds(event.latitude, event.longitude) then
+        --skip the rest of the processing.
+        playerInBounds = false
+        print("Out of Bounds")
+        return
+    end
+    print("In bounds")
+    playerInBounds = true
 
     if (event.direction ~= 0) then
          currentHeading = event.direction

@@ -133,11 +133,16 @@ local function UpdateLocalOptimized()
     -- This needs to be 2 loops, because the cell tables are different sizes.
     -- First loop for map tiles
     -- Then loop for touch event rectangles.
+    if timerResults == nil then
+        timerResults = timer.performWithDelay(150, UpdateLocalOptimized, -1)
+    end
+
+    if not playerInBounds then
+        return
+    end
+
     if (debugLocal) then print("start UpdateLocalOptimized") end
     if (currentPlusCode == "") then
-        if timerResults == nil then
-            timerResults = timer.performWithDelay(150, UpdateLocalOptimized, -1)
-        end
         if (debugLocal) then print("skipping, no location.") end
         return
     end
@@ -221,12 +226,6 @@ local function UpdateLocalOptimized()
             thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar9, 9)
             thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar10, 10)
 
-            -- if (cellDataCache[plusCodeNoPlus] ~= nil) then
-            --     --use cached data.
-            --     cellDataCache[plusCodeNoPlus].name = CellTapSensors[square].name
-            --     cellDataCache[plusCodeNoPlus].type = CellTapSensors[square].type
-            --     cellDataCache[plusCodeNoPlus].MapDataId = CellTapSensors[square].MapDataId
-            -- else
                 CellTapSensors[square].pluscode = thisSquaresPluscode
                 local plusCodeNoPlus = removePlus(thisSquaresPluscode)
                 local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
@@ -241,13 +240,6 @@ local function UpdateLocalOptimized()
                     CellTapSensors[square].type = ""
                 end
 
-                -- cellDataCache[plusCodeNoPlus] = {}
-                -- cellDataCache[plusCodeNoPlus].name = CellTapSensors[square].name
-                -- cellDataCache[plusCodeNoPlus].type = CellTapSensors[square].type
-                -- cellDataCache[plusCodeNoPlus].MapDataId = CellTapSensors[square].MapDataId
-            --end
-            
-            --This gets sets whether data was cached or not.
             if (currentPlusCode == thisSquaresPluscode) then
                 if (debugLocal) then print("setting name") end
                 -- draw this place's name on screen, or an empty string if its not a place.
@@ -299,11 +291,6 @@ local function UpdateLocalOptimized()
     directionArrow:toFront()
     scoreLog:toFront()
     locationName:toFront()
-
-    if timerResults == nil then
-        if (debugLocal) then print("setting timer") end
-        timerResults = timer.performWithDelay(150, UpdateLocalOptimized, -1)
-    end
 
     if (debugLocal) then print("end updateLocalOptimized") end
 end
