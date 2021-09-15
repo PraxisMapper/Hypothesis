@@ -38,7 +38,7 @@ function CreateRectangleGrid(gridSize, cellSizeX, cellSizeY, gridGroup, cellColl
             newSquare.name = "" --added for terrain/location support
             newSquare.type = ""--added for terrain/location support
             newSquare.pluscode = "" --to potentially be filled in by the game mode
-            newSquare.MapDataId = 0 --for area control mode
+            newSquare.MapDataId = "" --for area control mode
             newSquare.fill = {1, .01} --default to transparent, but using 0, 0 means they don't register at all?
             --newSquare.fill = {math.random(), .5} --Uncomment this to make the grid visible for debug/layout purposes
             if (tapHandlerType == "debug") then

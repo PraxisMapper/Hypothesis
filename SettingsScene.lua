@@ -34,7 +34,7 @@ end
         newTeam = 3
     end
     SetTeamAssignment(newTeam)
-
+    factionID = newTeam
  end
 
  local function checkTeamMembership()

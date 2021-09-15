@@ -83,7 +83,7 @@ function TrackplusCode8Listener(event)
     local resultsTable = Split(event.response, "\r\n") --windows newlines
     --Format:
     --cell10|name|typeID|mapDataID
-    --EX: 82HHWG48=Local Park|4|1234
+    --EX: 82HHWG48=Local Park|4|guid
 
     db:exec("BEGIN TRANSACTION") --transactions for multiple inserts are a huge performance boost.
     for i = 1, #resultsTable do

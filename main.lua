@@ -35,7 +35,7 @@ lastLocationEvent = ""
 
 tappedAreaName = ""
 tappedAreaScore = 0
-tappedAreaMapDataId = 0
+tappedAreaMapDataId = ""
 
 tappedCell = "            "
 redrawOverlay = false
@@ -49,7 +49,7 @@ serverBounds["south"] = -90
 serverBounds["west"] = -180
 serverBounds["north"] = 90
 serverBounds["east"] = 180
-playerInBounds = false
+playerInBounds = true
 
 function InBounds(lat, lon)
     if (lat >= serverBounds["south"] and lat <= serverBounds["north"]) then
