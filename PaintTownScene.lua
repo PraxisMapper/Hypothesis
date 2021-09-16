@@ -80,6 +80,7 @@ end
 local function GoToSceneSelect()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("SceneSelect", options)
+    return true
 end
 
 local function UpdateLocalOptimized()
@@ -285,7 +286,7 @@ function scene:show(event)
     elseif (phase == "did") then
         -- Code here runs when the scene is entirely on screen 
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
-        if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
+        if (debugGPS) then timer.performWithDelay(1000, testDrift, -1) end
         reorderUI()
     end
     if (debug) then print("showed painttown scene") end

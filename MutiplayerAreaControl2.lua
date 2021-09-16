@@ -116,6 +116,7 @@ end
 local function GoToSceneSelect()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("SceneSelect", options)
+    return true
 end
 
 local function tintArrow(teamID)
@@ -126,7 +127,6 @@ local function tintArrow(teamID)
     elseif (teamID == 3) then
         directionArrow:setFillColor(0, 0, 1, .5) 
     end
-    arrowPainted = true
 end
 
 local function UpdateLocalOptimized()
@@ -156,11 +156,11 @@ local function UpdateLocalOptimized()
     previousPlusCode = currentPlusCode
     
     if (arrowPainted == false) then
-        local teamID = factionID 
-        if (teamID == 0) then
+        if (factionID == 0) then
             GetTeamAssignment()
         else            
-            tintArrow(teamID)
+            tintArrow(factionID)
+            arrowPainted = true
         end
     end
 
@@ -377,6 +377,7 @@ function scene:show(event)
         firstRun = true
     elseif (phase == "did") then
         -- Code here runs when the scene is entirely on screen 
+        tintArrow(factionID)
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
     end

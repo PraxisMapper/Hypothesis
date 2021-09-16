@@ -12,10 +12,13 @@ require("gameLogic")
 require("database")
 require("plusCodes")
 local lfs = require( "lfs" )
+local composer = require("composer")
+
 
 forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
 debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
+composer.isDebug = debug
 debugGPS = false --display data for the GPS event and timer loop and auto-move
 debugDB = false
 debugLocal = false
@@ -102,8 +105,6 @@ tapData.anchorX = 0
 local osmLicenseText = display.newText("Map Data © OpenStreetMap contributors", 530, 1250, native.systemFont, 20)
 
 print("shifting to loading scene")
-local composer = require("composer")
-composer.isDebug = debug
 composer.gotoScene("loadingScene")
 
 function gpsListener(event)
@@ -121,9 +122,11 @@ function gpsListener(event)
         --skip the rest of the processing.
         playerInBounds = false
         print("Out of Bounds")
+        composer.showOverlay("oobOverlay")
         return
     end
     print("In bounds")
+    composer.hideOverlay("oobOverlay")
     playerInBounds = true
 
     if (event.direction ~= 0) then

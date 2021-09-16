@@ -110,14 +110,13 @@ function TrackerGetCell8Image11(plusCode)
 end
 
 function Trackerimage811Listener(event)
+    local filename = string.gsub(event.url, serverURL .. "MapTile/DrawPlusCode/", "")
     if event.status == 200 then
         forceRedraw = true
         netUp() 
-        local filename = string.gsub(event.url, serverURL .. "MapTile/DrawPlusCode/", "")
         requestedMapTileCells[filename] = 1
     else 
         netDown(event) 
-        local filename = string.gsub(event.url, serverURL .. "MapTile/DrawPlusCode/", "")
         requestedMapTileCells[filename] = -1
     end
 end
@@ -181,12 +180,11 @@ function PaintTownMapListener(event)
     else 
         if (debug) then print("paint the town map listener failed") end
         netDown(event) 
+        return
     end
-    if (event.status ~= 200) then return end --dont' save invalid results on an error.
     --Format:
     --Cell10|dataTag|dataValue\r\n
     local resultsTable = Split(event.response, "\r\n")
-    
     for cell = 1, #resultsTable do
         local splitData = Split(resultsTable[cell], "|")
         local key = splitData[1]
@@ -243,7 +241,7 @@ end
 
 function SetTeamAssignment(teamId)
     local url = serverURL .. "Data/SetPlayerData/"  .. system.getInfo("deviceID") .. "/team/" .. teamId .. defaultQueryString
-    network.request(url, "GET", nil) --I don't need a result from this.
+    network.request(url, "GET", DefaultNetCallHandler) 
     if (debug) then print("Team change sent to " .. url) end
     netTransfer()
 end
