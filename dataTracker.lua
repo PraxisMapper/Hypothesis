@@ -202,6 +202,7 @@ function ClaimPaintTownCell(Cell10)
     randomColorSkiaFormat = randomColorSkiaFormat ..  string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255))
     local url = serverURL .. "Data/SetPlusCodeData/" .. Cell10 .. "/color/" .. randomColorSkiaFormat .. defaultQueryString
     network.request(url, "GET", PaintTownClaimListener) 
+    requestedPaintTownCells[Cell10] = convertColor(randomColorSkiaFormat)
 end
 
 function PaintTownClaimListener(event) --doesnt record any data.

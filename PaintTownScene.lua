@@ -110,6 +110,7 @@ local function UpdateLocalOptimized()
     forceRedraw = false
     if currentPlusCode ~= previousPlusCode then
         ClaimPaintTownCell(plusCodeNoPlus)
+        innerForceRedraw = true
     end
     previousPlusCode = currentPlusCode
 
