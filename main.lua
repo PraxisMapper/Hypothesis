@@ -17,9 +17,9 @@ local composer = require("composer")
 
 forceRedraw = false --used to tell the screen to redraw even if we havent moved.
 
-debug = true --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
+debug = false --set false for release builds. Set true for lots of console info being dumped. Must be global to apply to all files.
 composer.isDebug = debug
-debugGPS = true --display data for the GPS event and timer loop and auto-move
+debugGPS = false --display data for the GPS event and timer loop and auto-move
 debugDB = false
 debugLocal = false
 debugNetwork = false
@@ -121,12 +121,12 @@ function gpsListener(event)
     if not InBounds(event.latitude, event.longitude) then
         --skip the rest of the processing.
         playerInBounds = false
-        print("Out of Bounds")
         composer.showOverlay("oobOverlay")
         return
     end
-    print("In bounds")
-    composer.hideOverlay("oobOverlay")
+    if (not playerInBounds) then
+        composer.hideOverlay()
+    end
     playerInBounds = true
 
     if (event.direction ~= 0) then
