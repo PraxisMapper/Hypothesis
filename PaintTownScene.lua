@@ -50,12 +50,12 @@ local function ToggleZoom()
     cellCollection = {}
     CellTapSensors = {}
 
-    if (bigGrid) then
+    if (bigGrid) then -- zoomed in grid
         CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(61, 16, 20, ctsGroup, CellTapSensors, "painttown") -- rectangular Cell11 grid with a color fill
         ctsGroup.x = -8
         ctsGroup.y = 10
-    else
+    else -- zoomed out grid
         CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(90, 8, 10, ctsGroup, CellTapSensors, "painttown") -- rectangular Cell11 grid  with a color fill
         ctsGroup.x = -4
@@ -100,6 +100,8 @@ local function UpdateLocalOptimized()
      if (not playerInBounds) then
          return
     end
+
+    currentHeading = currentHeading + 5
 
     if (debug) then debugText.text = dump(lastLocationEvent) end
 
@@ -191,12 +193,12 @@ local function UpdateLocalOptimized()
 
     local shift = CODE_ALPHABET_:find(currentPlusCode:sub(11, 11)) - 11
     local shift2 = CODE_ALPHABET_:find(currentPlusCode:sub(10, 10)) - 10
-    if (bigGrid) then
-        directionArrow.x = display.contentCenterX + (shift * 16)
-        directionArrow.y = display.contentCenterY - (shift2 * 20)
+    if (bigGrid) then -- zoomed in grid
+        directionArrow.x = display.contentCenterX + (shift * 16) + 8
+        directionArrow.y = display.contentCenterY - (shift2 * 20) + 10
     else
-        directionArrow.x = display.contentCenterX + (shift * 4)
-        directionArrow.y = display.contentCenterY - (shift2 * 5)
+        directionArrow.x = display.contentCenterX + (shift * 8) + 4
+        directionArrow.y = display.contentCenterY - (shift2 * 10) + 5
     end
 
     locationText:toFront()
@@ -241,8 +243,8 @@ function scene:create(event)
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 16, 20)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
-    directionArrow.anchorX = 0
-    directionArrow.anchorY = 0
+    directionArrow.anchorX = .5
+    directionArrow.anchorY = .5 
     directionArrow:toFront()
 
     header = display.newImageRect(sceneGroup, "themables/PaintTown.png",300, 100)

@@ -275,11 +275,11 @@ local function UpdateLocalOptimized()
     local shift = CODE_ALPHABET_:find(currentPlusCode:sub(11, 11)) - 11
     local shift2 = CODE_ALPHABET_:find(currentPlusCode:sub(10, 10)) - 10
     if (bigGrid) then
-        directionArrow.x = display.contentCenterX + (shift * 16)
-        directionArrow.y = display.contentCenterY - (shift2 * 20)
+        directionArrow.x = display.contentCenterX + (shift * 16)  + 8
+        directionArrow.y = display.contentCenterY - (shift2 * 20) + 10
     else
-        directionArrow.x = display.contentCenterX + (shift * 8)
-        directionArrow.y = display.contentCenterY - (shift2 * 10)
+        directionArrow.x = display.contentCenterX + (shift * 8) + 4
+        directionArrow.y = display.contentCenterY - (shift2 * 10) + 5
     end
     scoreLog.text = lastScoreLog
 
@@ -340,8 +340,8 @@ function scene:create(event)
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 16, 20)
     directionArrow.x = display.contentCenterX
     directionArrow.y = display.contentCenterY
-    directionArrow.anchorX = 0
-    directionArrow.anchorY = 0
+    directionArrow.anchorX = .5
+    directionArrow.anchorY = .5
     directionArrow:toFront()
 
     local header = display.newImageRect(sceneGroup, "themables/MultiplayerAreaControl.png",300, 100)
