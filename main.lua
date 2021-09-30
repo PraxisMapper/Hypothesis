@@ -199,7 +199,7 @@ function netTransfer()
 end
 
 function DefaultNetCallHandler(event)
-    if (debug and event.status ~= 200) then
+    if (event.status ~= 200) then
         netDown(event)
     else
         netUp()
