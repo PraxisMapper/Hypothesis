@@ -88,7 +88,7 @@ function multiplayerAreaClaim(event)
     end
 
     local noplus = removePlus(event.target.pluscode)
-    tappedCell = event.target.pluscode --needs to be before this print or it screws up on the first tap
+    tappedCell = event.target.pluscode 
     tappedAreaScore = 0 --i don't save this locally, this requires a network call to get and update
     tappedAreaMapDataId = event.target.MapDataId
     composer.showOverlay("overlayMPAreaClaim", {isModal = true})
