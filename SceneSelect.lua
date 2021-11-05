@@ -12,8 +12,7 @@ end
 
 local function SwitchToMultiplayerAreaControlScene()
     local options = {effect = "flip", time = 125}
-    --composer.gotoScene("MutiplayerAreaControl2", options)
-    composer.gotoScene("SingleClickDetectorTestScene", options)
+    composer.gotoScene("MutiplayerAreaControl2", options)
 end
 
 local function SwitchToPaintTownScene()
