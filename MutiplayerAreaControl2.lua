@@ -14,10 +14,8 @@ local bigGrid = true
 
 local cellCollection = {} -- main background map tiles
 local overlayCollection = {} -- AreaControl map tiles, translucent
-local CellTapSensors = {} -- this is for tapping an area to claim, but needs renamed. TODO: find a way to replace this with a single sensor?
-local ctsGroup = display.newGroup()
-ctsGroup.x = -8
-ctsGroup.y = 10
+
+local touchDetector = {} -- Determines what cell10 was tapped on the screen.
 
 local timerResults = nil
 local firstRun = true
@@ -65,6 +63,7 @@ local function testDrift()
 end
 
 local function ToggleZoom()
+    print("zoom tapped")
     bigGrid = not bigGrid
     local sceneGroup = scene.view
 
@@ -72,40 +71,23 @@ local function ToggleZoom()
 
     for i = 1, #cellCollection do cellCollection[i]:removeSelf() end
     for i = 1, #overlayCollection do overlayCollection[i]:removeSelf() end
-    for i = 1, #CellTapSensors do CellTapSensors[i]:removeSelf() end
 
     cellCollection = {}
     overlayCollection = {}
-    CellTapSensors = {}
 
     if (bigGrid) then
         CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with area control overlay
-        CreateRectangleGrid(61, 16, 20, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
-        ctsGroup.x = -8
-        ctsGroup.y = 10
     else
         CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(5, 160, 200, sceneGroup, overlayCollection) -- rectangular Cell11 grid with area control overlay
-        CreateRectangleGrid(80, 8, 10, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
-        ctsGroup.x = -4
-        ctsGroup.y = 5
-    end
-    --Move these to the back first, so that the map tiles will be behind them.
-    for square = 1, #CellTapSensors do
-        -- check each spot based on current cell, modified by gridX and gridY
-        CellTapSensors[square]:toBack()
     end
 
     for square = 1, #overlayCollection do
-        -- check each spot based on current cell, modified by gridX and gridY
         overlayCollection[square]:toBack()
-    end
-
-    for square = 1, #cellCollection do
-        -- check each spot based on current cell, modified by gridX and gridY
-        cellCollection[square]:toBack()
-    end
+        cellCollection[square]:toBack() --same count
+    end    
+    touchDetector:toBack()
 
     directionArrow:toFront()
     forceRedraw = true
@@ -113,7 +95,65 @@ local function ToggleZoom()
     return true
 end
 
+--"touch" event
+local function DetectLocationClick(event)
+    print("Detecting location")
+    -- we have a click somewhere in our rectangle. 
+    -- zoomed out grid is 5x5 lowres tiles, 800 x 1000 total, each pixel is 1 Cell 11
+    -- zoomed in grid is 3x3 highres tiles, 960 x 1200 total, each 2x2 pixels is 1 Cell 11
+
+    -- figure out how many pixels from the center of the item each tap is
+    -- divide those distances by 16 and 20 (or 8 and 10) to get cell10s away from center of image.
+    local screenX = event.x
+    local screenY = event.y
+    local centerX = display.contentCenterX
+    local centerY = display.contentCenterY
+
+    --remember that the CENTER of the center square is the center pixel on screen, not the SW corner
+    --so i have to shift info by half a square somewhere.
+
+    local pixelshiftX = screenX - centerX
+    local pixelshiftY = centerY - screenY --flips the sign to get things to line up correctly.
+    local plusCodeShiftX = 0
+    local plusCodeShiftY = 0
+
+    if (bigGrid) then
+        pixelshiftX = pixelshiftX + 8
+        pixelshiftY =  pixelshiftY + 10
+        plusCodeShiftX = pixelshiftX / 16
+        plusCodeShiftY = pixelshiftY / 20
+    else
+        pixelshiftX = pixelshiftX + 4
+        pixelshiftY =  pixelshiftY + 5
+        plusCodeShiftX = pixelshiftX / 8
+        plusCodeShiftY = pixelshiftY / 10
+    end
+
+    local newCell = currentPlusCode:sub(0,8) .. "+FF" --might be GG, depends on direction of shift
+    newCell = shiftCell(newCell, plusCodeShiftY, 9) --Y axis
+    newCell = shiftCell(newCell, plusCodeShiftX, 10) --X axis
+    print("Detected cell: " .. newCell)
+    tapData.text = "Cell Tapped: " .. newCell
+
+    local pluscodenoplus = removePlus(newCell)
+    local terrainInfo = LoadTerrainData(pluscodenoplus)
+
+    -- 3 is name, 4 is area type, 6 is mapDataID (privacyID)
+    if (terrainInfo[3] == "") then
+        tappedAreaName = terrainInfo[4]
+    else
+        tappedAreaName = terrainInfo[3]
+    end
+    
+    tappedCell = newCell
+    tappedAreaScore = 0 --i don't save this locally, this requires a network call to get and update
+    tappedAreaMapDataId = terrainInfo[6]
+    composer.showOverlay("overlayMPAreaClaim", {isModal = true})
+    
+end
+
 local function GoToSceneSelect()
+    print("back to scene select")
     local options = {effect = "flip", time = 125}
     composer.gotoScene("SceneSelect", options)
     return true
@@ -212,45 +252,6 @@ local function UpdateLocalOptimized()
         end
     end
 
-    -- Step 2: set up event listener grid. These need Cell10s
-    local baselinePlusCode = currentPlusCode:sub(1,8) .. "+FF"
-    if (innerForceRedraw) then --Also no need to do all of this unless we shifted our Cell8 location.
-    for square = 1, #CellTapSensors do
-            local thisSquaresPluscode = baselinePlusCode
-            local shiftChar7 = math.floor(CellTapSensors[square].gridY / 20)
-            local shiftChar8 = math.floor(CellTapSensors[square].gridX / 20)
-            local shiftChar9 = math.floor(CellTapSensors[square].gridY % 20)
-            local shiftChar10 = math.floor(CellTapSensors[square].gridX % 20)
-            thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar7, 7)
-            thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar8, 8)
-            thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar9, 9)
-            thisSquaresPluscode = shiftCell(thisSquaresPluscode, shiftChar10, 10)
-
-                CellTapSensors[square].pluscode = thisSquaresPluscode
-                local plusCodeNoPlus = removePlus(thisSquaresPluscode)
-                local terrainInfo = LoadTerrainData(plusCodeNoPlus) -- terrainInfo is a whole row from the DB.
-            
-                if (#terrainInfo > 4 and terrainInfo[4] ~= "") then -- 4 is areaType. not every area is named, so use type.
-                    -- apply info
-                    CellTapSensors[square].name = terrainInfo[3]
-                    CellTapSensors[square].type = terrainInfo[4]
-                    CellTapSensors[square].MapDataId = terrainInfo[6]
-                else
-                    CellTapSensors[square].name = ""
-                    CellTapSensors[square].type = ""
-                end
-
-            if (currentPlusCode == thisSquaresPluscode) then
-                if (debugLocal) then print("setting name") end
-                -- draw this place's name on screen, or an empty string if its not a place.
-                locationName.text = CellTapSensors[square].name
-                if (locationName.text == "") then
-                    locationName.text = CellTapSensors[square].type
-                end
-            end
-        end
-    end  
-
     --update team scores
     scoreCheckCounter = scoreCheckCounter - 1
     if (scoreCheckCounter <= 0) then
@@ -305,7 +306,11 @@ function scene:create(event)
     if (debug) then print("creating MPAreaControlScene2") end
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
-    sceneGroup:insert(ctsGroup)
+
+    touchDetector = display.newRect(sceneGroup, display.contentCenterX, display.contentCenterY, 720, 1280)
+    touchDetector:addEventListener("tap", DetectLocationClick)
+    touchDetector.fill = {0, 0.1}
+    touchDetector:toBack()
 
     contrastSquare = display.newRect(sceneGroup, display.contentCenterX, 270, 400, 200)
     contrastSquare:setFillColor(.8, .8, .8, .7)
@@ -330,11 +335,9 @@ function scene:create(event)
     if (bigGrid) then
         CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(60, 16, 20, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
     else
         CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(5, 160, 200, sceneGroup, overlayCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(80, 8, 10, ctsGroup, CellTapSensors, "mac") -- rectangular Cell11 grid  with event for area control
     end  
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 16, 20)
@@ -361,7 +364,6 @@ function scene:create(event)
         debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
         debugText:toFront()
     end
-    ctsGroup:toFront()
     zoom:toFront()
     contrastSquare:toFront()
     if (debug) then print("created AreaControl scene") end
