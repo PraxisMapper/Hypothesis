@@ -42,7 +42,7 @@ local function updateTotals()
     GetAllValues()
     --add per second values for each second that's passed since the last check
     local timeCheck = os.time()
-    local timeShift = (timeCheck - currentValues[2]) / 1000
+    local timeShift = (timeCheck - currentValues[2])
     sql = "UPDATE IdleStats SET allTotal = allTotal + " .. (currentValues[3] * timeShift) .. ", "
     sql = sql  .. "parkTotal = parkTotal + " .. (currentValues[4] * timeShift) .. ", "
     sql = sql  .. "natureTotal = natureTotal + " .. (currentValues[5] * timeShift) .. ", "
@@ -51,9 +51,11 @@ local function updateTotals()
     sql = sql  .. "graveyardTotal = graveyardTotal + " .. (currentValues[8] * timeShift) .. ", "
     sql = sql  .. "lastAddTime = " .. timeCheck
     Exec(sql)
+    updateText()
+end
 
+function updateText()
     GetAllValues()
-
     emptyLabel.text = "All Points: " .. math.modf(currentValues[9])
     parkLabel.text = "Park Points: " .. math.modf(currentValues[10])
     natureReserveLabel.text = "Nature Reserve Points: " .. math.modf(currentValues[11])
@@ -61,11 +63,11 @@ local function updateTotals()
     tourismLabel.text = "Tourism Points: " .. math.modf(currentValues[13])
     graveyardLabel.text ="Graveyard Points: " .. math.modf(currentValues[14])
 
-    buyParkLabel.text = "Buy 1 Park per second for " .. GetUpgradeCost(currentValues[4]) .. ' All points'
-    buyNatureReserverLabel.text = "Buy 1 Nature Reserve per second for " .. GetUpgradeCost(currentValues[5]) .. ' Park points'
-    buyTrailLabel.text ="Buy 1 Trail per second for " .. GetUpgradeCost(currentValues[6]) .. ' Nature Reserve points'
-    buyTourismLabel.text = "Buy 1 Tourism per second for " .. GetUpgradeCost(currentValues[7]) .. ' Trail points'
-    buyGraveyardLabel.text ="Buy 1 Graveyard per second for " .. GetUpgradeCost(currentValues[8]) .. ' Tourism points'
+    buyParkLabel.text = "Buy " .. (currentValues[4] + 1)  .. " Park points per second for " .. GetUpgradeCost(currentValues[4]) .. ' All points'
+    buyNatureReserverLabel.text = "Buy " .. (currentValues[5] + 1)  .. " Nature Reserve points per second for " .. GetUpgradeCost(currentValues[5]) .. ' Park points'
+    buyTrailLabel.text ="Buy " .. (currentValues[6] + 1)  .. " Trail points per second for " .. GetUpgradeCost(currentValues[6]) .. ' Nature Reserve points'
+    buyTourismLabel.text = "Buy " .. (currentValues[7] + 1)  .. " Tourism points per second for " .. GetUpgradeCost(currentValues[7]) .. ' Trail points'
+    buyGraveyardLabel.text ="Buy " .. (currentValues[8] + 1)  .. " Graveyard points per second for " .. GetUpgradeCost(currentValues[8]) .. ' Tourism points'
 
     buyWinLabel.text = "Confirm your victory with " .. (1000000 * (10 ^ currentValues[15])) ..  " of each terrain type"
 end
@@ -96,7 +98,7 @@ local function buyPark()
     if (currentValues[9] > cost) then
         local sql = "UPDATE IdleStats SET parkPerSec = parkPerSec + 1, allTotal = " .. (currentValues[9] - cost)
         Exec(sql)
-        GetAllValues()
+        updateText()
     end
 end
 
@@ -105,7 +107,7 @@ local function buyNatureReserve()
     if (currentValues[10] > cost) then
         local sql = "UPDATE IdleStats SET naturePerSec = naturePerSec + 1, parkTotal = " .. (currentValues[10] - cost)
         Exec(sql)
-        GetAllValues()
+        updateText()
     end
 end
 
@@ -114,7 +116,7 @@ local function buyTrail()
     if (currentValues[11] > cost) then
         local sql = "UPDATE IdleStats SET trailPerSec = trailPerSec + 1, natureTotal = " .. (currentValues[11] - cost)
         Exec(sql)
-        GetAllValues()
+        updateText()
     end
 end
 
@@ -123,7 +125,7 @@ local function buyTourism()
     if (currentValues[12] > cost) then
         local sql = "UPDATE IdleStats SET touristPerSec = touristPerSec + 1, trailTotal = " .. (currentValues[12] - cost)
         Exec(sql)
-        GetAllValues()
+        updateText()
     end
 end
 
@@ -132,7 +134,7 @@ local function buyGraveyard()
     if (currentValues[13] > cost) then
         local sql = "UPDATE IdleStats SET graveyardPerSec = graveyardPerSec + 1, touristTotal = " .. (currentValues[13] - cost)
         Exec(sql)
-        GetAllValues()
+        updateText()
     end
 end
  
@@ -193,15 +195,13 @@ function scene:create( event )
     buyTourismImg = display.newImageRect(sceneGroup, "themables/idleTourism.png", 300, 100)
     buyTourismImg.x = display.contentCenterX
     buyTourismImg.y = 740
-    buyTourismImg:addEventListener("tap", buyGraveyard)
+    buyTourismImg:addEventListener("tap", buyTourism)
 
     buyGraveyardImg = display.newImageRect(sceneGroup, "themables/idleGraveyard.png", 300, 100)
     buyGraveyardImg.x = display.contentCenterX
     buyGraveyardImg.y = 880
     buyGraveyardImg:addEventListener("tap", buyGraveyard)
 
- 
-    --need a button to 'win' and a label with the values
     buyWinLabel = display.newText(sceneGroup, "Confirm your victory with 1,000,000 of each terrain type", display.contentCenterX, 1080, native.systemFont, 20)
 
     local buyWinButton = display.newImageRect(sceneGroup, "themables/idleWin.png", 300, 100)
@@ -219,10 +219,11 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
+        print("starting idle game")
+        timer.performWithDelay(1000, updateTotals, -1)
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-        timer.performWithDelay(1000, updateTotals, -1)
     end
 end
   
