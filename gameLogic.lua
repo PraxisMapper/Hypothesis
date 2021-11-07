@@ -1,7 +1,13 @@
 function grantPoints(code)
+    -- area tag score:
     -- New Cell10: 10 points!
     -- daily checkin: 1 point
+
+    --Idle mode per second scores:
+    --1 point per day per cell.
+
     local addPoints = 0
+
     if (debug) then print("granting points for cell " .. code) end
 
     local timeValue = os.time()
@@ -35,6 +41,31 @@ function grantPoints(code)
 
     local cmd = "UPDATE playerData SET totalPoints = totalPoints + " .. addPoints
     Exec(cmd)
+
+    if (addPoints > 0) then
+        --Idle game update logic
+        local idleGameAreaType = ''
+        local column = 'all'
+        query = "SELECT areatype FROM terrainData WHERE pluscode = '" .. code .. "'"
+        for i, row in pairs(Query(query)) do
+            idleGameAreaType = row[1]
+        end
+
+        if (idleGameAreaType == 'park') then
+            column = 'park'
+        elseif (idleGameAreaType == 'natureReserve') then
+            column = 'nature'
+        elseif (idleGameAreaType == 'trail') then
+            column = 'trail'
+        elseif (idleGameAreaType == 'tourism') then
+            column = 'tourism'
+        elseif (idleGameAreaType == 'cemetery') then
+            column = 'graveyard'
+        end    
+
+        cmd = "UPDATE IdleStats SET " .. column .. "PerSec = " .. column .. "PerSec + 1"
+        Exec(cmd)
+    end
 
     if (debug) then
         print("earned " .. addPoints .. " points for cell " .. code)

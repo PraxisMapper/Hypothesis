@@ -37,10 +37,6 @@ local function ToggleZoom()
     print("zoom tapped")
     gridzoom = gridzoom + 1
     if (gridzoom > 3) then gridzoom = 1 end
-
-    print("A")
-
-    local sceneGroup = scene.view
     timer.pause(timerResults)
 
     for i = 1, #cellCollection do cellCollection[i]:removeSelf() end
