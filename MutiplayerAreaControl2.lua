@@ -10,7 +10,7 @@ require("dataTracker")
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
-local bigGrid = true
+local gridzoom = 2 -- 1, 2, 3. 
 
 local cellCollection = {} -- main background map tiles
 local overlayCollection = {} -- AreaControl map tiles, translucent
@@ -64,7 +64,8 @@ end
 
 local function ToggleZoom()
     print("zoom tapped")
-    bigGrid = not bigGrid
+    gridzoom = gridzoom + 1
+    if (gridzoom > 3) then gridzoom = 1 end
     local sceneGroup = scene.view
 
     timer.pause(timerResults)
@@ -74,14 +75,7 @@ local function ToggleZoom()
 
     cellCollection = {}
     overlayCollection = {}
-
-    if (bigGrid) then
-        CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with area control overlay
-    else
-        CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(5, 160, 200, sceneGroup, overlayCollection) -- rectangular Cell11 grid with area control overlay
-    end
+    makeGrid()
 
     for square = 1, #overlayCollection do
         overlayCollection[square]:toBack()
@@ -95,7 +89,27 @@ local function ToggleZoom()
     return true
 end
 
---"touch" event
+function makeGrid()
+    local sceneGroup = scene.view   
+    if (gridzoom == 1) then
+        CreateRectangleGrid(3, 640, 800, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(3, 640, 800, sceneGroup, overlayCollection) -- rectangular Cell11 grid with overlay
+    elseif (gridzoom == 2) then
+        CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with overlay
+    elseif (gridzoom == 3) then
+        CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(5, 160, 200, sceneGroup, overlayCollection) -- rectangular Cell11 grid with overlay
+    end
+
+    for square = 1, #overlayCollection do
+        overlayCollection[square]:toBack()
+        cellCollection[square]:toBack() --same count
+    end    
+    touchDetector:toBack()
+end
+
+--"tap" event
 local function DetectLocationClick(event)
     print("Detecting location")
     -- we have a click somewhere in our rectangle. 
@@ -117,12 +131,17 @@ local function DetectLocationClick(event)
     local plusCodeShiftX = 0
     local plusCodeShiftY = 0
 
-    if (bigGrid) then
+    if (gridzoom == 1) then
+        pixelshiftX = pixelshiftX + 16
+        pixelshiftY =  pixelshiftY + 20
+        plusCodeShiftX = pixelshiftX / 32
+        plusCodeShiftY = pixelshiftY / 40
+    elseif (gridzoom == 2) then
         pixelshiftX = pixelshiftX + 8
         pixelshiftY =  pixelshiftY + 10
         plusCodeShiftX = pixelshiftX / 16
         plusCodeShiftY = pixelshiftY / 20
-    else
+    elseif (gridzoom == 3) then
         pixelshiftX = pixelshiftX + 4
         pixelshiftY =  pixelshiftY + 5
         plusCodeShiftX = pixelshiftX / 8
@@ -275,10 +294,13 @@ local function UpdateLocalOptimized()
     --Shift is how many blocks to move. Multiply it by how big each block is. These offsets place the arrow in the correct Cell10.
     local shift = CODE_ALPHABET_:find(currentPlusCode:sub(11, 11)) - 11
     local shift2 = CODE_ALPHABET_:find(currentPlusCode:sub(10, 10)) - 10
-    if (bigGrid) then
+    if (gridzoom == 1) then
+        directionArrow.x = display.contentCenterX + (shift * 32)  + 16
+        directionArrow.y = display.contentCenterY - (shift2 * 40) + 20
+    elseif (gridzoom == 2) then
         directionArrow.x = display.contentCenterX + (shift * 16)  + 8
         directionArrow.y = display.contentCenterY - (shift2 * 20) + 10
-    else
+    elseif (gridzoom == 3) then
         directionArrow.x = display.contentCenterX + (shift * 8) + 4
         directionArrow.y = display.contentCenterY - (shift2 * 10) + 5
     end
