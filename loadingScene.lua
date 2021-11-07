@@ -1,5 +1,4 @@
 --This is the scene that appears after the splash screen, and sets up everything the game needs to run correcly
---overlayDL is the pop-up for downloading new data.
 
 --a lot of functions are localized to this scene, rather than being shared.
 local composer = require( "composer" )
@@ -130,12 +129,14 @@ function scene:show( event )
         CREATE TABLE IF NOT EXISTS bounds(id INTEGER PRIMARY KEY, south, west, north, east);
         CREATE TABLE IF NOT EXISTS dataDownloaded(id INTEGER PRIMARY KEY, pluscode8, downloadedOn);
         CREATE TABLE IF NOT EXISTS areasOwned(id INTEGER PRIMARY KEY, mapDataId, name, points);
+        CREATE TABLE IF NOT EXISTS idleStats(id INTEGER PRIMARY KEY, lastAddTime, allPerSec, parkPerSec, naturePerSec, trailPerSec, touristPerSec, graveyardPerSec, allTotal, parkTotal, natureTotal, trailTotal, touristTotal, graveyardTotal, wins);
         CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
         CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
         CREATE INDEX IF NOT EXISTS indexOwnedMapIds on areasOwned(mapDataId);
         CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode);
         INSERT OR IGNORE INTO systemData(id, dbVersionID, serverAddress) values (1, ]] .. currentDbVersion .. [[, 'https://us.praxismapper.org/praxismapper/');
         INSERT OR IGNORE INTO playerData(id, factionID, totalPoints) values (1, 0, 0);
+        INSERT OR IGNORE INTO idleStats(id, lastAddTime, allPerSec, parkPerSec, naturePerSec, trailPerSec, graveyardPerSec, touristPerSec, allTotal, parkTotal, natureTotal, trailTotal, graveyardTotal, touristTotal, wins) values (1, ]] .. os.time() .. [[, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         ]]
         
         statusText.text = "Database Opened "  .. sqlite3.version() --3.19 on android and simulator.
@@ -162,10 +163,10 @@ function scene:show( event )
         print(serverURL)
 
         --Debug setup
-        if (debug) then
+        --if (debug) then
             --serverURL = "http://localhost/praxismapper/"
-            serverURL = "http://192.168.50.247/praxismapper/"
-        end
+            --serverURL = "http://192.168.50.247/praxismapper/"
+        --end
 
         statusText.text = "Getting server boundaries..."
         GetServerBoundsStartup() --Startup process continues in the event handler for this.

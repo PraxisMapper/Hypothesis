@@ -19,6 +19,11 @@ local function SwitchToPaintTownScene()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("PaintTownScene", options)
 end
+
+local function SwitchToIdleScene()
+    local options = {effect = "flip", time = 125}
+    composer.gotoScene("IdleScene", options)
+end
  
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -39,6 +44,13 @@ function scene:create( event )
     changeMPAreaControl.x = 390
     changeMPAreaControl.y = 100
     changeMPAreaControl:addEventListener("tap", SwitchToMultiplayerAreaControlScene)
+
+    local changeIdle = display.newImageRect(sceneGroup, "themables/idleGame.png", 300, 100) --idle game
+    changeIdle.anchorX = 0
+    changeIdle.anchorY = 0
+    changeIdle.x = 60
+    changeIdle.y = 250
+    changeIdle:addEventListener("tap", SwitchToIdleScene)
 
     local changePaintTown = display.newImageRect(sceneGroup, "themables/PaintTown.png", 300, 100) --paint the town
     changePaintTown.anchorX = 0
