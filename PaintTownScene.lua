@@ -100,9 +100,6 @@ local function UpdateLocalOptimized()
      if (not playerInBounds) then
          return
     end
-
-    currentHeading = currentHeading + 5
-
     if (debug) then debugText.text = dump(lastLocationEvent) end
 
     local plusCodeNoPlus = removePlus(currentPlusCode)
