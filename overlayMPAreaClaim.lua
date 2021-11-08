@@ -68,7 +68,7 @@ function AreaOwnerListener(event)
 end
 
 function GetAreaScore(mapDataId)
-    network.request(serverURL .. "Data/GetScoreForArea/" .. tappedAreaMapDataId .. defaultQueryString, "GET", AreaScoreListener)
+    network.request(serverURL .. "Data/GetScoreForPlace/" .. tappedAreaMapDataId .. defaultQueryString, "GET", AreaScoreListener)
 end
 
 function AreaScoreListener(event)
