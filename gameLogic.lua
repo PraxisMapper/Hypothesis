@@ -47,7 +47,7 @@ function grantPoints(code)
         local idleGameAreaType = ''
         local column = 'all'
         query = "SELECT areatype FROM terrainData WHERE pluscode = '" .. code .. "'"
-        for i, row in pairs(Query(query)) do
+        for i, row in ipairs(Query(query)) do
             idleGameAreaType = row[1]
         end
 
