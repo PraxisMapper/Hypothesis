@@ -13,7 +13,7 @@ local scene = composer.newScene()
  local teamButton = ""
  local teamLabel = ""
  local teamTimer = ""
- local debugToggle = ""
+ local debugToggle = display.newImageRect("themables/debugOn.png",300, 100)
  
  local function GoToSceneSelect()
     local options = {effect = "flip", time = 125}
@@ -50,20 +50,16 @@ end
     end
  end
 
- local function toggleDebug()
-    print("tapped")
+ function setDebugImg()
     debug = not debug
-    debugToggle.fill = {0, 0}
-    if (debug == true) then
-        print("yes")
-        debugToggle.fill = {type = "image", filename = "themables/debugOn.png", baseDir = system.ResourceDirectory}
+    if (debug) then
+        debugToggle.fill = {type = "image", filename = "themables/debugOn.png"}
     else
-        print("no")
-        debugToggle.fill = {type = "image", filename = "themables/debugOn.png", baseDir = system.ResourceDirectory}
+        debugToggle.fill = {type = "image", filename = "themables/debugOff.png"}
     end
-    print(debug)
+    debugToggle.x = display.contentCenterX
+    debugToggle.y = 650
  end
-
 
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -89,7 +85,7 @@ function scene:show( event )
     header.y = 100
     header:addEventListener("tap", GoToSceneSelect)
         
-        --native components dont play nicely like the built in OpenGL stuff does, so manage it slightly differently.
+    --native components dont play nicely like the built in OpenGL stuff does, so manage it slightly differently.
     ipLabel = display.newText(sceneGroup, "Server URL: (Start with 'http://', end with '/')", 25, 210, 600, 50, native.systemFont, 30)
     ipLabel.anchorX = 0
 
@@ -108,15 +104,8 @@ function scene:show( event )
 
     --TODO: GDPR delete button
 
-    --TODO: this doesn't yet change the displayed image set when the button is tapped. Figure out why it isnt.
-    debugToggle = display.newImageRect(sceneGroup, "themables/debugOn.png",300, 100)
-    debugToggle.x = display.contentCenterX
-    debugToggle.y = 650
-    debugToggle:addEventListener("tap", toggleDebug)
-
-    -- if (not debug) then
-    --     debugToggle.fill.filename = "themables/debugOff.png"
-    -- end
+    setDebugImg()
+    debugToggle:addEventListener("tap", setDebugImg)
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
