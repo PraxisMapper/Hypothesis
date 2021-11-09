@@ -70,6 +70,10 @@ function scene:create( event )
  
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
+
+    debugToggle = display.newImageRect(sceneGroup, "themables/debugOn.png",300, 100)
+    setDebugImg()
+    debugToggle:addEventListener("tap", setDebugImg)
 end 
  
 -- show()
@@ -104,9 +108,7 @@ function scene:show( event )
 
     --TODO: GDPR delete button
 
-    debugToggle = display.newImageRect(sceneGroup, "themables/debugOn.png",300, 100)
-    setDebugImg()
-    debugToggle:addEventListener("tap", setDebugImg)
+    
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
