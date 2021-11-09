@@ -13,7 +13,7 @@ local scene = composer.newScene()
  local teamButton = ""
  local teamLabel = ""
  local teamTimer = ""
- local debugToggle = display.newImageRect("themables/debugOn.png",300, 100)
+ local debugToggle = "" 
  
  local function GoToSceneSelect()
     local options = {effect = "flip", time = 125}
@@ -104,6 +104,7 @@ function scene:show( event )
 
     --TODO: GDPR delete button
 
+    debugToggle = display.newImageRect(sceneGroup, "themables/debugOn.png",300, 100)
     setDebugImg()
     debugToggle:addEventListener("tap", setDebugImg)
  
