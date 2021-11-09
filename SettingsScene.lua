@@ -13,6 +13,7 @@ local scene = composer.newScene()
  local teamButton = ""
  local teamLabel = ""
  local teamTimer = ""
+ local debugToggle = ""
  
  local function GoToSceneSelect()
     local options = {effect = "flip", time = 125}
@@ -47,6 +48,20 @@ end
     elseif (factionID == 3) then
             teamLabel.text = "Active Team: Blue"
     end
+ end
+
+ local function toggleDebug()
+    print("tapped")
+    debug = not debug
+    debugToggle.fill = {0, 0}
+    if (debug == true) then
+        print("yes")
+        debugToggle.fill = {type = "image", filename = "themables/debugOn.png", baseDir = system.ResourceDirectory}
+    else
+        print("no")
+        debugToggle.fill = {type = "image", filename = "themables/debugOn.png", baseDir = system.ResourceDirectory}
+    end
+    print(debug)
  end
 
 
@@ -90,6 +105,18 @@ function scene:show( event )
     ipTextField = native.newTextField(350, 250, 650, 50)
     ipTextField.placeholder = "https://YourPraxisMapper.com/"
     ipTextField:addEventListener("userInput", UpdateURL)
+
+    --TODO: GDPR delete button
+
+    --TODO: this doesn't yet change the displayed image set when the button is tapped. Figure out why it isnt.
+    debugToggle = display.newImageRect(sceneGroup, "themables/debugOn.png",300, 100)
+    debugToggle.x = display.contentCenterX
+    debugToggle.y = 650
+    debugToggle:addEventListener("tap", toggleDebug)
+
+    -- if (not debug) then
+    --     debugToggle.fill.filename = "themables/debugOff.png"
+    -- end
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
