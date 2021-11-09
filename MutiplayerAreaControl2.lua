@@ -354,13 +354,7 @@ function scene:create(event)
     scoreLog:setFillColor(0, 0, 0);
     locationName:setFillColor(0, 0, 0);
 
-    if (bigGrid) then
-        CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with map tiles
-    else
-        CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-        CreateRectangleGrid(5, 160, 200, sceneGroup, overlayCollection) -- rectangular Cell11 grid with map tiles
-    end  
+    makeGrid()
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 16, 20)
     directionArrow.x = display.contentCenterX

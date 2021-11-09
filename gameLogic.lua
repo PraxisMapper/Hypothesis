@@ -43,10 +43,11 @@ function grantPoints(code)
     Exec(cmd)
 
     if (addPoints > 0) then
+        local codeNoPlus = removePlus(code)
         --Idle game update logic
         local idleGameAreaType = ''
         local column = 'all'
-        query = "SELECT areatype FROM terrainData WHERE pluscode = '" .. code .. "'"
+        query = "SELECT areatype FROM terrainData WHERE pluscode = '" .. codeNoPlus .. "'"
         for i, row in ipairs(Query(query)) do
             idleGameAreaType = row[1]
         end
