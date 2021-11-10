@@ -38,6 +38,26 @@ end
     factionID = newTeam
  end
 
+ function DeleteDataListener(event)
+    local url = serverURL .. "Data/DeleteUser/" .. system.getInfo("deviceID") .. defaultQueryString
+    print(url)
+    network.request(url, "GET", DeleteDataResponse)
+ end
+
+ function DeleteDataResponse(event)
+    if (event.status == 200) then
+        local deletedEntries = event.response
+        if (system.getInfo("manufacturer") == "Apple") then
+            native.showAlert("Completed", "Deleted " .. deletedEntries .. " deleted from the server. Close the app now.")
+        else
+            native.showAlert("Completed", "Deleted " .. deletedEntries .. " deleted from the server. Exiting game now. ")
+            native.requestExit()
+        end        
+    else
+        native.showAlert("Failed", "Server didn't answer the request. Try again with better connectivity or in a few minutes.")
+    end
+ end
+
  local function checkTeamMembership()
     if (factionID == 0) then
         teamLabel.text = "Active Team: Undetermined"
@@ -106,10 +126,12 @@ function scene:show( event )
     ipTextField.placeholder = "https://YourPraxisMapper.com/"
     ipTextField:addEventListener("userInput", UpdateURL)
 
-    --TODO: GDPR delete button
+    delUserData = display.newImageRect(sceneGroup, "themables/delUserData.png",300, 100)
+    delUserData.x = display.contentCenterX
+    delUserData.y = 800
+    delUserData:addEventListener("tap", DeleteDataListener)
 
-    
- 
+
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
         ipTextField.text = GetServerAddress()
