@@ -87,16 +87,14 @@ function shiftCell(pluscode, Shift, position)
     local digitIndex = 0
     --do the shift
     if (Shift ~= 0) then
-
         currentDigit = pluscode:sub(charPos, charPos)
         digitIndex = CODE_ALPHABET_:find(currentDigit)
         digitIndex = digitIndex + Shift
-
-        if (digitIndex <= 0) then
+        while (digitIndex <= 0) do
             digitIndex = 20 + digitIndex
             newCode = shiftCell(newCode, -1, position - 2) 
         end
-        if (digitIndex > 20) then
+        while (digitIndex > 20) do
             digitIndex = digitIndex - 20
             newCode = shiftCell(newCode, 1, position - 2) 
         end
