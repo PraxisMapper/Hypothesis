@@ -63,7 +63,6 @@ local function testDrift()
 end
 
 local function ToggleZoom()
-    print("zoom tapped")
     gridzoom = gridzoom + 1
     if (gridzoom > 3) then gridzoom = 1 end
     local sceneGroup = scene.view
@@ -208,7 +207,8 @@ local function UpdateLocalOptimized()
 
     if (debug) then debugText.text = dump(lastLocationEvent) end
 
-    if (timerResults ~= nil) then timer.pause(timerResults) end
+    --This function takes ~16ms to run, we call the loop every 150, we probably don't need to pause/resume the timer
+    --if (timerResults ~= nil) then timer.pause(timerResults) end
     local innerForceRedraw = forceRedraw or firstRun or (currentPlusCode:sub(1,8) ~= previousPlusCode:sub(1,8))
     firstRun = false
     forceRedraw = false
@@ -232,44 +232,44 @@ local function UpdateLocalOptimized()
         thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
-             GetMapData8(plusCodeNoPlus)
-            local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
-            local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
-            if (imageRequested == nil) then 
-                imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
-            end
- 
-            if (imageExists == false or imageExists == nil) then 
-                 GetMapTile8(plusCodeNoPlus)
-            else
-                cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
-                local paint = {
-                    type = "image",
-                    filename = plusCodeNoPlus .. "-11.png",
-                    baseDir = system.CachesDirectory
-                }
-                cellCollection[square].fill = paint
-            end
-
-            imageRequested = requestedMPMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
-            imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
-            if (imageRequested == nil) then 
-                imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
-            end
- 
-            if (imageExists == false or imageExists == nil) then 
-                 GetTeamControlMapTile8(plusCodeNoPlus)
-            else
-                overlayCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
-                local paint = {
-                    type = "image",
-                    filename = plusCodeNoPlus .. "-AC-11.png",
-                    baseDir = system.TemporaryDirectory
-                }
-                overlayCollection[square].fill = paint
-            end
+        GetMapData8(plusCodeNoPlus)
+        local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
+        local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
+        if (imageRequested == nil) then 
+            imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
         end
-    end
+ 
+        if (imageExists == false or imageExists == nil) then 
+            GetMapTile8(plusCodeNoPlus)
+        else
+            cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
+            local paint = {
+                type = "image",
+                filename = plusCodeNoPlus .. "-11.png",
+                baseDir = system.CachesDirectory
+            }
+            cellCollection[square].fill = paint
+        end
+
+        imageRequested = requestedMPMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
+        imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
+        if (imageRequested == nil) then 
+            imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
+        end
+ 
+        if (imageExists == false or imageExists == nil) then 
+            GetTeamControlMapTile8(plusCodeNoPlus)
+        else
+            overlayCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
+            local paint = {
+                type = "image",
+                filename = plusCodeNoPlus .. "-AC-11.png",
+                baseDir = system.TemporaryDirectory
+            }
+            overlayCollection[square].fill = paint
+        end
+    end --for
+    end --if
 
     --update team scores
     scoreCheckCounter = scoreCheckCounter - 1
@@ -281,7 +281,7 @@ local function UpdateLocalOptimized()
         scoreCheckCounter = 24
     end
 
-    if (timerResults ~= nil) then timer.resume(timerResults) end
+   -- if (timerResults ~= nil) then timer.resume(timerResults) end
     if (debugLocal) then print("grid done or skipped") end
     locationText.text = "Current location:" .. currentPlusCode
     explorePointText.text = "Explore Points: " .. Score()
