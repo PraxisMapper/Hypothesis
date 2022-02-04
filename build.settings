@@ -23,6 +23,8 @@ settings =
 			"android.permission.INTERNET",
             "android.permission.ACCESS_FINE_LOCATION",
             "android.permission.ACCESS_COARSE_LOCATION",
+			"android.permission.CAMERA",
+            "android.permission.WRITE_EXTERNAL_STORAGE",
 		},
 	},
 
@@ -36,6 +38,9 @@ settings =
 		{
 			UIStatusBarHidden = false,
 			UILaunchStoryboardName = "LaunchScreen",
+			NSCameraUsageDescription = "This app uses the camera in the GeoCaching example to let you hide a picture somewhere.",
+            NSPhotoLibraryUsageDescription = "This permission is required in order to read data from the camera.",
+			NSLocationWhenInUseUsageDescription = "Moving around in the real world is how you move around in game. Your location is not stored or tied to you personally."	
 		},
 	},
 

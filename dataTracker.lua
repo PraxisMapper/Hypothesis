@@ -280,3 +280,14 @@ function GetServerBoundsListener(event)
         netDown(event)
     end
 end
+
+function SendGeocachePublic(text)
+    local url = serverURL .. "Data/SetPlusCodeData/" .. Cell10 .. "/geocachepublic/" .. text .. defaultQueryString
+    network.request(url, "GET", DefaultNetCallHandler) 
+end
+
+function SendGeocacheSecret(text)
+    -- set data so it expires in 30 days. Don't overwrite existing data if its not expired.
+    local url = serverURL .. "Data/SetSecurePlusCodeData/" .. Cell10 .. "/geocachesecret/" .. text .. '/2592000' .. defaultQueryString
+    network.request(url, "GET", DefaultNetCallHandler) 
+end
