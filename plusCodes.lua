@@ -107,3 +107,17 @@ end
 function removePlus(pluscode)
     return string.gsub(pluscode, "+", "")
 end
+
+function countDistanceInCells(startCode, endCode)
+    -- figure out X cell distance, capping distance at a cell8 (even)
+    local xDigitS = startCode:sub(10, 10)
+    local xDigitE = endCode:sub(10, 10)
+    local xDistance = CODE_ALPHABET_:find(xDigitS) - CODE_ALPHABET_:find(xDigitE)
+    --figure out Y cell distance, capping at a cell 8 (odd)
+    local yDigitS = startCode:sub(9, 9)
+    local yDigitE = endCode:sub(9, 9)
+    local yDistance = CODE_ALPHABET_:find(yDigitS) - CODE_ALPHABET_:find(yDigitE)
+    --triangulate straight line distance.
+    local fullDist = math.sqrt((xDistance ^ 2) * (yDistance ^ 2))
+    return fullDist
+end
