@@ -49,7 +49,6 @@ require("dataTracker")
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
        --currentPlusCode = "85PFF56C+5P" --Old Faithful 
-       currentPlusCode = "86HWGGGP+2J" --Old Faithful 
 end
 
 --These 2 are mostly duplicates of the ones in dataTracker, but I want to stop the loading process until I get the server bounds.
@@ -131,10 +130,12 @@ function scene:show( event )
         CREATE TABLE IF NOT EXISTS dataDownloaded(id INTEGER PRIMARY KEY, pluscode8, downloadedOn);
         CREATE TABLE IF NOT EXISTS areasOwned(id INTEGER PRIMARY KEY, mapDataId, name, points);
         CREATE TABLE IF NOT EXISTS idleStats(id INTEGER PRIMARY KEY, lastAddTime, allPerSec, parkPerSec, naturePerSec, trailPerSec, touristPerSec, graveyardPerSec, allTotal, parkTotal, natureTotal, trailTotal, touristTotal, graveyardTotal, wins);
+        CREATE TABLE IF NOT EXISTS tileGenerationData (id INTEGER PRIMARY KEY, plusCode, styleSet, generationId);
         CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
         CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
         CREATE INDEX IF NOT EXISTS indexOwnedMapIds on areasOwned(mapDataId);
         CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode);
+        CREATE INDEX IF NOT EXISTS generationIndex on tileGenerationData(pluscode);
         INSERT OR IGNORE INTO systemData(id, dbVersionID, serverAddress) values (1, ]] .. currentDbVersion .. [[, 'https://us.praxismapper.org/praxismapper/');
         INSERT OR IGNORE INTO playerData(id, factionID, totalPoints) values (1, 0, 0);
         INSERT OR IGNORE INTO idleStats(id, lastAddTime, allPerSec, parkPerSec, naturePerSec, trailPerSec, graveyardPerSec, touristPerSec, allTotal, parkTotal, natureTotal, trailTotal, graveyardTotal, touristTotal, wins) values (1, ]] .. os.time() .. [[, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
