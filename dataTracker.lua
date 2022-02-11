@@ -3,7 +3,7 @@
 
 require("helpers") --colorConvert
 local composer = require( "composer" ) --for storing variables
-
+require("database")
 
 --this process:
 --these tables have a string key for each relevant cell
@@ -290,4 +290,61 @@ function SendGeocacheSecret(text)
     -- set data so it expires in 30 days. Don't overwrite existing data if its not expired.
     local url = serverURL .. "Data/SetSecurePlusCodeData/" .. Cell10 .. "/geocachesecret/" .. text .. '/2592000' .. defaultQueryString
     network.request(url, "GET", DefaultNetCallHandler) 
+end
+
+function checkTileGeneration(plusCode, styleSet)
+    local url = serverURL .. "MapTile/Generation/" .. plusCode .. "/" ..styleSet .. defaultQueryString
+    network.request(url, "GET", tileGenHandler) 
+end
+
+function tileGenHandler(event)
+    --this does require that the file exists in addition to being up to date, in case they cleared their cache.
+    -- so maybe i need to run local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
+    --and if the file doesn't exist, download it anyways after getting the current gen value.
+
+    -- pull out values, check DB
+    local piece = string.gsub(string.gsub(event.url, defaultQueryString, ""), serverURL .. "MapTile/Generation/", "")
+    local pieces = Split(piece, '/')
+    local answer = event.response
+
+    local imageExists = false
+    if pieces[2] == "mapTiles" then
+        imageExists = doesFileExist(pieces[1] .. "-11.png", system.CachesDirectory)
+    elseif pieces[2] == "teamColor" then
+        imageExists = doesFileExist(pieces[1] .. "-AC-11.png", system.TemporaryDirectory)
+    end
+
+    local currentGenQuery =  'SELECT generationId from tileGenerationData WHERE plusCode = "' .. pieces[1] .. '" and styleSet = "' .. pieces[2] .. '"'
+    local hasData = false
+    local redownload = false
+
+    --loop, but should be 1 result.
+    for i, v in ipairs(Query(currentGenQuery)) do
+        hasData = true
+        if v[1] < tonumber(answer) then
+            local exec = 'UPDATE tileGenerationData SET generationId = ' .. answer .. ' WHERE plusCode ="' .. pieces[1] .. '" AND styleSet = "' .. pieces[2] .. '"'
+            Exec(exec)
+            --TrackerGetCell8Image11(pieces[1])
+            redownload = true
+        else
+            --print("same value, no updates")
+        end
+    end
+
+    if hasData == false then
+        local sql = 'INSERT INTO tileGenerationData(plusCode, styleSet, generationId) VALUES ("' .. pieces[1] .. '", "' .. pieces[2] .. '", ' .. answer .. ')'
+        Exec(sql)
+        --TrackerGetCell8Image11(pieces[1])
+        redownload = true
+    end
+
+    redownload = (hasData == false) or redownload
+
+    if redownload then
+        if pieces[2] == "mapTiles" then
+            TrackerGetCell8Image11(pieces[1])
+        elseif pieces[2] == "teamColor" then
+            GetTeamControlMapTile8(pieces[1])
+        end
+    end
 end
