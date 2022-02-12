@@ -164,16 +164,16 @@ function backListener(event)
     if (debug) then print("didn't handle this one") end
 end
 
-function clearMACcache()
-    print("clearing tile cache")
-    requestedMPMapTileCells = {}
-    local temp_path = system.pathForFile( "", system.TemporaryDirectory )
-    for file in lfs.dir( temp_path ) do
-        os.remove(system.pathForFile( file, system.TemporaryDirectory ))
-    end
-end
+--function clearMACcache()
+    --print("clearing tile cache")
+    --requestedMPMapTileCells = {}
+    --local temp_path = system.pathForFile( "", system.TemporaryDirectory )
+    --for file in lfs.dir( temp_path ) do
+        --os.remove(system.pathForFile( file, system.TemporaryDirectory ))
+    --end
+--end
 
-timer.performWithDelay(20000, clearMACcache, -1)
+--timer.performWithDelay(20000, clearMACcache, -1)
 Runtime:addEventListener("location", gpsListener)
 Runtime:addEventListener("key", backListener)
 
