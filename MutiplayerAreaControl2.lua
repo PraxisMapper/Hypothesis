@@ -192,7 +192,7 @@ local function UpdateLocalOptimized()
     -- First loop for map tiles
     -- Then loop for touch event rectangles.
     if timerResults == nil then
-        timerResults = timer.performWithDelay(150, UpdateLocalOptimized, -1)
+        timerResults = timer.performWithDelay(450, UpdateLocalOptimized, -1)
     end
 
     if not playerInBounds then
@@ -264,7 +264,7 @@ local function UpdateLocalOptimized()
         --end
         --if (imageExists == false or imageExists == nil) then 
             --GetTeamControlMapTile8(plusCodeNoPlus)
-            
+
         imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
         if imageExists then
             overlayCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
