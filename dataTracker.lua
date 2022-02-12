@@ -103,6 +103,10 @@ function TrackplusCode8Listener(event)
 end
 
 function TrackerGetCell8Image11(plusCode)
+    if requestedMPMapTileCells[plusCode] ~= nil then
+        return
+    end
+
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
@@ -111,19 +115,20 @@ end
 
 function Trackerimage811Listener(event)
     local filename = string.gsub(event.url, serverURL .. "MapTile/DrawPlusCode/", "")
+    requestedMPMapTileCells[filename] = nil
     if event.status == 200 then
         forceRedraw = true
         netUp() 
-        requestedMapTileCells[filename] = 1
+        --requestedMapTileCells[filename] = 1
     else 
         netDown(event) 
-        requestedMapTileCells[filename] = -1
+        --requestedMapTileCells[filename] = -1
     end
 end
 
 function GetTeamControlMapTile8(Cell8)
     --print("getting AC tile " .. Cell8)
-    if (requestedMPMapTileCells[cell8] == 1) then
+    if (requestedMPMapTileCells[cell8] ~= nil) then
         --We already have this tile.
         return
     end
@@ -155,14 +160,15 @@ end
 function TrackerMPimage811Listener(event)
     local plusCode = string.gsub(string.gsub(event.url, serverURL .. "MapTile/DrawPlusCodeCustomElements/", ""), "/teamColor/teamColor", "")
     --if (debug) then print("got data for " ..  plusCode) end
+    requestedMPMapTileCells[plusCode] = nil
     if event.status == 200 then
         forceRedraw = true
         netUp() 
-        requestedMPMapTileCells[plusCode] = 1
+        --requestedMPMapTileCells[plusCode] = 1
     else 
         netDown(event) 
         print(plusCode .. " errored on MAC tile: " .. event.status)
-        requestedMPMapTileCells[plusCode] = -1
+        --requestedMPMapTileCells[plusCode] = -1
     end
 end
 
@@ -293,6 +299,7 @@ function SendGeocacheSecret(text)
 end
 
 function checkTileGeneration(plusCode, styleSet)
+    print("Calling checkTileGen " .. plusCode .. " " .. styleSet)
     local url = serverURL .. "MapTile/Generation/" .. plusCode .. "/" ..styleSet .. defaultQueryString
     network.request(url, "GET", tileGenHandler) 
 end
@@ -306,6 +313,8 @@ function tileGenHandler(event)
     local piece = string.gsub(string.gsub(event.url, defaultQueryString, ""), serverURL .. "MapTile/Generation/", "")
     local pieces = Split(piece, '/')
     local answer = event.response
+
+    print("tileGenHandler " .. pieces[1] .. " " .. pieces[2] .. " " .. answer)
 
     local imageExists = false
     if pieces[2] == "mapTiles" then
@@ -338,8 +347,7 @@ function tileGenHandler(event)
         redownload = true
     end
 
-    redownload = (hasData == false) or redownload
-
+    redownload = (imageExists == false) or redownload
     if redownload then
         if pieces[2] == "mapTiles" then
             TrackerGetCell8Image11(pieces[1])

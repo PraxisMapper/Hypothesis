@@ -233,15 +233,20 @@ local function UpdateLocalOptimized()
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
         GetMapData8(plusCodeNoPlus)
-        local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
-        local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
-        if (imageRequested == nil) then 
-            imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
-        end
+
+        checkTileGeneration(plusCodeNoPlus, "mapTiles")
+        --all of this commented block should be replaced with the simpler call above
+        --local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
+        
+        --if (imageRequested == nil) then 
+            --imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
+        --end
  
-        if (imageExists == false or imageExists == nil) then 
-            GetMapTile8(plusCodeNoPlus)
-        else
+        --if (imageExists == false or imageExists == nil) then 
+            --GetMapTile8(plusCodeNoPlus)
+        --else
+        local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
+        if imageExists == true then
             cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
             local paint = {
                 type = "image",
@@ -251,15 +256,17 @@ local function UpdateLocalOptimized()
             cellCollection[square].fill = paint
         end
 
-        imageRequested = requestedMPMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
+        checkTileGeneration(plusCodeNoPlus, "teamColor")
+        --imageRequested = requestedMPMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
+        
+        --if (imageRequested == nil) then 
+            --imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
+        --end
+        --if (imageExists == false or imageExists == nil) then 
+            --GetTeamControlMapTile8(plusCodeNoPlus)
+            
         imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
-        if (imageRequested == nil) then 
-            imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
-        end
- 
-        if (imageExists == false or imageExists == nil) then 
-            GetTeamControlMapTile8(plusCodeNoPlus)
-        else
+        if imageExists then
             overlayCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
             local paint = {
                 type = "image",
