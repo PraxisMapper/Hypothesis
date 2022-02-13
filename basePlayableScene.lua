@@ -173,24 +173,18 @@ local function UpdateLocalOptimized()
         thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
-             GetMapData8(plusCodeNoPlus)
-            local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
-            local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
-            if (imageRequested == nil) then 
-                imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
-            end
- 
-            if (imageExists == false or imageExists == nil) then 
-                 GetMapTile8(plusCodeNoPlus)
-            else
-                cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
-                local paint = {
-                    type = "image",
-                    filename = plusCodeNoPlus .. "-11.png",
-                    baseDir = system.CachesDirectory
-                }
-                cellCollection[square].fill = paint
-            end
+        GetMapData8(plusCodeNoPlus)
+        checkTileGeneration(plusCodeNoPlus, "mapTiles")
+        local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
+        if imageExists == true then
+            cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
+            local paint = {
+                type = "image",
+                filename = plusCodeNoPlus .. "-11.png",
+                baseDir = system.CachesDirectory
+            }
+            cellCollection[square].fill = paint
+        end
 
             --Update this loop to pull the overlay tiles if needed
             -- imageRequested = requestedMPMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
