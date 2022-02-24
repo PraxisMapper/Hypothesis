@@ -300,6 +300,11 @@ end
 
 function checkTileGeneration(plusCode, styleSet)
     print("Calling checkTileGen " .. plusCode .. " " .. styleSet)
+
+    if styleSet == 'mapTiles' and requestedMapTileCells[plusCode] == 1 then
+        return --only check baseline tiles once per run. Check for updates on next run.
+    end
+
     local url = serverURL .. "MapTile/Generation/" .. plusCode .. "/" ..styleSet .. defaultQueryString
     network.request(url, "GET", tileGenHandler) 
 end
@@ -354,5 +359,9 @@ function tileGenHandler(event)
         elseif pieces[2] == "teamColor" then
             GetTeamControlMapTile8(pieces[1])
         end
+    end
+
+    if event.status == 200 and pieces[2] == 'mapTiles' then
+        requestedMapTileCells[plusCode] = 1
     end
 end
