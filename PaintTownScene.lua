@@ -134,15 +134,13 @@ local function UpdateLocalOptimized()
                 GetPaintTownMapData8(plusCodeNoPlus)
             end
                 GetMapData8(plusCodeNoPlus)
-                local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
+                checkTileGeneration(plusCodeNoPlus, "mapTiles")
+                -- local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
                 local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
-                if (imageRequested == nil) then -- or imageExists == 0 --if I check for 0, this is always nil? if I check for nil, this is true when images are present?
-                    imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
-                end
-                if (imageExists == false or imageExists == nil) then -- not sure why this is true when file is found and 0 when its not? -- or imageExists == 0
-                    cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
-                    GetMapTile8(plusCodeNoPlus)
-                else
+                --if (imageRequested == nil) then -- or imageExists == 0 --if I check for 0, this is always nil? if I check for nil, this is true when images are present?
+                    --imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
+                --end
+                if (imageExists == true) then -- not sure why this is true when file is found and 0 when its not? -- or imageExists == 0
                     cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
                     local paint = {
                         type = "image",

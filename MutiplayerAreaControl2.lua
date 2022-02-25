@@ -233,7 +233,6 @@ local function UpdateLocalOptimized()
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
         GetMapData8(plusCodeNoPlus)
-
         checkTileGeneration(plusCodeNoPlus, "mapTiles")
         --all of this commented block should be replaced with the simpler call above
         --local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.

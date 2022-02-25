@@ -143,7 +143,7 @@ end
 
 local function UpdateLocalOptimized()
     if timerResults == nil then
-        timerResults = timer.performWithDelay(150, UpdateLocalOptimized, -1)
+        timerResults = timer.performWithDelay(450, UpdateLocalOptimized, -1)
     end
 
     if not playerInBounds then
