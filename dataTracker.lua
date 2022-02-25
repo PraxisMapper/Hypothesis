@@ -299,9 +299,9 @@ function SendGeocacheSecret(text)
 end
 
 function checkTileGeneration(plusCode, styleSet)
-    print("Calling checkTileGen " .. plusCode .. " " .. styleSet)
+    --print("Calling checkTileGen " .. plusCode .. " " .. styleSet .. ".")
 
-    if styleSet == 'mapTiles' and requestedMapTileCells[plusCode] == 1 then
+    if (styleSet == 'mapTiles') and (requestedMapTileCells[plusCode] == 1) then
         return --only check baseline tiles once per run. Check for updates on next run.
     end
 
@@ -319,7 +319,7 @@ function tileGenHandler(event)
     local pieces = Split(piece, '/')
     local answer = event.response
 
-    print("tileGenHandler " .. pieces[1] .. " " .. pieces[2] .. " " .. answer)
+    --print("tileGenHandler " .. pieces[1] .. " " .. pieces[2] .. " " .. answer)
 
     local imageExists = false
     if pieces[2] == "mapTiles" then
@@ -338,7 +338,6 @@ function tileGenHandler(event)
         if v[1] < tonumber(answer) then
             local exec = 'UPDATE tileGenerationData SET generationId = ' .. answer .. ' WHERE plusCode ="' .. pieces[1] .. '" AND styleSet = "' .. pieces[2] .. '"'
             Exec(exec)
-            --TrackerGetCell8Image11(pieces[1])
             redownload = true
         else
             --print("same value, no updates")
@@ -348,7 +347,6 @@ function tileGenHandler(event)
     if hasData == false then
         local sql = 'INSERT INTO tileGenerationData(plusCode, styleSet, generationId) VALUES ("' .. pieces[1] .. '", "' .. pieces[2] .. '", ' .. answer .. ')'
         Exec(sql)
-        --TrackerGetCell8Image11(pieces[1])
         redownload = true
     end
 
@@ -362,6 +360,6 @@ function tileGenHandler(event)
     end
 
     if event.status == 200 and pieces[2] == 'mapTiles' then
-        requestedMapTileCells[plusCode] = 1
+        requestedMapTileCells[pieces[1]] = 1
     end
 end
