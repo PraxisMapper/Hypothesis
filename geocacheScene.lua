@@ -1,6 +1,9 @@
 local composer = require( "composer" )
 local scene = composer.newScene()
-local media = require("media")
+-- local media = require("media")
+
+require("dataTracker") 
+
 
  
 -- -----------------------------------------------------------------------------------
@@ -17,17 +20,78 @@ local media = require("media")
 
  --use GetallDataInPlusCode to check for publicGeoCache and privateGeoCache
  --if publicGeoCache exists in our current cell, display it.
- --if privateGeoCahce exists, let the user enter a password and attempt to retreive it as an image file.
+ --if privateGeoCache exists, let the user enter a password and attempt to retreive it as an image file.
  --if we successsfully get the image file, display it
 
+ --test purposes, we need 2 image boxes. 1 for the uploaded image, 1 for the received image.
+
+ local textData = ''
+ local picUp = ''
+ local picDown = ''
  
-function processPhotoEvent(results)
-    if results.completed == false then
-        return
-    end
-    -- TODO: determine data and type in results, make it a base64 string, and save it.
-end
+-- function processPhotoEvent(results)
+--     textData.text = dump(results)
+--     if results.completed == false then
+--         return
+--     end
+--     -- upload given file.
+--     local params = {
+--         body = {
+--             filename = '86HWGGHQ-AC-11.png' -- "securePic.jpg",  --confirm this is static and wont be changed by the app
+--             baseDirectory = system.TemporaryDirectory
+--         }
+--     }
+--     network.request(serverURL .. 'SecureData/SetSecurePlusCodeData/' .. '86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'GET', DefaultNetCallHandler, params)
+-- end
     
+function uploadPhoto()
+    local headers = {}
+    headers["Content-Type"] = "application/octet-stream" --"text/text"
+    --headers["Content-Type"] = "text/text"
+
+    local params = {
+        --body = {
+            --filename = '86HWGGHQ-11.png', -- "securePic.jpg",  --confirm this is static and wont be changed by the app
+            --baseDirectory = system.CachesDirectory
+        --},
+        headers = headers,
+        bodyType = "text"
+    }
+    --network.request(serverURL .. 'SecureData/SetSecurePlusCodeData/' .. '86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'GET', DefaultNetCallHandler, params)
+    network.upload(serverURL .. 'SecureData/SetPlusCode/86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'GET', uploadHandler, params,'86HWGGGP-11.png', system.CachesDirectory)
+end
+
+function uploadHandler(event)
+    -- upload is done, get results.
+    print(event.status)
+    print('now getting uploaded photo')
+    getPhoto()
+end
+
+function getPhoto()
+    -- todo: see if i can save text data directly as a png and open it up, or if i'm missing something from that plan.
+    -- is only a question because the secureData endpoints return strings, not byte arrays.
+    local params = {
+        response = {
+            filename = "testDL.png",
+            baseDirectory = system.CachesDirectory
+        }
+    }
+    network.request(serverURL .. 'SecureData/GetPlusCodeBytes/' .. '86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'GET', dlHandler, params)
+end
+
+function dlHandler(event)
+    print("dl completed " .. event.status)
+    print(event.response)
+    local paint = {
+        type = "image",
+        filename = "testDL.png",
+        baseDir = system.CachesDirectory
+    }
+    picDown.fill = paint
+    
+end
+
 
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -38,7 +102,8 @@ function scene:create( event )
  
     local sceneGroup = self.view
     -- Code here runs when the scene is first created but has not yet appeared on screen
- 
+    --textData = display.newText(sceneGroup, "text", display.contentCenterX, 200, 600, 900, native.systemFont, 20)
+    print("create")
 end
  
  
@@ -50,10 +115,25 @@ function scene:show( event )
  
     if ( phase == "will" ) then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
+        print("will")
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
- 
+        uploadPhoto() --media.capturePhoto(processPhotoEvent, {baseDir = system.TemporaryDirectory, filename = "securePic.jpg"}) 
+        print("did")
+        picUp = display.newRect(sceneGroup, 80, 400, 80, 100) 
+        local paint = {
+            type = "image",
+            filename = "86HWGGGM-11.png",
+            baseDir = system.CachesDirectory
+        }
+        picUp.fill = paint
+
+        picDown = display.newRect(sceneGroup, 400, 400, 80, 100)
+
+        --print("checking tile gen id")
+        checkTileGeneration('86HWGGHQ', 'mapTiles')
+
     end
 end
  
@@ -69,6 +149,8 @@ function scene:hide( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs immediately after the scene goes entirely off screen
+        --media.
+        
  
     end
 end
