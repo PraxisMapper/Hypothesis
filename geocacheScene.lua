@@ -77,7 +77,7 @@ function getPhoto()
             baseDirectory = system.CachesDirectory
         }
     }
-    network.request(serverURL .. 'SecureData/GetPlusCodeBytes/' .. '86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'GET', dlHandler, params)
+    network.request(serverURL .. 'SecureData/Area/' .. '86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'GET', dlHandler, params)
 end
 
 function dlHandler(event)
