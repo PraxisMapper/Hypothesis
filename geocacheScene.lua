@@ -58,7 +58,7 @@ function uploadPhoto()
         bodyType = "text"
     }
     --network.request(serverURL .. 'SecureData/SetSecurePlusCodeData/' .. '86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'GET', DefaultNetCallHandler, params)
-    network.upload(serverURL .. 'SecureData/SetPlusCode/86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'GET', uploadHandler, params,'86HWGGGP-11.png', system.CachesDirectory)
+    network.upload(serverURL .. 'SecureData/PlusCode/86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'PUT', uploadHandler, params,'86HWGGGP-11.png', system.CachesDirectory)
 end
 
 function uploadHandler(event)
