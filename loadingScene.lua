@@ -21,6 +21,7 @@ require("dataTracker")
  local function startGame()
     statusText.text = "Opening Game..."
     composer.gotoScene("SceneSelect")
+    --    composer.gotoScene("geocacheScene")
  end
 
  function loadingGpsListener(event)
@@ -53,7 +54,7 @@ end
 
 --These 2 are mostly duplicates of the ones in dataTracker, but I want to stop the loading process until I get the server bounds.
 function GetServerBoundsStartup()
-    local url = serverURL .. "Data/GetServerBounds" .. defaultQueryString
+    local url = serverURL .. "Data/ServerBounds" .. defaultQueryString
     network.request(url, "GET", GetServerBoundsListenerStartup) 
     netTransfer()
 end
@@ -168,6 +169,7 @@ function scene:show( event )
         --if (debug) then
             --serverURL = "http://localhost/praxismapper/"
             --serverURL = "http://192.168.50.247/praxismapper/"
+            serverURL = "https://oh.praxismapper.org:5001/"
         --end
 
         statusText.text = "Getting server boundaries..."

@@ -64,9 +64,9 @@ end
 function GetCell8TerrainData(code8)
     if debugNetwork then 
         print("network: getting 8 cell data " .. code8) 
-        print ("getting cell data via " .. serverURL .. "Data/GetPlusCodeTerrainData/" .. code8) 
+        print ("getting cell data via " .. serverURL .. "Data/Terrain/" .. code8) 
     end
-    network.request(serverURL .. "Data/GetPlusCodeTerrainData/" .. code8 .. defaultQueryString , "GET", TrackplusCode8Listener)
+    network.request(serverURL .. "Data/Terrain/" .. code8 .. defaultQueryString , "GET", TrackplusCode8Listener)
     netTransfer()
 end
 
@@ -110,11 +110,11 @@ function TrackerGetCell8Image11(plusCode)
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
-    network.request(serverURL .. "MapTile/DrawPlusCode/" .. plusCode .. defaultQueryString, "GET", Trackerimage811Listener, params)
+    network.request(serverURL .. "MapTile/Area/" .. plusCode .. defaultQueryString, "GET", Trackerimage811Listener, params)
 end
 
 function Trackerimage811Listener(event)
-    local filename = string.gsub(event.url, serverURL .. "MapTile/DrawPlusCode/", "")
+    local filename = string.gsub(event.url, serverURL .. "MapTile/Area/", "")
     requestedMPMapTileCells[filename] = nil
     if event.status == 200 then
         forceRedraw = true
@@ -154,11 +154,11 @@ function TrackerGetMPCell8Image11(plusCode)
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-AC-11.png", baseDirectory = system.TemporaryDirectory}
-    network.request(serverURL .. "MapTile/DrawPlusCodeCustomElements/" .. plusCode .. "/teamColor/teamColor" .. defaultQueryString, "GET", TrackerMPimage811Listener, params)
+    network.request(serverURL .. "MapTile/AreaPlaceData/" .. plusCode .. "/teamColor/teamColor" .. defaultQueryString, "GET", TrackerMPimage811Listener, params)
 end
 
 function TrackerMPimage811Listener(event)
-    local plusCode = string.gsub(string.gsub(event.url, serverURL .. "MapTile/DrawPlusCodeCustomElements/", ""), "/teamColor/teamColor", "")
+    local plusCode = string.gsub(string.gsub(event.url, serverURL .. "MapTile/AreaPlaceData/", ""), "/teamColor/teamColor", "")
     --if (debug) then print("got data for " ..  plusCode) end
     requestedMPMapTileCells[plusCode] = nil
     if event.status == 200 then
@@ -176,7 +176,7 @@ end
 function GetPaintTownMapData8(Cell8) -- the painttown map update call.
     --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
     netTransfer()
-    network.request(serverURL .. "Data/GetAllDataInPlusCode/" .. Cell8 .. defaultQueryString, "GET", PaintTownMapListener) 
+    network.request(serverURL .. "Data/Area/All/" .. Cell8 .. defaultQueryString, "GET", PaintTownMapListener) 
 end
 
 function PaintTownMapListener(event)
@@ -206,8 +206,8 @@ function ClaimPaintTownCell(Cell10)
     netTransfer()
     local randomColorSkiaFormat = "42" --start with a fixed alpha value
     randomColorSkiaFormat = randomColorSkiaFormat ..  string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255))
-    local url = serverURL .. "Data/SetPlusCodeData/" .. Cell10 .. "/color/" .. randomColorSkiaFormat .. defaultQueryString
-    network.request(url, "GET", PaintTownClaimListener) 
+    local url = serverURL .. "Data/Area/" .. Cell10 .. "/color/" .. randomColorSkiaFormat .. defaultQueryString
+    network.request(url, "PUT", PaintTownClaimListener) 
     requestedPaintTownCells[Cell10] = convertColor(randomColorSkiaFormat)
 end
 
@@ -221,7 +221,7 @@ function PaintTownClaimListener(event) --doesnt record any data.
 end
 
 function GetTeamAssignment()
-    local url = serverURL .. "Data/GetPlayerData/"  .. system.getInfo("deviceID") .. "/team" .. defaultQueryString
+    local url = serverURL .. "Data/Player/"  .. system.getInfo("deviceID") .. "/team" .. defaultQueryString
     if (debug) then print("Team request sent to " .. url) end
     network.request(url, "GET", GetTeamAssignmentListener)
     netTransfer()
@@ -247,14 +247,14 @@ function GetTeamAssignmentListener(event)
 end
 
 function SetTeamAssignment(teamId)
-    local url = serverURL .. "Data/SetPlayerData/"  .. system.getInfo("deviceID") .. "/team/" .. teamId .. defaultQueryString
-    network.request(url, "GET", DefaultNetCallHandler) 
+    local url = serverURL .. "Data/Player/"  .. system.getInfo("deviceID") .. "/team/" .. teamId .. defaultQueryString
+    network.request(url, "PUT", DefaultNetCallHandler) 
     if (debug) then print("Team change sent to " .. url) end
     netTransfer()
 end
 
 function GetMyScore()
-    local url = serverURL .. "Data/GetPlayerData/"  .. system.getInfo("deviceID") .. "/score" .. defaultQueryString
+    local url = serverURL .. "Data/Player/"  .. system.getInfo("deviceID") .. "/score" .. defaultQueryString
     network.request(url, "GET", GetMyScoreListener) 
     netTransfer()
 end
@@ -269,7 +269,7 @@ function GetMyScoreListener(event)
 end
 
 function GetServerBounds()
-    local url = serverURL .. "Data/GetServerBounds" .. defaultQueryString
+    local url = serverURL .. "Data/ServerBounds" .. defaultQueryString
     network.request(url, "GET", GetServerBoundsListener) 
     netTransfer()
 end
@@ -288,14 +288,14 @@ function GetServerBoundsListener(event)
 end
 
 function SendGeocachePublic(text)
-    local url = serverURL .. "Data/SetPlusCodeData/" .. Cell10 .. "/geocachepublic/" .. text .. defaultQueryString
-    network.request(url, "GET", DefaultNetCallHandler) 
+    local url = serverURL .. "Data/Area/" .. Cell10 .. "/geocachepublic/" .. text .. defaultQueryString
+    network.request(url, "GPU", DefaultNetCallHandler) 
 end
 
 function SendGeocacheSecret(text)
     -- set data so it expires in 30 days. Don't overwrite existing data if its not expired.
-    local url = serverURL .. "Data/SetSecurePlusCodeData/" .. Cell10 .. "/geocachesecret/" .. text .. '/2592000' .. defaultQueryString
-    network.request(url, "GET", DefaultNetCallHandler) 
+    local url = serverURL .. "SecureData/Area/" .. Cell10 .. "/geocachesecret/" .. text .. '/2592000' .. defaultQueryString
+    network.request(url, "PUT", DefaultNetCallHandler) 
 end
 
 function checkTileGeneration(plusCode, styleSet)
