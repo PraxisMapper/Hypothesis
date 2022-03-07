@@ -40,7 +40,7 @@ local function noListener()
 end
 
 function GetAreaOwner(mapDataId)
-    network.request(serverURL .. "Data/GetElementData/" .. tappedAreaMapDataId .. "/teamColor" .. defaultQueryString, "GET", AreaOwnerListener)
+    network.request(serverURL .. "Data/Place/" .. tappedAreaMapDataId .. "/teamColor" .. defaultQueryString, "GET", AreaOwnerListener)
 end
 
 function AreaOwnerListener(event)
@@ -68,7 +68,7 @@ function AreaOwnerListener(event)
 end
 
 function GetAreaScore(mapDataId)
-    network.request(serverURL .. "Data/GetScoreForPlace/" .. tappedAreaMapDataId .. defaultQueryString, "GET", AreaScoreListener)
+    network.request(serverURL .. "Data/Score/" .. tappedAreaMapDataId .. defaultQueryString, "GET", AreaScoreListener)
 end
 
 function AreaScoreListener(event)
@@ -98,11 +98,11 @@ function ClaimMPArea()
     --TODO: ponder making a generic 'retryListener' that makes another attempt to call a URL if it fails, and use it for all of these.
     local teamID = composer.getVariable("faction") --GetTeamID()
     netTransfer()
-    network.request(serverURL .. "Data/IncrementPlayerData/" .. system.getInfo("deviceID") .. "/score/" .. tappedAreaScore .. defaultQueryString, "GET", DefaultNetCallHandler)
-    network.request(serverURL .. "Data/SetElementData/" .. tappedAreaMapDataId .. "/teamColor/" .. teamID .. defaultQueryString, "GET", DefaultNetCallHandler)
-    if oldTeam ~= 0 then network.request(serverURL .. "Data/IncrementGlobalData/scoreTeam" .. oldTeam .. "/-" .. tappedAreaScore .. defaultQueryString, "GET", DefaultNetCallHandler) end
-    network.request(serverURL .. "Data/IncrementGlobalData/scoreTeam" ..  teamID .. "/" .. tappedAreaScore .. defaultQueryString, "GET", DefaultNetCallHandler)
-    network.request(serverURL .. "MapTile/ExpireTiles/" .. tappedAreaMapDataId .. "/teamColor" .. defaultQueryString, "GET", DefaultNetCallHandler)
+    network.request(serverURL .. "Data/Player/Increment/" .. system.getInfo("deviceID") .. "/score/" .. tappedAreaScore .. defaultQueryString, "PUT", DefaultNetCallHandler)
+    network.request(serverURL .. "Data/Place/" .. tappedAreaMapDataId .. "/teamColor/" .. teamID .. defaultQueryString, "PUT", DefaultNetCallHandler)
+    if oldTeam ~= 0 then network.request(serverURL .. "Data/Global/Increment/scoreTeam" .. oldTeam .. "/-" .. tappedAreaScore .. defaultQueryString, "PUT", DefaultNetCallHandler) end
+    network.request(serverURL .. "Data/Global/Increment/scoreTeam" ..  teamID .. "/" .. tappedAreaScore .. defaultQueryString, "PUT", DefaultNetCallHandler)
+    network.request(serverURL .. "MapTile/Expire/" .. tappedAreaMapDataId .. "/teamColor" .. defaultQueryString, "PUT", DefaultNetCallHandler)
     SpendPoints(tappedAreaScore)
     composer.hideOverlay("overlayMPAreaClaim")
 end

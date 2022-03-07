@@ -281,9 +281,9 @@ local function UpdateLocalOptimized()
     scoreCheckCounter = scoreCheckCounter - 1
     if (scoreCheckCounter <= 0) then
         GetMyScore()
-        network.request(serverURL .. "Data/GetGlobalData/scoreTeam1" .. defaultQueryString, "GET", team1ScoreListener)
-        network.request(serverURL .. "Data/GetGlobalData/scoreTeam2" .. defaultQueryString, "GET", team2ScoreListener)
-        network.request(serverURL .. "Data/GetGlobalData/scoreTeam3" .. defaultQueryString, "GET", team3ScoreListener)
+        network.request(serverURL .. "Data/Global/scoreTeam1" .. defaultQueryString, "GET", team1ScoreListener)
+        network.request(serverURL .. "Data/Global/scoreTeam2" .. defaultQueryString, "GET", team2ScoreListener)
+        network.request(serverURL .. "Data/Global/scoreTeam3" .. defaultQueryString, "GET", team3ScoreListener)
         scoreCheckCounter = 24
     end
 

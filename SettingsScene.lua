@@ -39,9 +39,9 @@ end
  end
 
  function DeleteDataListener(event)
-    local url = serverURL .. "Data/DeleteUser/" .. system.getInfo("deviceID") .. defaultQueryString
+    local url = serverURL .. "Data/Player/" .. system.getInfo("deviceID") .. defaultQueryString
     print(url)
-    network.request(url, "GET", DeleteDataResponse)
+    network.request(url, "DELETE", DeleteDataResponse)
  end
 
  function DeleteDataResponse(event)
