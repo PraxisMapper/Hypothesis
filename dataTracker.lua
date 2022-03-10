@@ -14,7 +14,7 @@ require("database")
 -- -1 value: last request failed.
 requestedDataCells = {} --these should be Cell8
 requestedMapTileCells = {} --these should be Cell10
-requestedMPMapTileCells = {} --these should be Cell10, separate because they can change quickly.
+requestedMPMapTileCells = {} 
 requestedPaintTownCells = {} --Should be a table by instance types, since multiple PaintTheTowns could run at once.
 
 defaultQueryString = "?PraxisAuthKey=testingKey" --lazy easier way to authenticate
@@ -127,28 +127,11 @@ function Trackerimage811Listener(event)
 end
 
 function GetTeamControlMapTile8(Cell8)
-    --print("getting AC tile " .. Cell8)
-    if (requestedMPMapTileCells[cell8] ~= nil) then
-        --We already have this tile.
-        return
+    if requestedMPMapTileCells[Cell8] == nil then
+        requestedMPMapTileCells[Cell8] = 0
+        TrackerGetMPCell8Image11(Cell8)
     end
-    local status = requestedMPMapTileCells[Cell8] --this can occasionally be nil if there's multiple active calls that return out of order on the first update
-     if (status == nil) then --first time requesting this cell this session.
-        local dataPresent = doesFileExist(Cell8 .. "-AC-11.png", system.TemporaryDirectory)
-        if (dataPresent == true) then --use local data.
-            requestedMPMapTileCells[Cell8] = 1
-            return
-        end
-        requestedMPMapTileCells[Cell8] = 0
-        TrackerGetMPCell8Image11(Cell8)
-     end
-
-     if (status == -1) then --retry a failed download.
-        requestedMPMapTileCells[Cell8] = 0
-        TrackerGetMPCell8Image11(Cell8)
-     end
 end
-
 
 function TrackerGetMPCell8Image11(plusCode)
     netTransfer()
@@ -159,7 +142,7 @@ end
 
 function TrackerMPimage811Listener(event)
     local plusCode = string.gsub(string.gsub(event.url, serverURL .. "MapTile/AreaPlaceData/", ""), "/teamColor/teamColor", "")
-    --if (debug) then print("got data for " ..  plusCode) end
+    --print('got AreaTag image for ' .. plusCode)
     requestedMPMapTileCells[plusCode] = nil
     if event.status == 200 then
         forceRedraw = true
@@ -170,6 +153,7 @@ function TrackerMPimage811Listener(event)
         print(plusCode .. " errored on MAC tile: " .. event.status)
         --requestedMPMapTileCells[plusCode] = -1
     end
+    requestedMPMapTileCells[Cell8] = nil
 end
 
 --Since Paint The Town is meant to be a much faster game mode, we won't save its state in the database, just memory.
@@ -310,14 +294,15 @@ function checkTileGeneration(plusCode, styleSet)
 end
 
 function tileGenHandler(event)
-    --this does require that the file exists in addition to being up to date, in case they cleared their cache.
-    -- so maybe i need to run local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
-    --and if the file doesn't exist, download it anyways after getting the current gen value.
-
     -- pull out values, check DB
     local piece = string.gsub(string.gsub(event.url, defaultQueryString, ""), serverURL .. "MapTile/Generation/", "")
     local pieces = Split(piece, '/')
     local answer = event.response
+
+    if (answer == 'Timed out') then
+        --abort this logic!
+        return
+    end
 
     --print("tileGenHandler " .. pieces[1] .. " " .. pieces[2] .. " " .. answer)
 
@@ -332,10 +317,11 @@ function tileGenHandler(event)
     local hasData = false
     local redownload = false
 
+
     --loop, but should be 1 result.
     for i, v in ipairs(Query(currentGenQuery)) do
         hasData = true
-        if v[1] < tonumber(answer) then
+        if tonumber(v[1]) ~= tonumber(answer) or tonumber(answer) == -1 then
             local exec = 'UPDATE tileGenerationData SET generationId = ' .. answer .. ' WHERE plusCode ="' .. pieces[1] .. '" AND styleSet = "' .. pieces[2] .. '"'
             Exec(exec)
             redownload = true
@@ -350,7 +336,7 @@ function tileGenHandler(event)
         redownload = true
     end
 
-    redownload = (imageExists == false) or redownload
+    redownload = (imageExists == false) or redownload or answer == '-1'
     if redownload then
         if pieces[2] == "mapTiles" then
             TrackerGetCell8Image11(pieces[1])
