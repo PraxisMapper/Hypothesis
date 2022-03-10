@@ -70,7 +70,7 @@ function GetServerBoundsListenerStartup(event)
         statusText.text = "Starting Game"
         startGame()
     else
-        statusText = "Failed to get server bounds, retrying....."
+        statusText.text = "Failed to get server bounds, retrying....."
         GetServerBoundsStartup()
     end
 end
@@ -168,8 +168,8 @@ function scene:show( event )
         --Debug setup
         --if (debug) then
             --serverURL = "http://localhost/praxismapper/"
-            --serverURL = "http://192.168.50.247/praxismapper/"
-            serverURL = "https://oh.praxismapper.org:5001/"
+            serverURL = "http://192.168.50.247/praxismapper/"
+            --serverURL = "https://oh.praxismapper.org:5001/"
         --end
 
         statusText.text = "Getting server boundaries..."
