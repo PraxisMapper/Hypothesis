@@ -19,6 +19,7 @@ local touchDetector = {} -- Determines what cell10 was tapped on the screen.
 
 local timerResults = nil
 local firstRun = true
+local mapTileUpdater = nil
 
 local locationText = ""
 local explorePointText = ""
@@ -232,8 +233,8 @@ local function UpdateLocalOptimized()
         thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
-        GetMapData8(plusCodeNoPlus)
-        checkTileGeneration(plusCodeNoPlus, "mapTiles")
+        --GetMapData8(plusCodeNoPlus)
+        --checkTileGeneration(plusCodeNoPlus, "mapTiles")
         --all of this commented block should be replaced with the simpler call above
         --local imageRequested = requestedMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
         
@@ -255,7 +256,7 @@ local function UpdateLocalOptimized()
             cellCollection[square].fill = paint
         end
 
-        checkTileGeneration(plusCodeNoPlus, "teamColor")
+        --checkTileGeneration(plusCodeNoPlus, "teamColor")
         --imageRequested = requestedMPMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
         
         --if (imageRequested == nil) then 
@@ -322,6 +323,21 @@ local function UpdateLocalOptimized()
     locationName:toFront()
 
     if (debugLocal) then print("end updateLocalOptimized") end
+end
+
+local function UpdateMapTiles()
+    --set this to run once a second or so
+    for square = 1, #cellCollection do
+        -- check each spot based on current cell, modified by gridX and gridY
+        local thisSquaresPluscode = currentPlusCode
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 8)
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
+        cellCollection[square].pluscode = thisSquaresPluscode
+        local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
+        GetMapData8(plusCodeNoPlus)
+        checkTileGeneration(plusCodeNoPlus, "mapTiles")
+        checkTileGeneration(plusCodeNoPlus, "teamColor")
+    end -- for
 end
 
 -- -----------------------------------------------------------------------------------
@@ -404,6 +420,7 @@ function scene:show(event)
         tintArrow(factionID)
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
+        mapTileUpdater = timer.performWithDelay(2000, UpdateMapTiles, -1)
     end
 end
 
@@ -415,6 +432,7 @@ function scene:hide(event)
     if (phase == "will") then
         timer.cancel(timerResults)
         timerResults = nil
+        timer.cancel(mapTileUpdater)
     elseif (phase == "did") then
         -- Code here runs immediately after the scene goes entirely off screen
     end

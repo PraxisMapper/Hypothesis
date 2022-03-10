@@ -18,6 +18,7 @@ local touchDetector = {} -- Determines what cell10 was tapped on the screen.
 
 local timerResults = nil
 local firstRun = true
+local mapTileUpdater = nil
 
 local locationText = ""
 local timeText = ""
@@ -173,8 +174,8 @@ local function UpdateLocalOptimized()
         thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
         cellCollection[square].pluscode = thisSquaresPluscode
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
-        GetMapData8(plusCodeNoPlus)
-        checkTileGeneration(plusCodeNoPlus, "mapTiles")
+        --GetMapData8(plusCodeNoPlus)
+        --checkTileGeneration(plusCodeNoPlus, "mapTiles")
         local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
         if imageExists == true then
             cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
@@ -234,6 +235,20 @@ local function UpdateLocalOptimized()
     locationName:toFront()
 
     if (debugLocal) then print("end updateLocalOptimized") end
+end
+
+local function UpdateMapTiles()
+    --set this to run once a second or so.
+    for square = 1, #cellCollection do
+        -- check each spot based on current cell, modified by gridX and gridY
+        local thisSquaresPluscode = currentPlusCode
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 8)
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
+        cellCollection[square].pluscode = thisSquaresPluscode
+        local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
+        GetMapData8(plusCodeNoPlus)
+        checkTileGeneration(plusCodeNoPlus, "mapTiles")
+    end -- for
 end
 
 -- -----------------------------------------------------------------------------------
@@ -305,6 +320,7 @@ function scene:show(event)
         -- Code here runs when the scene is entirely on screen 
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
+        mapTileUpdater = timer.performWithDelay(2000, UpdateMapTiles, -1)
     end
 end
 
@@ -316,6 +332,7 @@ function scene:hide(event)
     if (phase == "will") then
         timer.cancel(timerResults)
         timerResults = nil
+        timer.cancel(mapTileUpdater)
     elseif (phase == "did") then
         -- Code here runs immediately after the scene goes entirely off screen
     end
