@@ -127,9 +127,12 @@ function Trackerimage811Listener(event)
 end
 
 function GetTeamControlMapTile8(Cell8)
-    if requestedMPMapTileCells[Cell8] == nil then
-        requestedMPMapTileCells[Cell8] = 0
+    print(requestedMPMapTileCells[Cell8])
+    if requestedMPMapTileCells[Cell8] == nil or requestedMPMapTileCells[Cell8] == 0 then
+        requestedMPMapTileCells[Cell8] = 1
         TrackerGetMPCell8Image11(Cell8)
+    else
+        print('actually not calling getMACtile')
     end
 end
 
@@ -141,19 +144,20 @@ function TrackerGetMPCell8Image11(plusCode)
 end
 
 function TrackerMPimage811Listener(event)
-    local plusCode = string.gsub(string.gsub(event.url, serverURL .. "MapTile/AreaPlaceData/", ""), "/teamColor/teamColor", "")
-    --print('got AreaTag image for ' .. plusCode)
-    requestedMPMapTileCells[plusCode] = nil
+    local plusCode = Split(string.gsub(string.gsub(event.url, serverURL .. "MapTile/AreaPlaceData/", ""), "/teamColor/teamColor", ""), '?')[1]
+    print('got AreaTag image for ' .. plusCode)
+    requestedMPMapTileCells[plusCode] = 0
     if event.status == 200 then
         forceRedraw = true
         netUp() 
         --requestedMPMapTileCells[plusCode] = 1
+        print('new maptile saved for ' .. plusCode)
     else 
         netDown(event) 
         print(plusCode .. " errored on MAC tile: " .. event.status)
         --requestedMPMapTileCells[plusCode] = -1
     end
-    requestedMPMapTileCells[Cell8] = nil
+    --requestedMPMapTileCells[plusCode] = nil
 end
 
 --Since Paint The Town is meant to be a much faster game mode, we won't save its state in the database, just memory.
@@ -321,7 +325,7 @@ function tileGenHandler(event)
     --loop, but should be 1 result.
     for i, v in ipairs(Query(currentGenQuery)) do
         hasData = true
-        if tonumber(v[1]) ~= tonumber(answer) or tonumber(answer) == -1 then
+        if tonumber(v[1]) < tonumber(answer)then
             local exec = 'UPDATE tileGenerationData SET generationId = ' .. answer .. ' WHERE plusCode ="' .. pieces[1] .. '" AND styleSet = "' .. pieces[2] .. '"'
             Exec(exec)
             redownload = true
@@ -336,6 +340,14 @@ function tileGenHandler(event)
         redownload = true
     end
 
+    if (imageExists == false) then
+        print('redownloading ' .. pieces[1]  .. pieces[2] .. ' because image doesnt exist')
+    elseif answer == '-1' then
+        print('redownloading ' .. pieces[1] .. pieces[2] .. ' because answer was -1')
+    elseif redownload then
+        print('redownloading ' .. pieces[1] .. pieces[2] .. ' because data changed')
+    end
+    
     redownload = (imageExists == false) or redownload or answer == '-1'
     if redownload then
         if pieces[2] == "mapTiles" then
