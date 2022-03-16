@@ -13,6 +13,7 @@ require("database")
 require("plusCodes")
 local lfs = require( "lfs" )
 local composer = require("composer")
+netCallCount = 0
 
 
 forceRedraw = false --used to tell the screen to redraw even if we havent moved.
@@ -178,12 +179,22 @@ Runtime:addEventListener("location", gpsListener)
 Runtime:addEventListener("key", backListener)
 
 function netUp()
+    netCallCount = netCallCount - 1
+    --print("Active net calls: " .. netCallCount)
+    if netCallCount > 0 then
+        return
+    end
     networkUp.isVisible = true
     networkDown.isVisible = false
     networkTx.isVisible = false
 end
 
 function netDown(event)
+    netCallCount = netCallCount - 1
+    --print("Active net calls: " .. netCallCount)
+    if netCallCount > 0 then
+        return
+    end
     networkDown.isVisible = true
     networkUp.isVisible = false
     networkTx.isVisible = false
@@ -193,6 +204,8 @@ function netDown(event)
 end
 
 function netTransfer()
+    netCallCount = netCallCount + 1
+    --print("Active net calls: " .. netCallCount)
     networkDown.isVisible = false
     networkUp.isVisible = false
     networkTx.isVisible = true
