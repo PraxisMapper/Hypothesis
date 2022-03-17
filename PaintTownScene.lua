@@ -141,7 +141,7 @@ local function UpdateLocalOptimized()
                     --imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
                 --end
                 if (imageExists == true) then -- not sure why this is true when file is found and 0 when its not? -- or imageExists == 0
-                    cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
+                    cellCollection[square].fill = {0.1, 0.1} -- required to make Solar2d actually update the texture.
                     local paint = {
                         type = "image",
                         filename = plusCodeNoPlus .. "-11.png",

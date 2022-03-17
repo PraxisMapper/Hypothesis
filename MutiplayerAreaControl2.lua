@@ -247,7 +247,7 @@ local function UpdateLocalOptimized()
         --else
         local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
         if imageExists == true then
-            cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
+            cellCollection[square].fill = {0.1, 0.1} -- required to make Solar2d actually update the texture.
             local paint = {
                 type = "image",
                 filename = plusCodeNoPlus .. "-11.png",
@@ -337,6 +337,7 @@ local function UpdateMapTiles()
         GetMapData8(plusCodeNoPlus)
         checkTileGeneration(plusCodeNoPlus, "mapTiles")
         checkTileGeneration(plusCodeNoPlus, "teamColor")
+        --print('checked for tile ' .. plusCodeNoPlus)
     end -- for
 end
 

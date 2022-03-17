@@ -40,7 +40,9 @@ function GetMapData8(Cell8) -- the terrain type call.
 end
 
 function GetMapTile8(Cell8)
-    if (requestedMapTileCells[cell8] == 1) then
+    local imageExists = doesFileExist(Cell8 .. "-11.png", system.CachesDirectory)
+
+    if (requestedMapTileCells[Cell8] == 1 and imageExists) then
         --We already have this tile.
         return
     end
@@ -103,18 +105,25 @@ function TrackplusCode8Listener(event)
 end
 
 function TrackerGetCell8Image11(plusCode)
-    if requestedMPMapTileCells[plusCode] ~= nil then
+    --print('checking for data on ' .. plusCode)
+    if requestedMPMapTileCells[plusCode] == 1 then
+        --print('data is' .. requestedMPMapTileCells[plusCode])
         return
     end
+    --print('tracker called for ' .. plusCode)
 
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
     network.request(serverURL .. "MapTile/Area/" .. plusCode .. defaultQueryString, "GET", Trackerimage811Listener, params)
+    --print('called for mapTiles on ' .. plusCode)
 end
 
 function Trackerimage811Listener(event)
-    local filename = string.gsub(event.url, serverURL .. "MapTile/Area/", "")
+    --local filename = string.gsub(event.url, serverURL .. "MapTile/Area/", "")
+    local filename = Split(string.gsub(event.url, serverURL .. "MapTile/Area/", ""), '?')[1]
+    --print('got mapTiles results for ' .. filename)
+    --print(dump(event))
     requestedMPMapTileCells[filename] = nil
     if event.status == 200 then
         forceRedraw = true
@@ -122,12 +131,13 @@ function Trackerimage811Listener(event)
         --requestedMapTileCells[filename] = 1
     else 
         netDown(event) 
+        print('Failed to get ' .. filename .. ' from download!')
         --requestedMapTileCells[filename] = -1
     end
 end
 
 function GetTeamControlMapTile8(Cell8)
-    print(requestedMPMapTileCells[Cell8])
+    --print(requestedMPMapTileCells[Cell8])
     if requestedMPMapTileCells[Cell8] == nil or requestedMPMapTileCells[Cell8] == 0 then
         requestedMPMapTileCells[Cell8] = 1
         TrackerGetMPCell8Image11(Cell8)
@@ -145,13 +155,13 @@ end
 
 function TrackerMPimage811Listener(event)
     local plusCode = Split(string.gsub(string.gsub(event.url, serverURL .. "MapTile/AreaPlaceData/", ""), "/teamColor/teamColor", ""), '?')[1]
-    print('got AreaTag image for ' .. plusCode)
+    --print('got AreaTag image for ' .. plusCode)
     requestedMPMapTileCells[plusCode] = 0
     if event.status == 200 then
         forceRedraw = true
         netUp() 
         --requestedMPMapTileCells[plusCode] = 1
-        print('new maptile saved for ' .. plusCode)
+        --print('new maptile saved for ' .. plusCode)
     else 
         netDown(event) 
         print(plusCode .. " errored on MAC tile: " .. event.status)
@@ -191,6 +201,7 @@ function PaintTownMapListener(event)
 end
 
 function ClaimPaintTownCell(Cell10)
+    print('claiming ' .. Cell10)
     netTransfer()
     local randomColorSkiaFormat = "42" --start with a fixed alpha value
     randomColorSkiaFormat = randomColorSkiaFormat ..  string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255)) .. string.format("%x", math.random(0, 255))
@@ -202,7 +213,9 @@ end
 function PaintTownClaimListener(event) --doesnt record any data.
     if event.status == 200 then 
         netUp() 
+        --native.showAlert("PTT", "data saved to server")
     else 
+        native.showAlert("PTT", "data call to server failed: " .. event.response)
         if (debug) then print("paint the town claim failed") end
         netDown(event) 
     end
@@ -341,11 +354,11 @@ function tileGenHandler(event)
     end
 
     if (imageExists == false) then
-        print('redownloading ' .. pieces[1]  .. pieces[2] .. ' because image doesnt exist')
+        print('redownloading ' .. pieces[1]  .. ' ' .. pieces[2] .. ' because image doesnt exist')
     elseif answer == '-1' then
-        print('redownloading ' .. pieces[1] .. pieces[2] .. ' because answer was -1')
+        print('redownloading ' .. pieces[1] .. ' '.. pieces[2] .. ' because answer was -1')
     elseif redownload then
-        print('redownloading ' .. pieces[1] .. pieces[2] .. ' because data changed')
+        print('redownloading ' .. pieces[1] .. ' '.. pieces[2] .. ' because data changed')
     end
     
     redownload = (imageExists == false) or redownload or answer == '-1'
@@ -358,6 +371,6 @@ function tileGenHandler(event)
     end
 
     if event.status == 200 and pieces[2] == 'mapTiles' then
-        requestedMapTileCells[pieces[1]] = 1
+        requestedMapTileCells[pieces[1]] = 0
     end
 end
