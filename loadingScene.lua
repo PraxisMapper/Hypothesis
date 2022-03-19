@@ -132,12 +132,14 @@ function scene:show( event )
         CREATE TABLE IF NOT EXISTS areasOwned(id INTEGER PRIMARY KEY, mapDataId, name, points);
         CREATE TABLE IF NOT EXISTS idleStats(id INTEGER PRIMARY KEY, lastAddTime, allPerSec, parkPerSec, naturePerSec, trailPerSec, touristPerSec, graveyardPerSec, allTotal, parkTotal, natureTotal, trailTotal, touristTotal, graveyardTotal, wins);
         CREATE TABLE IF NOT EXISTS tileGenerationData (id INTEGER PRIMARY KEY, plusCode, styleSet, generationId);
+        CREATE TABLE IF NOT EXISTS geocacheHints(id INTERGER PRIMARY KEY, plusCode8, hintsLeft, secretsLeft);
         CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
         CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
         CREATE INDEX IF NOT EXISTS indexOwnedMapIds on areasOwned(mapDataId);
         CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode);
         CREATE INDEX IF NOT EXISTS generationIndex on tileGenerationData(pluscode);
-        INSERT OR IGNORE INTO systemData(id, dbVersionID, serverAddress) values (1, ]] .. currentDbVersion .. [[, 'https://us.praxismapper.org/praxismapper/');
+        CREATE INDEX IF NOT EXISTS hintIndex on geocacheHints(plusCode8);
+        INSERT OR IGNORE INTO systemData(id, dbVersionID, serverAddress) values (1, ]] .. currentDbVersion .. [[, 'https://oh.praxismapper.org:5001/');
         INSERT OR IGNORE INTO playerData(id, factionID, totalPoints) values (1, 0, 0);
         INSERT OR IGNORE INTO idleStats(id, lastAddTime, allPerSec, parkPerSec, naturePerSec, trailPerSec, graveyardPerSec, touristPerSec, allTotal, parkTotal, natureTotal, trailTotal, graveyardTotal, touristTotal, wins) values (1, ]] .. os.time() .. [[, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
         ]]
@@ -168,8 +170,9 @@ function scene:show( event )
         --Debug setup
         --if (debug) then
             --serverURL = "http://localhost/praxismapper/"
-            serverURL = "http://192.168.50.247/praxismapper/"
-            --serverURL = "https://oh.praxismapper.org:5001/"
+            --serverURL = "http://192.168.50.247/praxismapper/"
+            serverURL = "https://oh.praxismapper.org:5001/"
+            --serverURL = "https://us.praxismapper.org/praxismapper/"
         --end
 
         statusText.text = "Getting server boundaries..."

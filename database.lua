@@ -130,3 +130,21 @@ function SetServerAddress(url)
     local cmd = "UPDATE systemData SET serverAddress = '" .. url .. "'"
     db:exec(cmd)
 end
+
+function getHintInfo(plusCode)
+    local cmd = 'SELECT * FROM geocacheHints WHERE plusCode8 = "' .. plusCode .. "'"
+    for i,row in ipairs(Query(query)) do
+        if (#row == 1) then
+            return row[1]
+        else
+            --insert the data now.
+            local exec = "INSERT INTO geocacheHints(plusCode8, hintsLeft, secretsLeft) VALUES('" .. plusCode .. "', 3, 1)"
+            db:Exec(exec)
+            local t = {}
+            t[1] = plusCode
+            t[2] = 3
+            t[3] = 1
+            return t
+        end
+    end
+end

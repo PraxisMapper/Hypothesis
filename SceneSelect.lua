@@ -34,6 +34,11 @@ local function SwitchToCreatureScene()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("CreatureCollectorScene", options)
 end
+
+local function SwitchToPlusCodeHelpScene()
+    local options = {effect = "flip", time = 125}
+    composer.gotoScene("ReadPlusCodeScene", options)
+end
  
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -89,6 +94,13 @@ function scene:create( event )
     changeSettings.x = 390
     changeSettings.y = 700
     changeSettings:addEventListener("tap", SwitchToSettingsScene) 
+
+    local plusCodeHelp = display.newImageRect(sceneGroup, "themables/plusCodeHelp.png", 300, 100) -- settings
+    plusCodeHelp.anchorX = 0
+    plusCodeHelp.anchorY = 0
+    plusCodeHelp.x = 60
+    plusCodeHelp.y = 700
+    plusCodeHelp:addEventListener("tap", SwitchToPlusCodeHelpScene) 
 end
  
 -- show()

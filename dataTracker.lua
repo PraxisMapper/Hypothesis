@@ -16,6 +16,7 @@ requestedDataCells = {} --these should be Cell8
 requestedMapTileCells = {} --these should be Cell10
 requestedMPMapTileCells = {} 
 requestedPaintTownCells = {} --Should be a table by instance types, since multiple PaintTheTowns could run at once.
+requestedGeocacheHints = {}
 
 defaultQueryString = "?PraxisAuthKey=testingKey" --lazy easier way to authenticate
 headers = {}
@@ -178,6 +179,38 @@ function TrackerMPimage811Listener(event)
         --requestedMPMapTileCells[plusCode] = -1
     end
     --requestedMPMapTileCells[plusCode] = nil
+end
+
+function GetGeocacheHintData8(Cell8) -- the painttown map update call.
+    --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
+    netTransfer()
+    network.request(serverURL .. "Data/Area/All/" .. Cell8 .. defaultQueryString, "GET", geocacheHintListener) 
+end
+
+function geocacheHintListener(event)
+    if (debug) then print("geocache event started") end
+    if event.status == 200 then 
+        netUp() 
+    else 
+        if (debug) then print("geocache hint listener failed") end
+        netDown(event) 
+        return
+    end
+    --Format:
+    --Cell10|dataTag|dataValue\n
+    local resultsTable = Split(event.response, "\n")
+    print('loading to hint memory ' .. #resultsTable)
+    print(event.response)
+
+    for cell = 1, #resultsTable do
+        local splitData = Split(resultsTable[cell], "|")
+        local key = splitData[1]
+        if (splitData[2] == "geocacheHint") then
+            requestedGeocacheHints[key] = splitData[3]
+        end
+    end
+    forceRedraw = true
+    if(debug) then print("geocache hint event ended") end
 end
 
 --Since Paint The Town is meant to be a much faster game mode, we won't save its state in the database, just memory.

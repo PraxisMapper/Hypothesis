@@ -1,200 +1,411 @@
-local composer = require( "composer" )
+local composer = require("composer")
 local scene = composer.newScene()
--- local media = require("media")
 
+require("UIParts")
+require("database")
 require("dataTracker") 
-
-
- 
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
+local gridzoom = 2 -- 1, 2, 3. 
 
- -- This scene doesn't need map tiles per se, but it might still draw the map. TBD
- -- if I do want maptiles, use basePlayableScene as the template instead of newSceneTemplate.
- -- this checks for both regular and secure entries for a cell10.
- -- public visible data is text, secured data is a photo taken live, requires a password to view.
- -- so I need to check if there are entries present here, and display the cell10 public entry if it is.
- -- the secure one requires a password so it's silly to bother getting it if it present.
+local cellCollection = {} -- main background map tiles
+local overlayCollection = {} -- any overlay tiles needed.
 
- --use GetallDataInPlusCode to check for publicGeoCache and privateGeoCache
- --if publicGeoCache exists in our current cell, display it.
- --if privateGeoCache exists, let the user enter a password and attempt to retreive it as an image file.
- --if we successsfully get the image file, display it
+local touchDetector = {} -- Determines what cell10 was tapped on the screen.
 
- --test purposes, we need 2 image boxes. 1 for the uploaded image, 1 for the received image.
+local timerResults = nil
+local firstRun = true
+local mapTileUpdater = nil
 
- local textData = ''
- local picUp = ''
- local picDown = ''
- local textSteps = ''
- 
- function processPhotoEvent(results)
-    --native.showAlert('', dump(results))
-    if (results.completed == true) then
-        textSteps.text = '1 2'
-    --native.showAlert('', 'Photo captured')
-        uploadPhoto();
+local locationText = ""
+local timeText = ""
+local directionArrow = ""
+local debugText = {}
+local locationName = ""
+local hintText = ''
+
+local leaveHint = ''
+local leaveSecret = ''
+local guessSecret = ''
+
+--NOTE:
+--Tracking hints left on the server would be data attached to a player and a location, so it shouldn't go there per my philosophy.
+
+--TODO:
+--display remaining hints/secrets for this Cell8 on the main info view.
+--network calls for reading/writing hints and secrets.
+--any additional UI work for hints or secrets? Overlays?
+--network: hints are on key:geocacheHint, secrets are on key:geocachePic
+
+
+local function testDrift()
+    if (os.time() % 2 == 0) then
+        currentPlusCode = shiftCell(currentPlusCode, 1, 9) -- move north
     else
-        textSteps.text = '1 X'
+        currentPlusCode = shiftCell(currentPlusCode, 1, 10) -- move west
     end
-    -- local headers = {}
-    -- headers["Content-Type"] = "application/octet-stream"
-    -- local params = {
-    --     headers = headers,
-    --     bodyType = "text"
-    -- }
-    -- network.upload(serverURL .. 'SecureData/Area/86GG224466FF/' .. 'privateGeoCache/' .. 'password' .. defaultQueryString, 'PUT', uploadHandler, params,'securePic.png', system.TemporaryDirectory)
 end
-    
-function uploadPhoto()
-    textSteps.text = '1 2 3'
-    local headers = {}
-    headers["Content-Type"] = "application/octet-stream" --"text/text"
-    --headers["Content-Type"] = "text/text"
 
-    local exists = doesFileExist("securePic.png", system.TemporaryDirectory)
-    if (exist == false) then
-        native.showAlert('', "securePic.png not found")
+local function ToggleZoom()
+    print("zoom tapped")
+    gridzoom = gridzoom + 1
+    if (gridzoom > 3) then gridzoom = 1 end
+    timer.pause(timerResults)
+
+    for i = 1, #cellCollection do cellCollection[i]:removeSelf() end
+    for i = 1, #overlayCollection do overlayCollection[i]:removeSelf() end
+
+    cellCollection = {}
+    overlayCollection = {}
+    makeGrid()
+
+    directionArrow:toFront()
+    forceRedraw = true
+    timer.resume(timerResults)
+    return true
+end
+
+function makeGrid()
+    local sceneGroup = scene.view   
+    if (gridzoom == 1) then
+        CreateRectangleGrid(3, 640, 800, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(3, 640, 800, sceneGroup, overlayCollection) -- rectangular Cell11 grid with overlay
+    elseif (gridzoom == 2) then
+        CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with overlay
+    elseif (gridzoom == 3) then
+        CreateRectangleGrid(5, 160, 200, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+        CreateRectangleGrid(5, 160, 200, sceneGroup, overlayCollection) -- rectangular Cell11 grid with overlay
     end
 
-    local params = {
-        --body = {
-            --filename = '86HWGGHQ-11.png', -- "securePic.jpg",  --confirm this is static and wont be changed by the app
-            --baseDirectory = system.CachesDirectory
-        --},
-        headers = headers,
-        bodyType = "binary"
-    }
-    --network.request(serverURL .. 'SecureData/SetSecurePlusCodeData/' .. '86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'GET', DefaultNetCallHandler, params)
-    --network.upload(serverURL .. 'SecureData/Area/86GG224466FF/' .. 'privateGeoCache/' .. 'password' .. defaultQueryString, 'PUT', uploadHandler, params,'86HWGGGP-11.png', system.CachesDirectory)
-    network.upload(serverURL .. 'SecureData/Area/86GG224466FF/' .. 'privateGeoCache/' .. 'password' .. defaultQueryString, 'PUT', uploadHandler, params,'securePic.png', system.TemporaryDirectory)
+    for square = 1, #overlayCollection do
+        overlayCollection[square]:toBack()
+        cellCollection[square]:toBack() --same count
+    end    
+    touchDetector:toBack()
 end
 
-function uploadHandler(event)
-    --native.showAlert('', dump(event))
-    --native.showAlert('', 'Photo uploades')
-    textSteps.text = '1 2 3 4'
-    -- upload is done, get results.
-    print(event.status)
-    print('now getting uploaded photo')
-    getPhoto()
+local function leaveSecretTap(event)
 end
 
-function getPhoto()
-    textSteps.text = '1 2 3 4 5'
-    -- todo: see if i can save text data directly as a png and open it up, or if i'm missing something from that plan.
-    -- is only a question because the secureData endpoints return strings, not byte arrays.
-
-    local params = {
-        response = {
-            filename = "testDL.png",
-            baseDirectory = system.CachesDirectory
-        }
-    }
-    --native.showAlert('requesting photo')
-    network.request(serverURL .. 'SecureData/Area/' .. '86GG224466FF/' .. 'privateGeoCache/' .. 'password' .. defaultQueryString, 'GET', dlHandler, params)
+local function leaveHintTap(event)
 end
 
-function dlHandler(event)
-    textSteps.text = '1 2 3 4 5 6'
-    native.showAlert('', 'Photo downloaded')
-    print("dl completed " .. event.status)
-    print(event.response)
-    local paint = {
-        type = "image",
-        filename = "testDL.png",
-        baseDir = system.CachesDirectory
-    }
-    picDown.fill = paint
+local function guessSecretTap(event)
+end
+
+--"tap" event
+local function DetectLocationClick(event)
+    print("Detecting location")
+    -- we have a click somewhere in our rectangle. 
+    -- gridzoom3 is 5x5 lowres tiles, 800 x 1000 total, each pixel is 1 Cell 11
+    -- gridzoom2 is 3x3 highres tiles, 960 x 1200 total, each 2x2 pixels is 1 Cell 11
+    -- gridzoom1 is 3x3 doubled highres tiles, 1960 x 2400 total, each 4x4 pixels is 1 cell 11.
+
+    -- figure out how many pixels from the center of the item each tap is
+    local screenX = event.x
+    local screenY = event.y
+    local centerX = display.contentCenterX
+    local centerY = display.contentCenterY
+
+    --remember that the CENTER of the center square is the center pixel on screen, not the SW corner
+    --so i have to shift info by half a square somewhere.
+
+    local pixelshiftX = screenX - centerX
+    local pixelshiftY = centerY - screenY --flips the sign to get things to line up correctly.
+    local plusCodeShiftX = 0
+    local plusCodeShiftY = 0
+
+    if (gridzoom == 1) then
+        pixelshiftX = pixelshiftX + 16
+        pixelshiftY =  pixelshiftY + 20
+        plusCodeShiftX = pixelshiftX / 32
+        plusCodeShiftY = pixelshiftY / 40
+    elseif (gridzoom == 2) then
+        pixelshiftX = pixelshiftX + 8
+        pixelshiftY =  pixelshiftY + 10
+        plusCodeShiftX = pixelshiftX / 16
+        plusCodeShiftY = pixelshiftY / 20
+    elseif (gridzoom == 3) then
+        pixelshiftX = pixelshiftX + 4
+        pixelshiftY =  pixelshiftY + 5
+        plusCodeShiftX = pixelshiftX / 8
+        plusCodeShiftY = pixelshiftY / 10
+    end
+
+    local newCell = currentPlusCode:sub(0,8) .. "+FF" --might be GG, depends on direction of shift
+    newCell = shiftCell(newCell, plusCodeShiftY, 9) --Y axis
+    newCell = shiftCell(newCell, plusCodeShiftX, 10) --X axis
+    print("Detected cell tap: " .. newCell)
+    tapData.text = "Cell Tapped: " .. newCell
+
+    local pluscodenoplus = removePlus(newCell)
+    local terrainInfo = LoadTerrainData(pluscodenoplus)
+
+    -- 3 is name, 4 is area type, 6 is mapDataID (privacyID)
+    if (terrainInfo[3] == "") then
+        tappedAreaName = terrainInfo[4]
+    else
+        tappedAreaName = terrainInfo[3]
+    end
+    
+    --tappedCell = newCell
+    --tappedAreaScore = 0 --i don't save this locally, this requires a network call to get and update
+    --tappedAreaMapDataId = terrainInfo[6]
+    --composer.showOverlay("overlayMPAreaClaim", {isModal = true})
     
 end
 
+local function GoToSceneSelect()
+    print("back to scene select")
+    local options = {effect = "flip", time = 125}
+    composer.gotoScene("SceneSelect", options)
+    return true
+end
+
+local function UpdateLocalOptimized()
+    if timerResults == nil then
+        timerResults = timer.performWithDelay(450, UpdateLocalOptimized, -1)
+    end
+
+    if not playerInBounds then
+        return
+    end
+
+    if (debugLocal) then print("start UpdateLocalOptimized") end
+    if (currentPlusCode == "") then
+        if (debugLocal) then print("skipping, no location.") end
+        return
+    end
+
+    if (debug) then debugText.text = dump(lastLocationEvent) end
+
+    if (timerResults ~= nil) then timer.pause(timerResults) end
+    local innerForceRedraw = forceRedraw or firstRun or (currentPlusCode:sub(1,8) ~= previousPlusCode:sub(1,8))
+    firstRun = false
+    forceRedraw = false
+    previousPlusCode = currentPlusCode
+
+    -- Step 1: set background MAC map tiles for the Cell8.
+    if (innerForceRedraw == false) then -- none of this needs to get processed if we haven't moved and there's no new maptiles to refresh.
+    for square = 1, #cellCollection do
+        -- check each spot based on current cell, modified by gridX and gridY
+        local thisSquaresPluscode = currentPlusCode
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 8)
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
+        cellCollection[square].pluscode = thisSquaresPluscode
+        local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
+        --GetMapData8(plusCodeNoPlus)
+        --checkTileGeneration(plusCodeNoPlus, "mapTiles")
+        local imageExists = doesFileExist(plusCodeNoPlus .. "-11.png", system.CachesDirectory)
+        if imageExists == true then
+            cellCollection[square].fill = {0.1, 0.1} -- required to make Solar2d actually update the texture.
+            local paint = {
+                type = "image",
+                filename = plusCodeNoPlus .. "-11.png",
+                baseDir = system.CachesDirectory
+            }
+            cellCollection[square].fill = paint
+        end
+
+            --Update this loop to pull the overlay tiles if needed
+            -- imageRequested = requestedMPMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
+            -- imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
+            -- if (imageRequested == nil) then 
+            --     imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
+            -- end
+ 
+            -- if (imageExists == false or imageExists == nil) then 
+            --      GetTeamControlMapTile8(plusCodeNoPlus)
+            -- else
+            --     overlayCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
+            --     local paint = {
+            --         type = "image",
+            --         filename = plusCodeNoPlus .. "-AC-11.png",
+            --         baseDir = system.TemporaryDirectory
+            --     }
+            --     overlayCollection[square].fill = paint
+            -- end
+        end
+    end
+
+    if (timerResults ~= nil) then timer.resume(timerResults) end
+    if (debugLocal) then print("grid done or skipped") end
+    locationText.text = "Current location:" .. currentPlusCode
+    timeText.text = "Current time:" .. os.date("%X")
+    directionArrow.rotation = currentHeading
+
+    local hintInfo = requestedGeocacheHints[pluscodenoplus]
+    if hintInfo ~= nil then
+        hintText.text = hintInfo
+    else
+        hintText.text = ''
+    end
+
+    --Remember, currentPlusCode has the +, so i want chars 10 and 11, not 9 and 10.
+    --Shift is how many blocks to move. Multiply it by how big each block is. These offsets place the arrow in the correct Cell10.
+    local shift = CODE_ALPHABET_:find(currentPlusCode:sub(11, 11)) - 11
+    local shift2 = CODE_ALPHABET_:find(currentPlusCode:sub(10, 10)) - 10
+    if (gridzoom == 1) then
+        directionArrow.x = display.contentCenterX + (shift * 32)  + 16
+        directionArrow.y = display.contentCenterY - (shift2 * 40) + 20
+    elseif (gridzoom == 2) then
+        directionArrow.x = display.contentCenterX + (shift * 16)  + 8
+        directionArrow.y = display.contentCenterY - (shift2 * 20) + 10
+    elseif (gridzoom == 3) then
+        directionArrow.x = display.contentCenterX + (shift * 8) + 4
+        directionArrow.y = display.contentCenterY - (shift2 * 10) + 5
+    end
+
+    locationText:toFront()
+    timeText:toFront()
+    directionArrow:toFront()
+    locationName:toFront()
+
+    if (debugLocal) then print("end updateLocalOptimized") end
+end
+
+local function UpdateMapTiles()
+    --set this to run once a second or so.
+    for square = 1, #cellCollection do
+        -- check each spot based on current cell, modified by gridX and gridY
+        local thisSquaresPluscode = currentPlusCode
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridX, 8)
+        thisSquaresPluscode = shiftCell(thisSquaresPluscode, cellCollection[square].gridY, 7)
+        cellCollection[square].pluscode = thisSquaresPluscode
+        local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
+        GetMapData8(plusCodeNoPlus)
+        checkTileGeneration(plusCodeNoPlus, "mapTiles")
+    end -- for
+end
 
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
 -- -----------------------------------------------------------------------------------
- 
--- create()
-function scene:create( event )
- 
+
+function scene:create(event)
     local sceneGroup = self.view
-    -- Code here runs when the scene is first created but has not yet appeared on screen
-    --textData = display.newText(sceneGroup, "text", display.contentCenterX, 200, 600, 900, native.systemFont, 20)
-    print("create")
+
+    touchDetector = display.newRect(sceneGroup, display.contentCenterX, display.contentCenterY, 720, 1280)
+    touchDetector:addEventListener("tap", DetectLocationClick)
+    touchDetector.fill = {0, 0.1}
+    touchDetector:toBack()
+
+    contrastSquare = display.newRect(sceneGroup, display.contentCenterX, 230, 400, 100)
+    contrastSquare:setFillColor(.8, .8, .8, .7)
+
+    locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
+    timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
+    locationName = display.newText(sceneGroup, "", display.contentCenterX, 240, native.systemFont, 20)
+    hintText = display.newText(sceneGroup, "", display.contentCenterX, 270, native.systemFont, 25)
+    
+    locationText:setFillColor(0, 0, 0)
+    timeText:setFillColor(0, 0, 0)
+    locationName:setFillColor(0, 0, 0)
+    hintText:setFillColor(0,0,0)
+
+    CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+    CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with overlay
+
+    directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 16, 20)
+    directionArrow.x = display.contentCenterX
+    directionArrow.y = display.contentCenterY
+    directionArrow.anchorX = .5
+    directionArrow.anchorY = .5
+    directionArrow:toFront()
+
+    local header = display.newImageRect(sceneGroup, "themables/virtualGeocache.png",300, 100)
+    header.x = display.contentCenterX
+    header.y = 100
+    header:addEventListener("tap", GoToSceneSelect)
+    header:toFront()
+
+    local zoom = display.newImageRect(sceneGroup, "themables/ToggleZoom.png", 100, 100)
+    zoom.anchorX = 0
+    zoom.x = 50
+    zoom.y = 100
+    zoom:addEventListener("tap", ToggleZoom)
+
+    guessSecret = display.newImageRect(sceneGroup, "themables/guessSecret.png", 300, 100)
+    guessSecret.x = 175
+    guessSecret.y = 1175
+    guessSecret.anchorX = .5
+    guessSecret.anchorY = .5
+    guessSecret:toFront()
+    guessSecret:addEventListener("tap", guessSecretTap)
+
+    leaveSecret = display.newImageRect(sceneGroup, "themables/leaveSecret.png", 300, 100)
+    leaveSecret.x = 545
+    leaveSecret.y = 1175
+    leaveSecret.anchorX = .5
+    leaveSecret.anchorY = .5
+    leaveSecret:toFront()
+    leaveSecret:addEventListener("tap", leaveSecretTap)
+
+    leaveHint = display.newImageRect(sceneGroup, "themables/leaveHint.png", 300, 100)
+    leaveHint.x = 545
+    leaveHint.y = 1050
+    leaveHint.anchorX = .5
+    leaveHint.anchorY = .5
+    leaveHint:toFront()
+    leaveHint:addEventListener("tap", leaveHintTap)
+
+    if (debug) then
+        debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
+        debugText:toFront()
+    end
+    zoom:toFront()
+    contrastSquare:toFront()
+    hintText:toFront()
+    if (debug) then print("created baseline scene") end
 end
- 
- 
--- show()
-function scene:show( event )
- 
+
+function scene:show(event)
+    if (debug) then print("showing baseline scene") end
     local sceneGroup = self.view
     local phase = event.phase
- 
-    if ( phase == "will" ) then
+
+    if (phase == "will") then
         -- Code here runs when the scene is still off screen (but is about to come on screen)
-        print("will")
- 
-    elseif ( phase == "did" ) then
-        -- Code here runs when the scene is entirely on screen
-        textSteps = display.newText(sceneGroup, "1", display.contentCenterX, 280, native.systemFont, 20)
-
-        --native.showAlert('', 'getting photo')
-        media.capturePhoto({ listener = processPhotoEvent, destination  = {baseDir = system.TemporaryDirectory, filename = "securePic.png"}}) 
-        --uploadPhoto() 
-        --print("did")
-        picUp = display.newRect(sceneGroup, 80, 400, 80, 100) 
-        local paint = {
-            type = "image",
-            filename = "86HWGGGM-11.png",
-            baseDir = system.CachesDirectory
-        }
-        picUp.fill = paint
-
-        picDown = display.newRect(sceneGroup, 400, 400, 80, 100)
-
-        --print("checking tile gen id")
-        --checkTileGeneration('86HWGGHQ', 'mapTiles')
-
+        firstRun = true
+    elseif (phase == "did") then
+        -- Code here runs when the scene is entirely on screen 
+        timer.performWithDelay(50, UpdateLocalOptimized, 1)
+        if (debugGPS) then timer.performWithDelay(300, testDrift, -1) end
+        mapTileUpdater = timer.performWithDelay(1000, UpdateMapTiles, -1)
     end
 end
- 
- 
--- hide()
-function scene:hide( event )
- 
+
+function scene:hide(event)
+    if (debug) then print("hiding baseline scene") end
     local sceneGroup = self.view
     local phase = event.phase
- 
-    if ( phase == "will" ) then
-        -- Code here runs when the scene is on screen (but is about to go off screen)
- 
-    elseif ( phase == "did" ) then
+
+    if (phase == "will") then
+        timer.cancel(timerResults)
+        timerResults = nil
+        timer.cancel(mapTileUpdater)
+    elseif (phase == "did") then
         -- Code here runs immediately after the scene goes entirely off screen
-        --media.
-        
- 
     end
 end
- 
- 
--- destroy()
-function scene:destroy( event )
- 
+
+function scene:destroy(event)
+    if (debug) then print("destroying baseline scene") end
+
     local sceneGroup = self.view
     -- Code here runs prior to the removal of scene's view
- 
 end
- 
- 
+
 -- -----------------------------------------------------------------------------------
 -- Scene event function listeners
 -- -----------------------------------------------------------------------------------
-scene:addEventListener( "create", scene )
-scene:addEventListener( "show", scene )
-scene:addEventListener( "hide", scene )
-scene:addEventListener( "destroy", scene )
+scene:addEventListener("create", scene)
+scene:addEventListener("show", scene)
+scene:addEventListener("hide", scene)
+scene:addEventListener("destroy", scene)
 -- -----------------------------------------------------------------------------------
- 
+
 return scene
