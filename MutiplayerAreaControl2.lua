@@ -254,6 +254,8 @@ local function UpdateLocalOptimized()
                 baseDir = system.CachesDirectory
             }
             cellCollection[square].fill = paint
+        else
+            cellCollection[square].fill = {0.1, 0.1} -- required to make Solar2d actually update the texture.
         end
 
         --checkTileGeneration(plusCodeNoPlus, "teamColor")
@@ -274,6 +276,8 @@ local function UpdateLocalOptimized()
                 baseDir = system.TemporaryDirectory
             }
             overlayCollection[square].fill = paint
+        else
+            overlayCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
         end
     end --for
     end --if

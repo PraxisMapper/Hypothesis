@@ -41,7 +41,8 @@ end
  function DeleteDataListener(event)
     local url = serverURL .. "Data/Player/" .. system.getInfo("deviceID") .. defaultQueryString
     print(url)
-    network.request(url, "DELETE", DeleteDataResponse)
+    --network.request(url, "DELETE", DeleteDataResponse)
+    table.insert(networkQueue, { url = url, verb = "DELETE", handlerFunc = DeleteDataResponse})
  end
 
  function DeleteDataResponse(event)

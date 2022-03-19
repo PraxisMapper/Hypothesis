@@ -181,7 +181,8 @@ Runtime:addEventListener("key", backListener)
 function netUp()
     netCallCount = netCallCount - 1
     --print("Active net calls: " .. netCallCount)
-    if netCallCount > 0 then
+    --if netCallCount > 0 then
+    if #networkQueue > 0 then
         return
     end
     networkUp.isVisible = true
@@ -192,7 +193,8 @@ end
 function netDown(event)
     netCallCount = netCallCount - 1
     --print("Active net calls: " .. netCallCount)
-    if netCallCount > 0 then
+    --if netCallCount > 0 then
+    if #networkQueue > 0 then
         return
     end
     networkDown.isVisible = true
@@ -218,3 +220,11 @@ function DefaultNetCallHandler(event)
         netUp()
     end
 end
+
+function netQueueCheck()
+    if #networkQueue> 0 and networkQueueBusy == false then
+        nextNetworkQueue()
+    end
+end
+
+timer.performWithDelay(25, netQueueCheck,  -1)

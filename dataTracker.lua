@@ -68,12 +68,15 @@ function GetCell8TerrainData(code8)
         print("network: getting 8 cell data " .. code8) 
         print ("getting cell data via " .. serverURL .. "Data/Terrain/" .. code8) 
     end
-    network.request(serverURL .. "Data/Terrain/" .. code8 .. defaultQueryString , "GET", TrackplusCode8Listener)
+    --network.request(serverURL .. "Data/Terrain/" .. code8 .. defaultQueryString , "GET", TrackplusCode8Listener)
+    table.insert(networkQueue, { url = serverURL .. "Data/Terrain/" .. code8 .. defaultQueryString, verb = "GET", handlerFunc = TrackplusCode8Listener})
     netTransfer()
 end
 
 function TrackplusCode8Listener(event)
     --if (debug) then print("plus code 8 event started") end
+    networkQueueBusy = false
+    print('terrain listener ' .. event.status)
     if event.status == 200 then 
         netUp() 
     else 
@@ -86,6 +89,8 @@ function TrackplusCode8Listener(event)
     --Format:
     --cell10|name|typeID|mapDataID
     --EX: 82HHWG48=Local Park|4|guid
+
+    print('loading ' .. #resultsTable .. ' to terrain db')
 
     db:exec("BEGIN TRANSACTION") --transactions for multiple inserts are a huge performance boost.
     for i = 1, #resultsTable do
@@ -115,11 +120,13 @@ function TrackerGetCell8Image11(plusCode)
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
-    network.request(serverURL .. "MapTile/Area/" .. plusCode .. defaultQueryString, "GET", Trackerimage811Listener, params)
+    --network.request(serverURL .. "MapTile/Area/" .. plusCode .. defaultQueryString, "GET", Trackerimage811Listener, params)
+    table.insert(networkQueue, { url = serverURL .. "MapTile/Area/" .. plusCode .. defaultQueryString, verb = "GET", handlerFunc = TrackplusCode8Listener, params = params})
     --print('called for mapTiles on ' .. plusCode)
 end
 
 function Trackerimage811Listener(event)
+    networkQueueBusy = false
     --local filename = string.gsub(event.url, serverURL .. "MapTile/Area/", "")
     local filename = Split(string.gsub(event.url, serverURL .. "MapTile/Area/", ""), '?')[1]
     --print('got mapTiles results for ' .. filename)
@@ -150,10 +157,13 @@ function TrackerGetMPCell8Image11(plusCode)
     netTransfer()
     local params = {}
     params.response  = {filename = plusCode .. "-AC-11.png", baseDirectory = system.TemporaryDirectory}
-    network.request(serverURL .. "MapTile/AreaPlaceData/" .. plusCode .. "/teamColor/teamColor" .. defaultQueryString, "GET", TrackerMPimage811Listener, params)
+    --network.request(serverURL .. "MapTile/AreaPlaceData/" .. plusCode .. "/teamColor/teamColor" .. defaultQueryString, "GET", TrackerMPimage811Listener, params)
+    table.insert(networkQueue, { url = serverURL .. "MapTile/AreaPlaceData/" .. plusCode .. "/teamColor/teamColor" .. defaultQueryString, verb = "GET", handlerFunc = TrackerMPimage811Listener, params = params})
+    --table.insert(networkQueue, { url = url, verb = "GET", handlerFunc = TrackplusCode8Listener})
 end
 
 function TrackerMPimage811Listener(event)
+    networkQueueBusy = false
     local plusCode = Split(string.gsub(string.gsub(event.url, serverURL .. "MapTile/AreaPlaceData/", ""), "/teamColor/teamColor", ""), '?')[1]
     --print('got AreaTag image for ' .. plusCode)
     requestedMPMapTileCells[plusCode] = 0
@@ -188,7 +198,10 @@ function PaintTownMapListener(event)
     end
     --Format:
     --Cell10|dataTag|dataValue\r\n
-    local resultsTable = Split(event.response, "\r\n")
+    local resultsTable = Split(event.response, "\n") --NOTE: could be \n or \r\n depending on if server is Windows or Unix.
+    print('loading  to PTT memory ' .. #resultsTable)
+    print(event.response)
+
     for cell = 1, #resultsTable do
         local splitData = Split(resultsTable[cell], "|")
         local key = splitData[1]
@@ -373,4 +386,16 @@ function tileGenHandler(event)
     if event.status == 200 and pieces[2] == 'mapTiles' then
         requestedMapTileCells[pieces[1]] = 0
     end
+end
+
+networkQueue = {}
+networkQueueBusy = false --current idea, check every 50ms if the network queue is busy, if not then call next.
+
+--a quick queue doesnt seem to work better than calling it all at once. 
+function nextNetworkQueue()
+    networkQueueBusy = true
+    netData = networkQueue[1]
+    print('firing network queue for ' .. dump(netData))
+    network.request(netData.url, netData.verb, netData.handlerFunc, netData.params)
+    table.remove(networkQueue, 1)
 end

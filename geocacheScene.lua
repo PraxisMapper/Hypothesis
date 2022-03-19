@@ -28,26 +28,36 @@ require("dataTracker")
  local textData = ''
  local picUp = ''
  local picDown = ''
+ local textSteps = ''
  
--- function processPhotoEvent(results)
---     textData.text = dump(results)
---     if results.completed == false then
---         return
---     end
---     -- upload given file.
---     local params = {
---         body = {
---             filename = '86HWGGHQ-AC-11.png' -- "securePic.jpg",  --confirm this is static and wont be changed by the app
---             baseDirectory = system.TemporaryDirectory
---         }
---     }
---     network.request(serverURL .. 'SecureData/SetSecurePlusCodeData/' .. '86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'GET', DefaultNetCallHandler, params)
--- end
+ function processPhotoEvent(results)
+    --native.showAlert('', dump(results))
+    if (results.completed == true) then
+        textSteps.text = '1 2'
+    --native.showAlert('', 'Photo captured')
+        uploadPhoto();
+    else
+        textSteps.text = '1 X'
+    end
+    -- local headers = {}
+    -- headers["Content-Type"] = "application/octet-stream"
+    -- local params = {
+    --     headers = headers,
+    --     bodyType = "text"
+    -- }
+    -- network.upload(serverURL .. 'SecureData/Area/86GG224466FF/' .. 'privateGeoCache/' .. 'password' .. defaultQueryString, 'PUT', uploadHandler, params,'securePic.png', system.TemporaryDirectory)
+end
     
 function uploadPhoto()
+    textSteps.text = '1 2 3'
     local headers = {}
     headers["Content-Type"] = "application/octet-stream" --"text/text"
     --headers["Content-Type"] = "text/text"
+
+    local exists = doesFileExist("securePic.png", system.TemporaryDirectory)
+    if (exist == false) then
+        native.showAlert('', "securePic.png not found")
+    end
 
     local params = {
         --body = {
@@ -55,13 +65,17 @@ function uploadPhoto()
             --baseDirectory = system.CachesDirectory
         --},
         headers = headers,
-        bodyType = "text"
+        bodyType = "binary"
     }
     --network.request(serverURL .. 'SecureData/SetSecurePlusCodeData/' .. '86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'GET', DefaultNetCallHandler, params)
-    network.upload(serverURL .. 'SecureData/Area/86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'PUT', uploadHandler, params,'86HWGGGP-11.png', system.CachesDirectory)
+    --network.upload(serverURL .. 'SecureData/Area/86GG224466FF/' .. 'privateGeoCache/' .. 'password' .. defaultQueryString, 'PUT', uploadHandler, params,'86HWGGGP-11.png', system.CachesDirectory)
+    network.upload(serverURL .. 'SecureData/Area/86GG224466FF/' .. 'privateGeoCache/' .. 'password' .. defaultQueryString, 'PUT', uploadHandler, params,'securePic.png', system.TemporaryDirectory)
 end
 
 function uploadHandler(event)
+    --native.showAlert('', dump(event))
+    --native.showAlert('', 'Photo uploades')
+    textSteps.text = '1 2 3 4'
     -- upload is done, get results.
     print(event.status)
     print('now getting uploaded photo')
@@ -69,18 +83,23 @@ function uploadHandler(event)
 end
 
 function getPhoto()
+    textSteps.text = '1 2 3 4 5'
     -- todo: see if i can save text data directly as a png and open it up, or if i'm missing something from that plan.
     -- is only a question because the secureData endpoints return strings, not byte arrays.
+
     local params = {
         response = {
             filename = "testDL.png",
             baseDirectory = system.CachesDirectory
         }
     }
-    network.request(serverURL .. 'SecureData/Area/' .. '86GG224466FF/' .. 'privateGeoCache/' .. 'password', 'GET', dlHandler, params)
+    --native.showAlert('requesting photo')
+    network.request(serverURL .. 'SecureData/Area/' .. '86GG224466FF/' .. 'privateGeoCache/' .. 'password' .. defaultQueryString, 'GET', dlHandler, params)
 end
 
 function dlHandler(event)
+    textSteps.text = '1 2 3 4 5 6'
+    native.showAlert('', 'Photo downloaded')
     print("dl completed " .. event.status)
     print(event.response)
     local paint = {
@@ -119,8 +138,12 @@ function scene:show( event )
  
     elseif ( phase == "did" ) then
         -- Code here runs when the scene is entirely on screen
-        uploadPhoto() --media.capturePhoto(processPhotoEvent, {baseDir = system.TemporaryDirectory, filename = "securePic.jpg"}) 
-        print("did")
+        textSteps = display.newText(sceneGroup, "1", display.contentCenterX, 280, native.systemFont, 20)
+
+        --native.showAlert('', 'getting photo')
+        media.capturePhoto({ listener = processPhotoEvent, destination  = {baseDir = system.TemporaryDirectory, filename = "securePic.png"}}) 
+        --uploadPhoto() 
+        --print("did")
         picUp = display.newRect(sceneGroup, 80, 400, 80, 100) 
         local paint = {
             type = "image",
@@ -132,7 +155,7 @@ function scene:show( event )
         picDown = display.newRect(sceneGroup, 400, 400, 80, 100)
 
         --print("checking tile gen id")
-        checkTileGeneration('86HWGGHQ', 'mapTiles')
+        --checkTileGeneration('86HWGGHQ', 'mapTiles')
 
     end
 end

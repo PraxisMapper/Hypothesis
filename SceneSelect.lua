@@ -24,6 +24,16 @@ local function SwitchToIdleScene()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("IdleScene", options)
 end
+
+local function SwitchToGeocacheScene()
+    local options = {effect = "flip", time = 125}
+    composer.gotoScene("geocacheScene", options)
+end
+
+local function SwitchToCreatureScene()
+    local options = {effect = "flip", time = 125}
+    composer.gotoScene("CreatureCollectorScene", options)
+end
  
 -- -----------------------------------------------------------------------------------
 -- Scene event functions
@@ -58,6 +68,20 @@ function scene:create( event )
     changePaintTown.x = 60
     changePaintTown.y = 100
     changePaintTown:addEventListener("tap", SwitchToPaintTownScene)
+
+    local changeGeocache = display.newImageRect(sceneGroup, "themables/virtualGeocache.png", 300, 100) --area tag
+    changeGeocache.anchorX = 0
+    changeGeocache.anchorY = 0
+    changeGeocache.x = 390
+    changeGeocache.y = 250
+    changeGeocache:addEventListener("tap", SwitchToGeocacheScene)
+
+    local changeCreature = display.newImageRect(sceneGroup, "themables/creatureCollector.png", 300, 100) --paint the town
+    changeCreature.anchorX = 0
+    changeCreature.anchorY = 0
+    changeCreature.x = 60
+    changeCreature.y = 400
+    changeCreature:addEventListener("tap", SwitchToCreatureScene)
 
     local changeSettings = display.newImageRect(sceneGroup, "themables/Settings.png", 300, 100) -- settings
     changeSettings.anchorX = 0
