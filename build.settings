@@ -38,8 +38,8 @@ settings =
 		{
 			UIStatusBarHidden = false,
 			UILaunchStoryboardName = "LaunchScreen",
-			NSCameraUsageDescription = "This app uses the camera in the GeoCaching example to let you hide a picture somewhere.",
-            NSPhotoLibraryUsageDescription = "This permission is required in order to read data from the camera.",
+			NSCameraUsageDescription = "This app uses the camera in the GeoCaching example to let you hide a freshly taken picture somewhere in-game.",
+            NSPhotoLibraryUsageDescription = "This permission is required in order to read data from the camera, the app does not read your photo library directly.",
 			NSLocationWhenInUseUsageDescription = "Moving around in the real world is how you move around in game. Your location is not stored or tied to you personally."	
 		},
 	},
