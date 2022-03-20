@@ -91,6 +91,7 @@ local function leaveSecretTap(event)
 end
 
 local function leaveHintTap(event)
+    composer.showOverlay("leaveHintOverlay", {isModal = true})
 end
 
 local function guessSecretTap(event)

@@ -132,19 +132,30 @@ function SetServerAddress(url)
 end
 
 function getHintInfo(plusCode)
-    local cmd = 'SELECT * FROM geocacheHints WHERE plusCode8 = "' .. plusCode .. "'"
-    for i,row in ipairs(Query(query)) do
-        if (#row == 1) then
-            return row[1]
-        else
+    local cmd = 'SELECT * FROM geocacheHints WHERE plusCode8 = "' .. plusCode .. '"'
+    print(cmd)
+    local results = Query(cmd)
+    print(dump(results))
+    for i,row in ipairs(Query(cmd)) do
+        print(dump(row))
+        return row
+    end
             --insert the data now.
             local exec = "INSERT INTO geocacheHints(plusCode8, hintsLeft, secretsLeft) VALUES('" .. plusCode .. "', 3, 1)"
-            db:Exec(exec)
+            db:exec(exec)
             local t = {}
-            t[1] = plusCode
-            t[2] = 3
-            t[3] = 1
+            t[2] = plusCode
+            t[3] = 3
+            t[4] = 1
             return t
-        end
-    end
+end
+
+function spendHint(plusCode)
+    local cmd = 'UPDATE geocacheHints SET hintsLeft = (hintsLeft - 1) WHERE plusCode8 = "' .. plusCode .. '"'
+    db:exec(cmd)
+end
+
+function spendSecret(plusCode)
+    local cmd = 'UPDATE geocacheHints SET secretsLeft = secretsLeft - 1 WHERE plusCode8 = "' .. plusCode .. '"'
+    db:exec(cmd)
 end
