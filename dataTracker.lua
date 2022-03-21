@@ -450,20 +450,9 @@ function saveHintHandler(event)
         print("spending")
         spendHint(plusCode:sub(1,8))
         print("spent")
+        netUp()
+    else
+        netDown()
     end
 end
 
-function saveSecret(pluscode, password, file)
-
-    network.upload(serverURL .. 'SecureData/Area/' .. pluscode .. '/privateGeoCache/' .. password .. defaultQueryString, 'PUT', saveSecretHandler, params,'securePic.png', system.TemporaryDirectory)
-end
-
-function saveSecretHandler(event)
-    --we don't need to do anything real serious, just confirm the upload succeeded and track counts.
-    local plusCode = Split(string.gsub(string.gsub(event.url, serverURL .. "SecureData/Area/", ""), "/privateGeoCache", ""), '?')[1]
-    print(plusCode)
-
-    if event.status == 200 then
-        spendSecret(plusCode)
-    end
-end

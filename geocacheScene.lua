@@ -88,6 +88,7 @@ function makeGrid()
 end
 
 local function leaveSecretTap(event)
+    composer.showOverlay("leaveSecretOverlay", {isModal = true})
 end
 
 local function leaveHintTap(event)

@@ -156,6 +156,6 @@ function spendHint(plusCode)
 end
 
 function spendSecret(plusCode)
-    local cmd = 'UPDATE geocacheHints SET secretsLeft = secretsLeft - 1 WHERE plusCode8 = "' .. plusCode .. '"'
+    local cmd = 'UPDATE geocacheHints SET secretsLeft = (secretsLeft - 1) WHERE plusCode8 = "' .. plusCode .. '"'
     db:exec(cmd)
 end
