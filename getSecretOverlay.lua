@@ -111,8 +111,6 @@ function scene:create( event )
     noButton.y = display.contentCenterY + 300
     noButton:addEventListener("tap", noListener)
 
-    --TODO: add 'Rotate' and 'Exit' buttons.
-
     yesButton = display.newImageRect(sceneGroup, "themables/ACYes.png", 100, 100)
     yesButton.x = display.contentCenterX - 200
     yesButton.y = display.contentCenterY + 300
@@ -123,18 +121,17 @@ function scene:create( event )
     noButton.y = display.contentCenterY + 300
     noButton:addEventListener("tap", noListener)
 
-    rotateButton = display.newImageRect(sceneGroup, "themables/ACYes.png", 100, 100)
-    rotateButton.x = display.contentCenterX - 300
+    rotateButton = display.newImageRect(sceneGroup, "themables/rotate.png", 300, 100)
+    rotateButton.x = display.contentCenterX - 200
     rotateButton.y = display.contentCenterY + 500
     rotateButton:addEventListener("tap", rotateListener)
     rotateButton.isVisible = false
 
-    exitButton = display.newImageRect(sceneGroup, "themables/ACNo.png", 100, 100)
-    exitButton.x = display.contentCenterX + 300
+    exitButton = display.newImageRect(sceneGroup, "themables/exit.png", 300, 100)
+    exitButton.x = display.contentCenterX + 200
     exitButton.y = display.contentCenterY + 500
     exitButton:addEventListener("tap", noListener)
     exitButton.isVisible = false
-
 end
  
  

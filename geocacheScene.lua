@@ -30,14 +30,14 @@ local leaveHint = ''
 local leaveSecret = ''
 local guessSecret = ''
 
+local hintsLeft = ''
+local cachesLeft = ''
+
 --NOTE:
 --Tracking hints left on the server would be data attached to a player and a location, so it shouldn't go there per my philosophy.
 
 --TODO:
 --display remaining hints/secrets for this Cell8 on the main info view.
---network calls for reading/writing hints and secrets.
---any additional UI work for hints or secrets? Overlays?
---network: hints are on key:geocacheHint, secrets are on key:geocachePic
 
 
 local function testDrift()
@@ -191,6 +191,10 @@ local function UpdateLocalOptimized()
     forceRedraw = false
     previousPlusCode = currentPlusCode
 
+    local hintData = getHintInfo(currentPlusCode:sub(1,8))
+    hintsLeft.text = "Hints Left To Place in " .. currentPlusCode:sub(1,8) .. ": " .. hintData[3]
+    cachesLeft.text = "Caches To Hide In " .. currentPlusCode:sub(1,8) .. ": " .. hintData[4]
+
     -- Step 1: set background MAC map tiles for the Cell8.
     if (innerForceRedraw == false) then -- none of this needs to get processed if we haven't moved and there's no new maptiles to refresh.
     for square = 1, #cellCollection do
@@ -265,7 +269,9 @@ local function UpdateLocalOptimized()
     locationText:toFront()
     timeText:toFront()
     directionArrow:toFront()
-    locationName:toFront()
+    --locationName:toFront()
+    hintsLeft:toFront()
+    cachesLeft:toFront()
 
     if (debugLocal) then print("end updateLocalOptimized") end
 end
@@ -296,18 +302,22 @@ function scene:create(event)
     touchDetector.fill = {0, 0.1}
     touchDetector:toBack()
 
-    contrastSquare = display.newRect(sceneGroup, display.contentCenterX, 230, 400, 100)
+    contrastSquare = display.newRect(sceneGroup, display.contentCenterX, 230, 400, 130)
     contrastSquare:setFillColor(.8, .8, .8, .7)
 
     locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
-    locationName = display.newText(sceneGroup, "", display.contentCenterX, 240, native.systemFont, 20)
-    hintText = display.newText(sceneGroup, "", display.contentCenterX, 270, native.systemFont, 25)
+    --locationName = display.newText(sceneGroup, "", display.contentCenterX, 240, native.systemFont, 20)
+    hintText = display.newText(sceneGroup, "", display.contentCenterX, 285, native.systemFont, 25)
+    hintsLeft = display.newText(sceneGroup, "Hints Left for " .. currentPlusCode:sub(1,8), display.contentCenterX, 240, native.systemFont, 20)
+    cachesLeft = display.newText(sceneGroup, "Cache hidden in  " .. currentPlusCode:sub(1,8), display.contentCenterX, 260, native.systemFont, 20)
     
     locationText:setFillColor(0, 0, 0)
     timeText:setFillColor(0, 0, 0)
-    locationName:setFillColor(0, 0, 0)
+    --locationName:setFillColor(0, 0, 0)
     hintText:setFillColor(0,0,0)
+    hintsLeft:setFillColor(0,0,0)
+    cachesLeft:setFillColor(0,0,0)
 
     CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
     CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with overlay
