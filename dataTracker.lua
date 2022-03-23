@@ -184,7 +184,7 @@ end
 function GetGeocacheHintData8(Cell8) -- the painttown map update call.
     --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
     netTransfer()
-    network.request(serverURL .. "Data/Area/All/" .. Cell8 .. defaultQueryString, "GET", geocacheHintListener) 
+    network.request(serverURL .. "Data/Area/All/" .. currentPlusCode:sub(1,8) .. defaultQueryString, "GET", geocacheHintListener) 
 end
 
 function geocacheHintListener(event)
@@ -199,8 +199,8 @@ function geocacheHintListener(event)
     --Format:
     --Cell10|dataTag|dataValue\n
     local resultsTable = Split(event.response, "\n")
-    print('loading to hint memory ' .. #resultsTable)
-    print(event.response)
+    --print('loading to hint memory ' .. #resultsTable)
+    --print(event.response)
 
     for cell = 1, #resultsTable do
         local splitData = Split(resultsTable[cell], "|")

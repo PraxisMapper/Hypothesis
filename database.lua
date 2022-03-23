@@ -133,11 +133,8 @@ end
 
 function getHintInfo(plusCode)
     local cmd = 'SELECT * FROM geocacheHints WHERE plusCode8 = "' .. plusCode .. '"'
-    print(cmd)
     local results = Query(cmd)
-    print(dump(results))
     for i,row in ipairs(Query(cmd)) do
-        print(dump(row))
         return row
     end
             --insert the data now.

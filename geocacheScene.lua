@@ -36,9 +36,6 @@ local cachesLeft = ''
 --NOTE:
 --Tracking hints left on the server would be data attached to a player and a location, so it shouldn't go there per my philosophy.
 
---TODO:
---display remaining hints/secrets for this Cell8 on the main info view.
-
 
 local function testDrift()
     if (os.time() % 2 == 0) then
@@ -244,7 +241,7 @@ local function UpdateLocalOptimized()
     timeText.text = "Current time:" .. os.date("%X")
     directionArrow.rotation = currentHeading
 
-    local hintInfo = requestedGeocacheHints[pluscodenoplus]
+    local hintInfo = requestedGeocacheHints[removePlus(currentPlusCode)]
     if hintInfo ~= nil then
         hintText.text = hintInfo
     else
@@ -305,12 +302,12 @@ function scene:create(event)
     contrastSquare = display.newRect(sceneGroup, display.contentCenterX, 230, 400, 130)
     contrastSquare:setFillColor(.8, .8, .8, .7)
 
-    locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
-    timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
+    locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 190, native.systemFont, 20)
+    timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 210, native.systemFont, 20)
     --locationName = display.newText(sceneGroup, "", display.contentCenterX, 240, native.systemFont, 20)
-    hintText = display.newText(sceneGroup, "", display.contentCenterX, 285, native.systemFont, 25)
-    hintsLeft = display.newText(sceneGroup, "Hints Left for " .. currentPlusCode:sub(1,8), display.contentCenterX, 240, native.systemFont, 20)
-    cachesLeft = display.newText(sceneGroup, "Cache hidden in  " .. currentPlusCode:sub(1,8), display.contentCenterX, 260, native.systemFont, 20)
+    hintText = display.newText(sceneGroup, "", display.contentCenterX, 275, native.systemFont, 25)
+    hintsLeft = display.newText(sceneGroup, "Hints Left for " .. currentPlusCode:sub(1,8), display.contentCenterX, 230, native.systemFont, 20)
+    cachesLeft = display.newText(sceneGroup, "Cache hidden in  " .. currentPlusCode:sub(1,8), display.contentCenterX, 250, native.systemFont, 20)
     
     locationText:setFillColor(0, 0, 0)
     timeText:setFillColor(0, 0, 0)
@@ -388,6 +385,7 @@ function scene:show(event)
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
         if (debugGPS) then timer.performWithDelay(300, testDrift, -1) end
         mapTileUpdater = timer.performWithDelay(1000, UpdateMapTiles, -1)
+        hintUpdater = timer.performWithDelay(3000, GetGeocacheHintData8, -1)
     end
 end
 
@@ -400,6 +398,7 @@ function scene:hide(event)
         timer.cancel(timerResults)
         timerResults = nil
         timer.cancel(mapTileUpdater)
+        timer.cancel(hintUpdater)
     elseif (phase == "did") then
         -- Code here runs immediately after the scene goes entirely off screen
     end
