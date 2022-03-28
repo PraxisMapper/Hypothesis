@@ -3,6 +3,7 @@
 local composer = require("composer")
 local scene = composer.newScene()
 
+local json = require("json")
 require("UIParts")
 require("database")
 require("dataTracker") 
@@ -18,10 +19,11 @@ local function GoToSceneSelect()
     composer.gotoScene("SceneSelect", options)
 end
  
+local deviceId = system.getInfo("deviceID")
 
 defaultConfig ={
-    monsterPerCell8 = 4,
-    monsterCountToRespawn = 1,
+    monsterPerCell8 = 12,
+    monsterCountToRespawn = 3,
     monsterDurationMin = 30,
     monsterDurationMax = 60,
     monsters = {
@@ -61,6 +63,7 @@ function ccSetupCheck()
     network.request(serverURL .. "Data/Global/ccSetup" .. defaultQueryString, "GET", cc1Listener)
 end
 
+local uploadPicsLeft = 0
 function cc1Listener(event)
     if (event.response == "true") then
         --skip to normal logic? might need a flag to confirm ive done the setup check or bootstrap
@@ -68,15 +71,18 @@ function cc1Listener(event)
     end
     --Global entries can't expire, so i may have issues if these get set to pending and never changed or updating is cancelled.
     --Plan 2: put deviceID in ccSetup, and attach expiration to an entry on that player? If they're not configuring things, you are allowed to instead.
-    network.request(serverURL .. "Data/Global/ccSetup/pending" .. defaultQueryString, "PUT", DefaultNetCallHandler)
+    network.request(serverURL .. "Data/Global/ccSetup/" .. deviceId .. defaultQueryString, "PUT", DefaultNetCallHandler)
+    network.request(serverURL .. "Data/Player/" .. deviceId .. "/ccSetup/pending/120" .. defaultQueryString, "PUT", DefaultNetCallHandler)
     network.request(serverURL .. "Data/Global/ccConfigId/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)
-    network.request(serverURL .. "Data/Global/ccPics/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)
-    network.request(serverURL .. "Data/Global/ccPics/pending" .. defaultQueryString, "PUT", DefaultNetCallHandler)
+    network.request(serverURL .. "Data/Global/ccPics/" .. deviceId .. defaultQueryString, "PUT", DefaultNetCallHandler)
+    network.request(serverURL .. "Data/Player/" .. deviceId .. "/ccPics/pending/60" .. defaultQueryString, "PUT", DefaultNetCallHandler)
+    network.request(serverURL .. "Data/Global/ccPicsId/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)  
 
     local headers = {}
     headers["Content-Type"] = "application/octet-stream"
     --queue all these calls up.
     for i,v in ipairs(defaultConfig.monsters) do
+        --todo: add line here to copy file to temporary files.
         local params = {
             headers = headers,
             bodyType = "binary",
@@ -85,7 +91,9 @@ function cc1Listener(event)
                 baseDirectory = system.ResourceDirectory
             }
         }
-        table.insert(networkQueue, { url = serverURL .. "StyleData/Global/ccSetup/pending" .. defaultQueryString, verb = "PUT", handlerFunc = picUploadHandler, params = params})
+        --might have an issue here if I have slashes in the imageName value. Might need to escape that here. &#47 == / or %2f
+        table.insert(networkQueue, { url = serverURL .. "StyleData/Bitmap/" .. v.imageName .. defaultQueryString, verb = "PUT", handlerFunc = picUploadHandler, params = params})
+        uploadPicsLeft = uploadPicsLeft + 1
     end
 
     --wait for queue to empty, then continue.
@@ -93,6 +101,38 @@ function cc1Listener(event)
 end
 
 function picUploadHandler(event)
+    if (event.response ~= 200) then
+        --requeue this call? Might need to be done on a specific status call.
+    else
+        uploadPicsLeft = uploadPicsLeft - 1
+        --todo: delete temporary file bitmap matching this call.
+        if (uploadPicsLeft == 0) then
+            --go on to the next step
+            --NOTE: this might fail on the server since a null value would read the body, which is also null, and may not like that. Might need actual delete calls.
+            network.request(serverURL .. "Data/Global/ccPics" .. defaultQueryString, "PUT", DefaultNetCallHandler)
+            network.request(serverURL .. "Data/Global/ccSpawnRuleUpload/" .. deviceId .. defaultQueryString, "PUT", DefaultNetCallHandler)
+            network.request(serverURL .. "Data/Global/ccSpawnRuleId/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)
+            sendSpawnRules()
+        end
+    end
+end
+
+function sendSpawnRules()
+    --turn defaultConfig into a string, upload it
+    local convertedDefaultConfig = json.encode(defaultConfig)
+    --set this convertedDefaultConfig to the request's body.
+    local params = {}
+    params.body = convertedDefaultConfig
+    table.insert(networkQueue, { url = serverURL .. "StyleData/Global/ccConfig" .. defaultQueryString, verb = "PUT", handlerFunc = spawnRuleUploadHandler, params = params})
+end
+
+function spawnRuleUploadHandler(event)
+    if (event.status == 200) then
+        --i think this means CreatureCollector mode is configured up.
+        network.request(serverURL .. "Data/Global/ccSetup" .. defaultQueryString, "PUT", DefaultNetCallHandler)
+        network.request(serverURL .. "Data/Player/" .. deviceId .. "/ccSetup/done/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)
+        network.request(serverURL .. "Data/Player/" .. deviceId .. "/ccPics/done/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)
+    end
 end
 
 
