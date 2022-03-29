@@ -28,47 +28,62 @@ defaultConfig ={
     monsterDurationMax = 60,
     monsters = {
         -- These are CC-NC-BY, need to credit Pheonixsong at https://phoenixdex.alteredorigin.net
-        { name ="Acafia", type1 ="Grass", type2 = "", imageName ="CreatureImages/acafia.png" },
-        { name ="Acceleret", type1 ="Normal", type2 = "Flying", imageName ="CreatureImages/acceleret.png" },
-        { name ="Aeolagio", type1 ="Water", type2 = "Poison", imageName ="CreatureImages/aeolagio.png" },
-        { name ="Bandibat", type1 ="Electric", type2 = "Dark", imageName ="CreatureImages/bandibat.png" },
-        { name ="Belamrine", type1 ="Bug", type2 = "Water", imageName ="CreatureImages/belmarine.png" },
-        { name ="Bojina", type1 ="Ghost", type2 = "", imageName ="CreatureImages/bojina.png" },
-        { name ="Caslot", type1 ="Dark", type2 = "Fairy", imageName ="CreatureImages/caslot.png" },
-        { name ="Cindigre", type1 ="Fire", type2 = "", imageName ="CreatureImages/cindigre.png" },
-        { name ="Curlsa", type1 ="Fairy", type2 = "", imageName ="CreatureImages/curlsa.png" },
-        { name ="Decicorn", type1 ="Poison", type2 = "", imageName ="CreatureImages/decicorn.png" },
-        { name ="Dauvespa", type1 ="Bug", type2 = "Ground", imageName ="CreatureImages/dauvespa.png" },
-        { name ="Drakella", type1 ="Water", type2 = "Grass", imageName ="CreatureImages/drakella.png" },
-        { name ="Eidograph", type1 ="Ghost", type2 = "Psychic", imageName ="CreatureImages/eidograph.png" },
-        { name ="Encanoto", type1 ="Psychic", type2 = "", imageName ="CreatureImages/encanoto.png" },
-        { name ="Faintrick", type1 ="Normal", type2 = "", imageName ="CreatureImages/faintrick.png" },
-        { name ="Galavena", type1 ="Rock", type2 = "Psychic", imageName ="CreatureImages/galavena.png" },
-        { name ="Vanitarch", type1 ="Bug", type2 = "Fairy", imageName ="CreatureImages/vanitarch.png" },
-        { name ="Grotuille", type1 ="Water", type2 = "Rock", imageName ="CreatureImages/grotuille.png" },
-        { name ="Gumbwaal", type1 ="Normal", type2 = "", imageName ="CreatureImages/gumbwaal.png" },
-        { name ="Mandragoon", type1 ="Grass", type2 = "Dragon", imageName ="CreatureImages/mandragoon.png" },
-        { name ="Ibazel", type1 ="Dark", type2 = "", imageName ="CreatureImages/ibazel.png" },
-        { name ="Makappa", type1 ="Ice", type2 = "Fire", imageName ="CreatureImages/makappa.png" },
-        { name ="Pyrobin", type1 ="Fire", type2 = "Fairy", imageName ="CreatureImages/pyrobin.png" },
-        { name ="Rocklantis", type1 ="Water", type2 = "Fighting", imageName ="CreatureImages/rocklantis.png" },
-        { name ="Strixlan", type1 ="Dark", type2 = "Flying", imageName ="CreatureImages/strixlan.png" },
-        { name ="Tinimer", type1 ="Bug", type2 = "", imageName ="CreatureImages/tinimer.png" },
-        { name ="Vaquerado", type1 ="Bug", type2 = "Ground", imageName ="CreatureImages/vaquerado.png" },
+        { name ="Acafia", type1 ="Grass", type2 = "", imageName ="themables/CreatureImages/acafia.png" },
+        { name ="Acceleret", type1 ="Normal", type2 = "Flying", imageName ="themables/CreatureImages/acceleret.png" },
+        { name ="Aeolagio", type1 ="Water", type2 = "Poison", imageName ="themables/CreatureImages/aeolagio.png" },
+        { name ="Bandibat", type1 ="Electric", type2 = "Dark", imageName ="themables/CreatureImages/bandibat.png" },
+        { name ="Belamrine", type1 ="Bug", type2 = "Water", imageName ="themables/CreatureImages/belmarine.png" },
+        { name ="Bojina", type1 ="Ghost", type2 = "", imageName ="themables/CreatureImages/bojina.png" },
+        { name ="Caslot", type1 ="Dark", type2 = "Fairy", imageName ="themables/CreatureImages/caslot.png" },
+        { name ="Cindigre", type1 ="Fire", type2 = "", imageName ="themables/CreatureImages/cindigre.png" },
+        { name ="Curlsa", type1 ="Fairy", type2 = "", imageName ="themables/CreatureImages/curlsa.png" },
+        { name ="Decicorn", type1 ="Poison", type2 = "", imageName ="themables/CreatureImages/decicorn.png" },
+        { name ="Dauvespa", type1 ="Bug", type2 = "Ground", imageName ="themables/CreatureImages/dauvespa.png" },
+        { name ="Drakella", type1 ="Water", type2 = "Grass", imageName ="themables/CreatureImages/drakella.png" },
+        { name ="Eidograph", type1 ="Ghost", type2 = "Psychic", imageName ="themables/CreatureImages/eidograph.png" },
+        { name ="Encanoto", type1 ="Psychic", type2 = "", imageName ="themables/CreatureImages/encanoto.png" },
+        { name ="Faintrick", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/faintrick.png" },
+        { name ="Galavena", type1 ="Rock", type2 = "Psychic", imageName ="themables/CreatureImages/galavena.png" },
+        { name ="Vanitarch", type1 ="Bug", type2 = "Fairy", imageName ="themables/CreatureImages/vanitarch.png" },
+        { name ="Grotuille", type1 ="Water", type2 = "Rock", imageName ="themables/CreatureImages/grotuille.png" },
+        { name ="Gumbwaal", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/gumbwaal.png" },
+        { name ="Mandragoon", type1 ="Grass", type2 = "Dragon", imageName ="themables/CreatureImages/mandragoon.png" },
+        { name ="Ibazel", type1 ="Dark", type2 = "", imageName ="themables/CreatureImages/ibazel.png" },
+        { name ="Makappa", type1 ="Ice", type2 = "Fire", imageName ="themables/CreatureImages/makappa.png" },
+        { name ="Pyrobin", type1 ="Fire", type2 = "Fairy", imageName ="themables/CreatureImages/pyrobin.png" },
+        { name ="Rocklantis", type1 ="Water", type2 = "Fighting", imageName ="themables/CreatureImages/rocklantis.png" },
+        { name ="Strixlan", type1 ="Dark", type2 = "Flying", imageName ="themables/CreatureImages/strixlan.png" },
+        { name ="Tinimer", type1 ="Bug", type2 = "", imageName ="themables/CreatureImages/tinimer.png" },
+        { name ="Vaquerado", type1 ="Bug", type2 = "Ground", imageName ="themables/CreatureImages/vaquerado.png" },
     }
 }
 
 -- This chain of functions should create the Creaturecollector data on the server if its missing.
 function ccSetupCheck()
+    print("ccsetupcheck")
     network.request(serverURL .. "Data/Global/ccSetup" .. defaultQueryString, "GET", cc1Listener)
 end
 
 local uploadPicsLeft = 0
 function cc1Listener(event)
+    --Response meanings:
+    --blank: server hasn't been setup. Claim the right to bootstrap up CC mode
+    --a player ID: this player has claimed to be running setup, check their ID to see if its still reserved or if that attempt expired.
+    --true: Server has been configured and is ready to play.
+    print("cc1Listener")
     if (event.response == "true") then
+        print("response true, bailing on setup.")
         --skip to normal logic? might need a flag to confirm ive done the setup check or bootstrap
         return
+    elseif event.response == deviceId then
+        --oh, we're the ones setting it up, continue on.
+    else
+        --this should be someone else'se deviceId, we have to wait for them.
+        --exiting for now, TODO indicate to the player whats going on.
+        print("other player mid-setup, bailing.")
+        return
     end
+    print("staring cc load")
     --Global entries can't expire, so i may have issues if these get set to pending and never changed or updating is cancelled.
     --Plan 2: put deviceID in ccSetup, and attach expiration to an entry on that player? If they're not configuring things, you are allowed to instead.
     network.request(serverURL .. "Data/Global/ccSetup/" .. deviceId .. defaultQueryString, "PUT", DefaultNetCallHandler)
@@ -78,22 +93,34 @@ function cc1Listener(event)
     network.request(serverURL .. "Data/Player/" .. deviceId .. "/ccPics/pending/60" .. defaultQueryString, "PUT", DefaultNetCallHandler)
     network.request(serverURL .. "Data/Global/ccPicsId/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)  
 
+    print("post-claiming config")
+
     local headers = {}
     headers["Content-Type"] = "application/octet-stream"
     --queue all these calls up.
     for i,v in ipairs(defaultConfig.monsters) do
         --todo: add line here to copy file to temporary files.
+        print("copying file")
+        local filenameparts = Split(v.imageName, "/")
+        print(dump(filenameparts))
+        copyFile(v.imageName, system.ResourceDirectory, filenameparts[3], system.TemporaryDirectory, true )
+        print("file copied")
         local params = {
             headers = headers,
             bodyType = "binary",
             body = {
-                filename = v.imageName, --NOTE: Android won't read .png files from the ResourceDirectory, those need moved or renamed.
-                baseDirectory = system.ResourceDirectory
+                filename = filenameparts[3], --NOTE: Android won't read .png files from the ResourceDirectory, those need moved or renamed.
+                baseDirectory = system.TemporaryDirectory
             }
         }
         --might have an issue here if I have slashes in the imageName value. Might need to escape that here. &#47 == / or %2f
-        table.insert(networkQueue, { url = serverURL .. "StyleData/Bitmap/" .. v.imageName .. defaultQueryString, verb = "PUT", handlerFunc = picUploadHandler, params = params})
+        --print(v.imageName)
+        --print(string.gsub(v.imageName, "\/", "-"))
+        local url = serverURL .. "StyleData/Bitmap/" .. string.gsub(v.imageName, "\/", "-") .. defaultQueryString
+        print(url)
+        table.insert(networkQueue, { url = serverURL .. "StyleData/Bitmap/" .. filenameparts[3] .. defaultQueryString, verb = "PUT", handlerFunc = picUploadHandler, params = params})
         uploadPicsLeft = uploadPicsLeft + 1
+        print("upload queued")
     end
 
     --wait for queue to empty, then continue.
@@ -101,15 +128,21 @@ function cc1Listener(event)
 end
 
 function picUploadHandler(event)
-    if (event.response ~= 200) then
+    print("picUploadhandler")
+    if (event.status ~= 200) then
         --requeue this call? Might need to be done on a specific status call.
+        print("pic upload failed.")
+
+        print(event.response)
     else
+        print("pic uploaded")
         uploadPicsLeft = uploadPicsLeft - 1
+        networkQueueBusy = false
         --todo: delete temporary file bitmap matching this call.
         if (uploadPicsLeft == 0) then
             --go on to the next step
             --NOTE: this might fail on the server since a null value would read the body, which is also null, and may not like that. Might need actual delete calls.
-            network.request(serverURL .. "Data/Global/ccPics" .. defaultQueryString, "PUT", DefaultNetCallHandler)
+            network.request(serverURL .. "Data/Global/ccPics" .. defaultQueryString, "DELETE", DefaultNetCallHandler)
             network.request(serverURL .. "Data/Global/ccSpawnRuleUpload/" .. deviceId .. defaultQueryString, "PUT", DefaultNetCallHandler)
             network.request(serverURL .. "Data/Global/ccSpawnRuleId/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)
             sendSpawnRules()
@@ -118,20 +151,27 @@ function picUploadHandler(event)
 end
 
 function sendSpawnRules()
+    print("sendSpawnRules")
     --turn defaultConfig into a string, upload it
     local convertedDefaultConfig = json.encode(defaultConfig)
     --set this convertedDefaultConfig to the request's body.
     local params = {}
     params.body = convertedDefaultConfig
-    table.insert(networkQueue, { url = serverURL .. "StyleData/Global/ccConfig" .. defaultQueryString, verb = "PUT", handlerFunc = spawnRuleUploadHandler, params = params})
+    table.insert(networkQueue, { url = serverURL .. "Data/Global/ccConfig" .. defaultQueryString, verb = "PUT", handlerFunc = spawnRuleUploadHandler, params = params})
 end
 
 function spawnRuleUploadHandler(event)
+    print("spawnRulesHandler")
+    networkQueueBusy = false
+    print(event.status)
+    print(event.response)
     if (event.status == 200) then
         --i think this means CreatureCollector mode is configured up.
-        network.request(serverURL .. "Data/Global/ccSetup" .. defaultQueryString, "PUT", DefaultNetCallHandler)
+        network.request(serverURL .. "Data/Global/ccSpawnRuleUpload" .. deviceId .. defaultQueryString, "DELETE", DefaultNetCallHandler)
+        network.request(serverURL .. "Data/Global/ccSetup/true" .. defaultQueryString, "PUT", DefaultNetCallHandler)
         network.request(serverURL .. "Data/Player/" .. deviceId .. "/ccSetup/done/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)
         network.request(serverURL .. "Data/Player/" .. deviceId .. "/ccPics/done/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)
+        print("all good")
     end
 end
 
@@ -434,6 +474,8 @@ function scene:create(event)
     zoom:toFront()
     contrastSquare:toFront()
     if (debug) then print("created baseline scene") end
+
+    ccSetupCheck()
 end
 
 function scene:show(event)
