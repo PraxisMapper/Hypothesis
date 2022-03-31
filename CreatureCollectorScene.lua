@@ -21,6 +21,20 @@ end
  
 local deviceId = system.getInfo("deviceID")
 
+--valid terrain-gameplay options:
+-- university, retail, tourism, historical, building, water, wetland, park, beach, natureReserve, cemetery, trail, 
+--additional styles that are probably poor choices:
+--tertiary, motorway, primary, secondary, admin, parking, greenspace, alsobeach, darkgreenspace, industrial, residential, greyFill
+--reasoning: roads will be highly common in a lot of areas, and could overwhelm other spawns. The color areas are places that aren't really interactable. 
+--Industrial areas are poor places to walk and play, and residential is a common tag that isn't used evenly across a map.
+--Admin is more or less the 'default' result, since essentially every area will have some kind of city/county/state/country area attached to it, and this picks the smallest of those.
+
+--LUA limit: strings must start with a letter, so I can't save "86HW" as a key in a table this way. Adding an x to areas, i will need to :sub() that out later.
+
+--initial plan: give each creature 5 points in terrain spawn slots. Most should have an entry in area for the whole state (86). 
+--some should be limited to a region of the state. AreaSpawns are added to the table after terrain, so they may need different numbers since terrain will have up to 400 entries.
+--I have 4 region-specific entries here to demonstrate how to set those up client-side (a server-side app might be able to attach it to specific admin areas, perhaps.)
+--and 4 entries that only spawn in their terrain types.
 defaultConfig ={
     monsterPerCell8 = 12,
     monsterCountToRespawn = 3,
@@ -28,33 +42,33 @@ defaultConfig ={
     monsterDurationMax = 60,
     monsters = {
         -- These are CC-NC-BY, need to credit Pheonixsong at https://phoenixdex.alteredorigin.net
-        { name ="Acafia", type1 ="Grass", type2 = "", imageName ="themables/CreatureImages/acafia.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Acceleret", type1 ="Normal", type2 = "Flying", imageName ="themables/CreatureImages/acceleret.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Aeolagio", type1 ="Water", type2 = "Poison", imageName ="themables/CreatureImages/aeolagio.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Bandibat", type1 ="Electric", type2 = "Dark", imageName ="themables/CreatureImages/bandibat.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Belamrine", type1 ="Bug", type2 = "Water", imageName ="themables/CreatureImages/belmarine.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Bojina", type1 ="Ghost", type2 = "", imageName ="themables/CreatureImages/bojina.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Caslot", type1 ="Dark", type2 = "Fairy", imageName ="themables/CreatureImages/caslot.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Cindigre", type1 ="Fire", type2 = "", imageName ="themables/CreatureImages/cindigre.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Curlsa", type1 ="Fairy", type2 = "", imageName ="themables/CreatureImages/curlsa.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Decicorn", type1 ="Poison", type2 = "", imageName ="themables/CreatureImages/decicorn.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Dauvespa", type1 ="Bug", type2 = "Ground", imageName ="themables/CreatureImages/dauvespa.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Drakella", type1 ="Water", type2 = "Grass", imageName ="themables/CreatureImages/drakella.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Eidograph", type1 ="Ghost", type2 = "Psychic", imageName ="themables/CreatureImages/eidograph.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Encanoto", type1 ="Psychic", type2 = "", imageName ="themables/CreatureImages/encanoto.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Faintrick", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/faintrick.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Galavena", type1 ="Rock", type2 = "Psychic", imageName ="themables/CreatureImages/galavena.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Vanitarch", type1 ="Bug", type2 = "Fairy", imageName ="themables/CreatureImages/vanitarch.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Grotuille", type1 ="Water", type2 = "Rock", imageName ="themables/CreatureImages/grotuille.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Gumbwaal", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/gumbwaal.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Mandragoon", type1 ="Grass", type2 = "Dragon", imageName ="themables/CreatureImages/mandragoon.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Ibazel", type1 ="Dark", type2 = "", imageName ="themables/CreatureImages/ibazel.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Makappa", type1 ="Ice", type2 = "Fire", imageName ="themables/CreatureImages/makappa.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Pyrobin", type1 ="Fire", type2 = "Fairy", imageName ="themables/CreatureImages/pyrobin.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Rocklantis", type1 ="Water", type2 = "Fighting", imageName ="themables/CreatureImages/rocklantis.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Strixlan", type1 ="Dark", type2 = "Flying", imageName ="themables/CreatureImages/strixlan.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Tinimer", type1 ="Bug", type2 = "", imageName ="themables/CreatureImages/tinimer.png", terrainSpawns ={}, areaSpawns = {}, },
-        { name ="Vaquerado", type1 ="Bug", type2 = "Ground", imageName ="themables/CreatureImages/vaquerado.png", terrainSpawns ={}, areaSpawns = {}, },
+        { name ="Acafia", type1 ="Grass", type2 = "", imageName ="themables/CreatureImages/acafia.png", terrainSpawns = {park = 3, natureReserve = 1, trail = 1}, areaSpawns = {} },
+        { name ="Acceleret", type1 ="Normal", type2 = "Flying", imageName ="themables/CreatureImages/acceleret.png", terrainSpawns ={}, areaSpawns = {x86HQ =1, x86HR = 1, x86HV =1, x86GQ =1,}, }, -- toledo area
+        { name ="Aeolagio", type1 ="Water", type2 = "Poison", imageName ="themables/CreatureImages/aeolagio.png", terrainSpawns ={water = 2, wetland = 1, beach = 2}, areaSpawns = {x86 = 1}, },
+        { name ="Bandibat", type1 ="Electric", type2 = "Dark", imageName ="themables/CreatureImages/bandibat.png", terrainSpawns ={building = 5}, areaSpawns = {x86 = 1}, },
+        { name ="Belamrine", type1 ="Bug", type2 = "Water", imageName ="themables/CreatureImages/belmarine.png", terrainSpawns ={water = 2, beach = 2, natureReserve = 1, }, areaSpawns = {x86 = 1}, },
+        { name ="Bojina", type1 ="Ghost", type2 = "", imageName ="themables/CreatureImages/bojina.png", terrainSpawns ={cemetery = 5}, areaSpawns = {x86 = 1}, },
+        { name ="Caslot", type1 ="Dark", type2 = "Fairy", imageName ="themables/CreatureImages/caslot.png", terrainSpawns ={tourism = 3, building = 2}, areaSpawns = {x86 = 1}, },
+        { name ="Cindigre", type1 ="Fire", type2 = "", imageName ="themables/CreatureImages/cindigre.png", terrainSpawns ={}, areaSpawns = {x86HW = 1, x86HX = 1, x86GW =1, x86GX =1, x86FX = 1, x86FW =1}, }, --cleveland area
+        { name ="Curlsa", type1 ="Fairy", type2 = "", imageName ="themables/CreatureImages/curlsa.png", terrainSpawns ={university = 2, tourism = 2, historical = 1}, areaSpawns = {x86 = 1}, },
+        { name ="Decicorn", type1 ="Poison", type2 = "", imageName ="themables/CreatureImages/decicorn.png", terrainSpawns ={wetland = 2, retail = 3}, areaSpawns = {x86 = 1}, },
+        { name ="Dauvespa", type1 ="Bug", type2 = "Ground", imageName ="themables/CreatureImages/dauvespa.png", terrainSpawns ={retail = 3, trail = 2}, areaSpawns = {}, },
+        { name ="Drakella", type1 ="Water", type2 = "Grass", imageName ="themables/CreatureImages/drakella.png", terrainSpawns ={water = 1, park = 1, natureReserve = 1, wetland = 1, beach = 1}, areaSpawns = {x86 = 1}, },
+        { name ="Eidograph", type1 ="Ghost", type2 = "Psychic", imageName ="themables/CreatureImages/eidograph.png", terrainSpawns ={cemetery = 7, }, areaSpawns = {x86 = 1}, },
+        { name ="Encanoto", type1 ="Psychic", type2 = "", imageName ="themables/CreatureImages/encanoto.png", terrainSpawns ={university = 4, historical = 1}, areaSpawns = {x86 = 1}, },
+        { name ="Faintrick", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/faintrick.png", terrainSpawns ={}, areaSpawns = {x86GR =1, x86GV = 1, x86FR =1, x86FV =1, x86CV =1 }, }, -- columbus area
+        { name ="Galavena", type1 ="Rock", type2 = "Psychic", imageName ="themables/CreatureImages/galavena.png", terrainSpawns ={historical = 3, university = 2}, areaSpawns = {x86 = 1}, },
+        { name ="Vanitarch", type1 ="Bug", type2 = "Fairy", imageName ="themables/CreatureImages/vanitarch.png", terrainSpawns ={retail =2, university = 1, historical = 1, tourism = 1}, areaSpawns = {x86 = 1}, },
+        { name ="Grotuille", type1 ="Water", type2 = "Rock", imageName ="themables/CreatureImages/grotuille.png", terrainSpawns ={beach = 3, water = 1, historical = 1}, areaSpawns = {x86 = 1}, },
+        { name ="Gumbwaal", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/gumbwaal.png", terrainSpawns ={}, areaSpawns = {x86 = 1, x86FQ =1, x86CQ =1, x86CR =1,}, }, -- cincinnatti area
+        { name ="Mandragoon", type1 ="Grass", type2 = "Dragon", imageName ="themables/CreatureImages/mandragoon.png", terrainSpawns ={park = 2, trail = 3}, areaSpawns = {}, },
+        { name ="Ibazel", type1 ="Dark", type2 = "", imageName ="themables/CreatureImages/ibazel.png", terrainSpawns ={building = 5}, areaSpawns = {x86 = 1}, },
+        { name ="Makappa", type1 ="Ice", type2 = "Fire", imageName ="themables/CreatureImages/makappa.png", terrainSpawns ={water = 1, retail = 1, wetland = 1, beach = 1, cemetery = 1}, areaSpawns = {}, },
+        { name ="Pyrobin", type1 ="Fire", type2 = "Fairy", imageName ="themables/CreatureImages/pyrobin.png", terrainSpawns ={university = 3, historical = 2, tourism = 1}, areaSpawns = {x86 = 1}, },
+        { name ="Rocklantis", type1 ="Water", type2 = "Fighting", imageName ="themables/CreatureImages/rocklantis.png", terrainSpawns ={water = 2, beach = 2, building = 1}, areaSpawns = {x86 = 1}, },
+        { name ="Strixlan", type1 ="Dark", type2 = "Flying", imageName ="themables/CreatureImages/strixlan.png", terrainSpawns ={building = 3, park = 2}, areaSpawns = {x86 = 1}, },
+        { name ="Tinimer", type1 ="Bug", type2 = "", imageName ="themables/CreatureImages/tinimer.png", terrainSpawns ={retail = 5}, areaSpawns = {x86 = 1}, },
+        { name ="Vaquerado", type1 ="Bug", type2 = "Ground", imageName ="themables/CreatureImages/vaquerado.png", terrainSpawns ={trail = 4, retail = 1}, areaSpawns = {x86 = 1}, },
     }
 }
 
