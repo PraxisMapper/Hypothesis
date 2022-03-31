@@ -86,7 +86,7 @@ function TrackplusCode8Listener(event)
     if (event.status ~= 200) then return end --dont' save invalid results on an error.
 
     --This one splits each Cell10 via newline.
-    local resultsTable = Split(event.response, "\r\n") --windows newlines
+    local resultsTable = Split(event.response, "\n") --newlines
     --Format:
     --cell10|name|typeID|mapDataID
     --EX: 82HHWG48=Local Park|4|guid

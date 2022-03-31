@@ -101,6 +101,40 @@ function buildSpawnTable()
     print(dump(areaSpawns))
 end
 
+function generateSpawnTableForCell8(plusCode8)
+    -- need terrain info for this cell8
+    local sql1 = "SELECT * FROM dataDownloaded WHERE pluscode8 = '" .. plusCode8 .. "'"
+    results = Query(sql1)
+    if (#results <= 0) then
+        return -- We will check again in a second to see if we've pulled this data yet.
+    end
+
+    local sql2 = "SELECT areaType FROM terrainData WHERE plusCode LIKE '" .. plusCode8 .. "%'"
+    results = Query(sql2)
+
+    local resultsTable = {}
+
+    for d in results do
+        print(dump(d))
+        local dataToAdd = terrainSpawns[d]
+        for entry in dataToAdd do
+            resultsTable.insert(entry)
+        end
+    end
+
+    -- check area table, add those entries to the end.
+    for k,v in pairs(areaSpawns) do
+        --k is x[PLUSCODE], so i need to pull the x out for a search.
+        if plusCode8:find(k:sub(2, #k) > 0 then
+            for entry in v do
+                resultsTable.insert(entry)
+            end
+        end
+    end
+
+    print(dump(resultsTable))
+end
+
 -- This chain of functions should create the Creaturecollector data on the server if its missing.
 function ccSetupCheck()
     print("ccsetupcheck")
