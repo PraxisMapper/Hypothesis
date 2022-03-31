@@ -56,10 +56,10 @@ defaultConfig ={
         Drakella = { name ="Drakella", type1 ="Water", type2 = "Grass", imageName ="themables/CreatureImages/drakella.png", terrainSpawns ={water = 1, park = 1, natureReserve = 1, wetland = 1, beach = 1}, areaSpawns = {x86 = 1}, },
         Eidograph = { name ="Eidograph", type1 ="Ghost", type2 = "Psychic", imageName ="themables/CreatureImages/eidograph.png", terrainSpawns ={cemetery = 7, }, areaSpawns = {x86 = 1}, },
         Encanoto = { name ="Encanoto", type1 ="Psychic", type2 = "", imageName ="themables/CreatureImages/encanoto.png", terrainSpawns ={university = 4, historical = 1}, areaSpawns = {x86 = 1}, },
-        Faintrick = { name ="Faintrick", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/faintrick.png", terrainSpawns ={}, areaSpawns = {x86GR =1, x86GV = 1, x86FR =1, x86FV =1, x86CV =1 }, }, -- columbus area
+        Faintrick = { name ="Faintrick", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/faintrick.png", terrainSpawns ={}, areaSpawns = {x86GR =1, x86GV = 1, x86FR =1, x86FV =1, }, }, -- columbus area
         Galavena = { name ="Galavena", type1 ="Rock", type2 = "Psychic", imageName ="themables/CreatureImages/galavena.png", terrainSpawns ={historical = 3, university = 2}, areaSpawns = {x86 = 1}, },
         Grotuille = { name ="Grotuille", type1 ="Water", type2 = "Rock", imageName ="themables/CreatureImages/grotuille.png", terrainSpawns ={beach = 3, water = 1, historical = 1}, areaSpawns = {x86 = 1}, },
-        Gumbwaal = { name ="Gumbwaal", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/gumbwaal.png", terrainSpawns ={}, areaSpawns = {x86 = 1, x86FQ =1, x86CQ =1, x86CR =1,}, }, -- cincinnatti area
+        Gumbwaal = { name ="Gumbwaal", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/gumbwaal.png", terrainSpawns ={}, areaSpawns = {x86FQ =1, x86CQ =1, x86CR =1, x86CV =1}, }, -- cincinnatti area
         Mandragoon = { name ="Mandragoon", type1 ="Grass", type2 = "Dragon", imageName ="themables/CreatureImages/mandragoon.png", terrainSpawns ={park = 2, trail = 3}, areaSpawns = {}, },
         Ibazel = { name ="Ibazel", type1 ="Dark", type2 = "", imageName ="themables/CreatureImages/ibazel.png", terrainSpawns ={building = 5}, areaSpawns = {x86 = 1}, },
         Makappa = { name ="Makappa", type1 ="Ice", type2 = "Fire", imageName ="themables/CreatureImages/makappa.png", terrainSpawns ={water = 1, retail = 1, wetland = 1, beach = 1, cemetery = 1}, areaSpawns = {}, },
