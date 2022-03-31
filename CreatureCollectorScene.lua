@@ -36,41 +36,70 @@ local deviceId = system.getInfo("deviceID")
 --I have 4 region-specific entries here to demonstrate how to set those up client-side (a server-side app might be able to attach it to specific admin areas, perhaps.)
 --and 4 entries that only spawn in their terrain types.
 defaultConfig ={
-    monsterPerCell8 = 12,
-    monsterCountToRespawn = 3,
-    monsterDurationMin = 30,
-    monsterDurationMax = 60,
-    monsters = {
+    creaturesPerCell8 = 12,
+    creatureCountToRespawn = 3,
+    creatureDurationMin = 30,
+    creatureDurationMax = 60,
+    creatures = {
         -- These are CC-NC-BY, need to credit Pheonixsong at https://phoenixdex.alteredorigin.net
-        { name ="Acafia", type1 ="Grass", type2 = "", imageName ="themables/CreatureImages/acafia.png", terrainSpawns = {park = 3, natureReserve = 1, trail = 1}, areaSpawns = {} },
-        { name ="Acceleret", type1 ="Normal", type2 = "Flying", imageName ="themables/CreatureImages/acceleret.png", terrainSpawns ={}, areaSpawns = {x86HQ =1, x86HR = 1, x86HV =1, x86GQ =1,}, }, -- toledo area
-        { name ="Aeolagio", type1 ="Water", type2 = "Poison", imageName ="themables/CreatureImages/aeolagio.png", terrainSpawns ={water = 2, wetland = 1, beach = 2}, areaSpawns = {x86 = 1}, },
-        { name ="Bandibat", type1 ="Electric", type2 = "Dark", imageName ="themables/CreatureImages/bandibat.png", terrainSpawns ={building = 5}, areaSpawns = {x86 = 1}, },
-        { name ="Belamrine", type1 ="Bug", type2 = "Water", imageName ="themables/CreatureImages/belmarine.png", terrainSpawns ={water = 2, beach = 2, natureReserve = 1, }, areaSpawns = {x86 = 1}, },
-        { name ="Bojina", type1 ="Ghost", type2 = "", imageName ="themables/CreatureImages/bojina.png", terrainSpawns ={cemetery = 5}, areaSpawns = {x86 = 1}, },
-        { name ="Caslot", type1 ="Dark", type2 = "Fairy", imageName ="themables/CreatureImages/caslot.png", terrainSpawns ={tourism = 3, building = 2}, areaSpawns = {x86 = 1}, },
-        { name ="Cindigre", type1 ="Fire", type2 = "", imageName ="themables/CreatureImages/cindigre.png", terrainSpawns ={}, areaSpawns = {x86HW = 1, x86HX = 1, x86GW =1, x86GX =1, x86FX = 1, x86FW =1}, }, --cleveland area
-        { name ="Curlsa", type1 ="Fairy", type2 = "", imageName ="themables/CreatureImages/curlsa.png", terrainSpawns ={university = 2, tourism = 2, historical = 1}, areaSpawns = {x86 = 1}, },
-        { name ="Decicorn", type1 ="Poison", type2 = "", imageName ="themables/CreatureImages/decicorn.png", terrainSpawns ={wetland = 2, retail = 3}, areaSpawns = {x86 = 1}, },
-        { name ="Dauvespa", type1 ="Bug", type2 = "Ground", imageName ="themables/CreatureImages/dauvespa.png", terrainSpawns ={retail = 3, trail = 2}, areaSpawns = {}, },
-        { name ="Drakella", type1 ="Water", type2 = "Grass", imageName ="themables/CreatureImages/drakella.png", terrainSpawns ={water = 1, park = 1, natureReserve = 1, wetland = 1, beach = 1}, areaSpawns = {x86 = 1}, },
-        { name ="Eidograph", type1 ="Ghost", type2 = "Psychic", imageName ="themables/CreatureImages/eidograph.png", terrainSpawns ={cemetery = 7, }, areaSpawns = {x86 = 1}, },
-        { name ="Encanoto", type1 ="Psychic", type2 = "", imageName ="themables/CreatureImages/encanoto.png", terrainSpawns ={university = 4, historical = 1}, areaSpawns = {x86 = 1}, },
-        { name ="Faintrick", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/faintrick.png", terrainSpawns ={}, areaSpawns = {x86GR =1, x86GV = 1, x86FR =1, x86FV =1, x86CV =1 }, }, -- columbus area
-        { name ="Galavena", type1 ="Rock", type2 = "Psychic", imageName ="themables/CreatureImages/galavena.png", terrainSpawns ={historical = 3, university = 2}, areaSpawns = {x86 = 1}, },
-        { name ="Vanitarch", type1 ="Bug", type2 = "Fairy", imageName ="themables/CreatureImages/vanitarch.png", terrainSpawns ={retail =2, university = 1, historical = 1, tourism = 1}, areaSpawns = {x86 = 1}, },
-        { name ="Grotuille", type1 ="Water", type2 = "Rock", imageName ="themables/CreatureImages/grotuille.png", terrainSpawns ={beach = 3, water = 1, historical = 1}, areaSpawns = {x86 = 1}, },
-        { name ="Gumbwaal", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/gumbwaal.png", terrainSpawns ={}, areaSpawns = {x86 = 1, x86FQ =1, x86CQ =1, x86CR =1,}, }, -- cincinnatti area
-        { name ="Mandragoon", type1 ="Grass", type2 = "Dragon", imageName ="themables/CreatureImages/mandragoon.png", terrainSpawns ={park = 2, trail = 3}, areaSpawns = {}, },
-        { name ="Ibazel", type1 ="Dark", type2 = "", imageName ="themables/CreatureImages/ibazel.png", terrainSpawns ={building = 5}, areaSpawns = {x86 = 1}, },
-        { name ="Makappa", type1 ="Ice", type2 = "Fire", imageName ="themables/CreatureImages/makappa.png", terrainSpawns ={water = 1, retail = 1, wetland = 1, beach = 1, cemetery = 1}, areaSpawns = {}, },
-        { name ="Pyrobin", type1 ="Fire", type2 = "Fairy", imageName ="themables/CreatureImages/pyrobin.png", terrainSpawns ={university = 3, historical = 2, tourism = 1}, areaSpawns = {x86 = 1}, },
-        { name ="Rocklantis", type1 ="Water", type2 = "Fighting", imageName ="themables/CreatureImages/rocklantis.png", terrainSpawns ={water = 2, beach = 2, building = 1}, areaSpawns = {x86 = 1}, },
-        { name ="Strixlan", type1 ="Dark", type2 = "Flying", imageName ="themables/CreatureImages/strixlan.png", terrainSpawns ={building = 3, park = 2}, areaSpawns = {x86 = 1}, },
-        { name ="Tinimer", type1 ="Bug", type2 = "", imageName ="themables/CreatureImages/tinimer.png", terrainSpawns ={retail = 5}, areaSpawns = {x86 = 1}, },
-        { name ="Vaquerado", type1 ="Bug", type2 = "Ground", imageName ="themables/CreatureImages/vaquerado.png", terrainSpawns ={trail = 4, retail = 1}, areaSpawns = {x86 = 1}, },
+        Acafia = { name ="Acafia", type1 ="Grass", type2 = "", imageName ="themables/CreatureImages/acafia.png", terrainSpawns = {park = 3, natureReserve = 1, trail = 1}, areaSpawns = {} },
+        Acceleret = { name ="Acceleret", type1 ="Normal", type2 = "Flying", imageName ="themables/CreatureImages/acceleret.png", terrainSpawns ={}, areaSpawns = {x86HQ =1, x86HR = 1, x86HV =1, x86GQ =1,}, }, -- toledo area
+        Aeolagio = { name ="Aeolagio", type1 ="Water", type2 = "Poison", imageName ="themables/CreatureImages/aeolagio.png", terrainSpawns ={water = 2, wetland = 1, beach = 2}, areaSpawns = {x86 = 1}, },
+        Bandibat = { name ="Bandibat", type1 ="Electric", type2 = "Dark", imageName ="themables/CreatureImages/bandibat.png", terrainSpawns ={building = 5}, areaSpawns = {x86 = 1}, },
+        Belamrine = { name ="Belamrine", type1 ="Bug", type2 = "Water", imageName ="themables/CreatureImages/belmarine.png", terrainSpawns ={water = 2, beach = 2, natureReserve = 1, }, areaSpawns = {x86 = 1}, },
+        Bojina = { name ="Bojina", type1 ="Ghost", type2 = "", imageName ="themables/CreatureImages/bojina.png", terrainSpawns ={cemetery = 5}, areaSpawns = {x86 = 1}, },
+        Caslot = { name ="Caslot", type1 ="Dark", type2 = "Fairy", imageName ="themables/CreatureImages/caslot.png", terrainSpawns ={tourism = 3, building = 2}, areaSpawns = {x86 = 1}, },
+        Cindigre = { name ="Cindigre", type1 ="Fire", type2 = "", imageName ="themables/CreatureImages/cindigre.png", terrainSpawns ={}, areaSpawns = {x86HW = 1, x86HX = 1, x86GW =1, x86GX =1, x86FX = 1, x86FW =1}, }, --cleveland area
+        Curlsa = { name ="Curlsa", type1 ="Fairy", type2 = "", imageName ="themables/CreatureImages/curlsa.png", terrainSpawns ={university = 2, tourism = 2, historical = 1}, areaSpawns = {x86 = 1}, },
+        Decicorn = { name ="Decicorn", type1 ="Poison", type2 = "", imageName ="themables/CreatureImages/decicorn.png", terrainSpawns ={wetland = 2, retail = 3}, areaSpawns = {x86 = 1}, },
+        Dauvespa = { name ="Dauvespa", type1 ="Bug", type2 = "Ground", imageName ="themables/CreatureImages/dauvespa.png", terrainSpawns ={retail = 3, trail = 2}, areaSpawns = {}, },
+        Drakella = { name ="Drakella", type1 ="Water", type2 = "Grass", imageName ="themables/CreatureImages/drakella.png", terrainSpawns ={water = 1, park = 1, natureReserve = 1, wetland = 1, beach = 1}, areaSpawns = {x86 = 1}, },
+        Eidograph = { name ="Eidograph", type1 ="Ghost", type2 = "Psychic", imageName ="themables/CreatureImages/eidograph.png", terrainSpawns ={cemetery = 7, }, areaSpawns = {x86 = 1}, },
+        Encanoto = { name ="Encanoto", type1 ="Psychic", type2 = "", imageName ="themables/CreatureImages/encanoto.png", terrainSpawns ={university = 4, historical = 1}, areaSpawns = {x86 = 1}, },
+        Faintrick = { name ="Faintrick", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/faintrick.png", terrainSpawns ={}, areaSpawns = {x86GR =1, x86GV = 1, x86FR =1, x86FV =1, x86CV =1 }, }, -- columbus area
+        Galavena = { name ="Galavena", type1 ="Rock", type2 = "Psychic", imageName ="themables/CreatureImages/galavena.png", terrainSpawns ={historical = 3, university = 2}, areaSpawns = {x86 = 1}, },
+        Grotuille = { name ="Grotuille", type1 ="Water", type2 = "Rock", imageName ="themables/CreatureImages/grotuille.png", terrainSpawns ={beach = 3, water = 1, historical = 1}, areaSpawns = {x86 = 1}, },
+        Gumbwaal = { name ="Gumbwaal", type1 ="Normal", type2 = "", imageName ="themables/CreatureImages/gumbwaal.png", terrainSpawns ={}, areaSpawns = {x86 = 1, x86FQ =1, x86CQ =1, x86CR =1,}, }, -- cincinnatti area
+        Mandragoon = { name ="Mandragoon", type1 ="Grass", type2 = "Dragon", imageName ="themables/CreatureImages/mandragoon.png", terrainSpawns ={park = 2, trail = 3}, areaSpawns = {}, },
+        Ibazel = { name ="Ibazel", type1 ="Dark", type2 = "", imageName ="themables/CreatureImages/ibazel.png", terrainSpawns ={building = 5}, areaSpawns = {x86 = 1}, },
+        Makappa = { name ="Makappa", type1 ="Ice", type2 = "Fire", imageName ="themables/CreatureImages/makappa.png", terrainSpawns ={water = 1, retail = 1, wetland = 1, beach = 1, cemetery = 1}, areaSpawns = {}, },
+        Pyrobin = { name ="Pyrobin", type1 ="Fire", type2 = "Fairy", imageName ="themables/CreatureImages/pyrobin.png", terrainSpawns ={university = 3, historical = 2, tourism = 1}, areaSpawns = {x86 = 1}, },
+        Rocklantis = { name ="Rocklantis", type1 ="Water", type2 = "Fighting", imageName ="themables/CreatureImages/rocklantis.png", terrainSpawns ={water = 2, beach = 2, building = 1}, areaSpawns = {x86 = 1}, },
+        Strixlan = { name ="Strixlan", type1 ="Dark", type2 = "Flying", imageName ="themables/CreatureImages/strixlan.png", terrainSpawns ={building = 3, park = 2}, areaSpawns = {x86 = 1}, },
+        Tinimer = { name ="Tinimer", type1 ="Bug", type2 = "", imageName ="themables/CreatureImages/tinimer.png", terrainSpawns ={retail = 5}, areaSpawns = {x86 = 1}, },
+        Vanitarch = { name ="Vanitarch", type1 ="Bug", type2 = "Fairy", imageName ="themables/CreatureImages/vanitarch.png", terrainSpawns ={retail =2, university = 1, historical = 1, tourism = 1}, areaSpawns = {x86 = 1}, },
+        Vaquerado = { name ="Vaquerado", type1 ="Bug", type2 = "Ground", imageName ="themables/CreatureImages/vaquerado.png", terrainSpawns ={trail = 4, retail = 1}, areaSpawns = {x86 = 1}, },
     }
 }
+
+terrainSpawns = {}  --{ terrain = { A, A, B, B, C}, }
+areaSpawns = {} --{area = {A, B, C, D}}
+function buildSpawnTable()
+    print("building spawn")
+    for i,m in pairs(defaultConfig.creatures) do
+        for k,v in pairs(m.terrainSpawns) do
+            for i = 1, v do
+                if terrainSpawns[k] == nil then
+                    terrainSpawns[k] = {}
+                end
+                table.insert(terrainSpawns[k], m.name)
+            end
+        end
+
+        for k,v in pairs(m.areaSpawns) do
+            for i = 0, v do
+                if areaSpawns[k] == nil then
+                    areaSpawns[k] = {}
+                end
+                table.insert(areaSpawns[k], m.name)
+            end
+        end
+        print("done with " .. m.name)
+    end
+
+    print(dump(terrainSpawns))
+    print(dump(areaSpawns))
+end
 
 -- This chain of functions should create the Creaturecollector data on the server if its missing.
 function ccSetupCheck()
@@ -112,7 +141,7 @@ function cc1Listener(event)
     local headers = {}
     headers["Content-Type"] = "application/octet-stream"
     --queue all these calls up.
-    for i,v in ipairs(defaultConfig.monsters) do
+    for i,v in ipairs(defaultConfig.creatures) do
         --todo: add line here to copy file to temporary files.
         print("copying file")
         local filenameparts = Split(v.imageName, "/")
@@ -505,6 +534,8 @@ function scene:show(event)
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
         mapTileUpdater = timer.performWithDelay(2000, UpdateMapTiles, -1)
+
+        buildSpawnTable() --TODO: move this call to after checking that we have the latest config and/or downloading said latest config.
     end
 end
 
