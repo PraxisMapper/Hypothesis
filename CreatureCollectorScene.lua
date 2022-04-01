@@ -7,6 +7,7 @@ local json = require("json")
 require("UIParts")
 require("database")
 require("dataTracker") 
+require("plusCodes")
  
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
@@ -100,7 +101,29 @@ function buildSpawnTable()
     print(dump(terrainSpawns))
     print(dump(areaSpawns))
 
-    generateSpawnTableForCell8(currentPlusCode:sub(1,8))
+    --I could save these tables into RAM in another table, and keep attempting to generate them until they exist each updateLocal loop
+    local thisTable = generateSpawnTableForCell8(currentPlusCode:sub(1,8))
+    print("starting pulls")
+    for i =0, defaultConfig.creaturesPerCell8 do
+        local nextCreature = defaultConfig.creatures[thisTable[math.random(1, #thisTable)]]
+        nextCreature.duration = math.random(1800, 3600)
+        print(dump(nextCreature))
+        --pick area.
+        --TODO: follow rules for placement. (min 3 on tertiary/trail, min 3 NOT on those, don't overwrite existing creatures)
+        local rollX = math.random(1,20)
+        local rollY = math.random(1,20)
+        local areaSpawned = currentPlusCode:sub(1,8) .. CODE_ALPHABET_:sub(rollY, rollY) .. CODE_ALPHABET_:sub(rollX, rollX)
+        print(areaSpawned)
+        --TODO: custom handler for this.
+        local data = json.encode(nextCreature)
+        local params = {}
+        params.body = data
+        table.insert(networkQueue, {url = serverURL .. "Data/Area/" .. areaSpawned .."/creature/noval/" .. nextCreature.duration ..defaultQueryString, verb="PUT", handlerFunc = spawnCreatureToServerHandler, params = params})
+    end
+end
+
+function spawnCreatureToServerHandler(event)
+    networkQueueBusy = false
 end
 
 function generateSpawnTableForCell8(plusCode8)
