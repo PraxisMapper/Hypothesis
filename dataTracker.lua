@@ -76,8 +76,8 @@ end
 
 function TrackplusCode8Listener(event)
     --if (debug) then print("plus code 8 event started") end
+    local plusCode8 = Split(string.gsub(string.gsub(event.url, serverURL .. "Data/Terrain/", ""), defaultQueryString, ""), '?')[1]
     networkQueueBusy = false
-    print('terrain listener ' .. event.status)
     if event.status == 200 then 
         netUp() 
     else 
@@ -103,8 +103,9 @@ function TrackplusCode8Listener(event)
         end
     end
     local e2 = db:exec("END TRANSACTION")
+    print("adding successful call to db")
     --save these results to the DB.
-    local updateCmd = "INSERT INTO dataDownloaded (pluscode8, downloadedOn) VALUES ('" .. plusCode8 .. "', " .. os.time() .. ")"
+    local updateCmd = "INSERT INTO dataDownloaded (pluscode8, downloadedOn) VALUES ('" .. plusCode8 .. "', '" .. tostring(os.time()) .. "')"
     Exec(updateCmd)
     requestedDataCells[plusCode8] = 1
     forceRedraw = true

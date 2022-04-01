@@ -99,40 +99,60 @@ function buildSpawnTable()
 
     print(dump(terrainSpawns))
     print(dump(areaSpawns))
+
+    generateSpawnTableForCell8(currentPlusCode:sub(1,8))
 end
 
 function generateSpawnTableForCell8(plusCode8)
     -- need terrain info for this cell8
+    print("generating spawn table for " .. plusCode8)
     local sql1 = "SELECT * FROM dataDownloaded WHERE pluscode8 = '" .. plusCode8 .. "'"
+    print("A")
     results = Query(sql1)
+    print("B")
     if (#results <= 0) then
+        print("exit early")
         return -- We will check again in a second to see if we've pulled this data yet.
     end
+    print("C")
+
+    print("have data locally")
 
     local sql2 = "SELECT areaType FROM terrainData WHERE plusCode LIKE '" .. plusCode8 .. "%'"
     results = Query(sql2)
 
+    print("have info loaded ")
+    print(#results)
     local resultsTable = {}
 
-    for d in results do
+    for k,d in pairs(results) do
         print(dump(d))
-        local dataToAdd = terrainSpawns[d]
-        for entry in dataToAdd do
-            resultsTable.insert(entry)
+        if terrainSpawns[d] ~= nil then
+            --skip nulls, we dont have any entries for this terrain type in our core table.
+            local dataToAdd = terrainSpawns[d]
+            for k, entry in dataToAdd do
+                print("adding entry ")
+                print(entry)
+                table.insert(resultsTable, entry)
+            end
         end
     end
+    print("past terrain data")
 
     -- check area table, add those entries to the end.
     for k,v in pairs(areaSpawns) do
         --k is x[PLUSCODE], so i need to pull the x out for a search.
-        if plusCode8:find(k:sub(2, #k) > 0 then
-            for entry in v do
-                resultsTable.insert(entry)
+        if plusCode8:find(k:sub(2, #k)) ~= nil then
+            for i, entry in ipairs(v) do
+                table.insert(resultsTable, entry)
             end
         end
     end
+    print("past area table")
 
     print(dump(resultsTable))
+
+    return resultsTable
 end
 
 -- This chain of functions should create the Creaturecollector data on the server if its missing.
