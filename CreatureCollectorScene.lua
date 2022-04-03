@@ -38,6 +38,8 @@ local deviceId = system.getInfo("deviceID")
 --and 4 entries that only spawn in their terrain types.
 defaultConfig ={
     creaturesPerCell8 = 12,
+    minWalkableSpacesOnSpawn = 3,
+    minOtherSpacesOnSpawn =3,
     creatureCountToRespawn = 3,
     creatureDurationMin = 30,
     creatureDurationMax = 60,
@@ -293,6 +295,96 @@ function spawnRuleUploadHandler(event)
         network.request(serverURL .. "Data/Player/" .. deviceId .. "/ccPics/done/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)
         print("all good")
     end
+end
+
+
+function spawnProcess()
+    --Get data and/or terrain for this area.
+    --we may already have them in memory, we may not.
+    local pluscode8 = currentPlusCode:sub(1,8)
+    local terrainInfo = LoadTerrainData(pluscode8)
+
+    if #terrainInfo == 0 then
+        --let this call again next loop, we don't have terrain data downloaded yet.
+        return
+    end
+
+    GetCreaturesInArea(pluscode8) -- this should be called regularly, not explicitly in this loop.
+    --so we have creature info in wildCreatures.
+
+    local thisTable = generateSpawnTableForCell8(currentPlusCode:sub(1,8))
+
+    --check for spawnLock
+    --if not found, claim spawnlock
+    --recheck, if we have spawn lock then advance:
+
+    --make 3 lists:
+    --forbidden areas (don't spawn things here. Includes cells that currently have a creature in them. May have other rules later.)
+    --Walkable areas (which cells have tertiary or trail terrains)
+    --not-walkable areas (cells not in the above list)
+
+    local forbidden = {}
+    local walkable = {}
+    local other = {}
+
+    for k,v in pairs(wildCreatures) do
+        --block spawning in a space with an existing creature.
+        table.insert(forbidden, k)
+    end
+
+    for i,v in ipairs(terrainInfo) do
+        --tertiary being a walkable space is a fairly big assumption, but I can't leave this logic ONLY applying to hiking trails.
+        if (v.areatype == 'trail' or v.areatype == 'tertiary') then
+            table.insert(walkable, v.pluscode)
+        else
+            table.insert(other, v.pluscode)
+        end
+    end
+
+    local i = 0
+    --pick 3 (if available) cells from walkable
+    local walkableTotal = #walkable
+    while i < defaultConfig.minWalkableSpacesOnSpawn and i < walkableTotal do
+        spawnCell = walkable[math.random(1, #walkable)]
+        table.remove(walkable, spawnCell)
+        PullOneEntryFromTable(thisTable, spawnCell)
+        i = i + 1
+    end
+
+    i = 0
+    --pick 3 (if available) cells from not-walkable
+    local otherTotal = #other
+    while i < defaultConfig.minOtherSpacesOnSpawn and i < otherTotal do
+        spawnCell = other[math.random(1, #other)]
+        table.remove(other, spawnCell)
+        PullOneEntryFromTable(thisTable, spawnCell)
+        i = i + 1
+    end
+
+    i = 0
+    --pick rest (if available) cells that aren't on the forbidden list.
+    while i < (creaturesPerCell8 - defaultConfig.minWalkableSpacesOnSpawn - defaultConfig.minOtherSpacesOnSpawn) and i < 400 - #forbidden do
+        if (math.random(1,2) == 2 and #other >= 1) or #walkable == 0 then
+            spawnCell = other[math.random(1, #other)]
+            table.remove(other, spawnCell)
+        else if #walkable >= 1  or #other == 0 then
+            spawnCell = walkable[math.random(1, #walkable)]
+            table.remove(walkable, spawnCell)
+        end
+        PullOneEntryFromTable(thisTable, spawnCell)
+        i = i + 1
+    end
+
+end
+
+function PullOneEntryFromTable(spawnTable, pluscode10)
+    local nextCreature = defaultConfig.creatures[spawnTable[math.random(1, #spawnTable)]]
+    nextCreature.duration = math.random(1800, 3600)
+
+    local data = json.encode(nextCreature)
+    local params = {}
+    params.body = data
+    table.insert(networkQueue, {url = serverURL .. "Data/Area/" .. pluscode10 .."/creature/noval/" .. nextCreature.duration ..defaultQueryString, verb="PUT", handlerFunc = spawnCreatureToServerHandler, params = params})
 end
 
 

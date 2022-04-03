@@ -18,6 +18,8 @@ requestedMPMapTileCells = {}
 requestedPaintTownCells = {} --Should be a table by instance types, since multiple PaintTheTowns could run at once.
 requestedGeocacheHints = {}
 
+wildCreatures ={} --creature collector entries on the map.
+
 defaultQueryString = "?PraxisAuthKey=testingKey" --lazy easier way to authenticate
 headers = {}
 headers["PraxisAuthKey"] = "testingKey" --the proper way to authenticate
@@ -182,7 +184,42 @@ function TrackerMPimage811Listener(event)
     --requestedMPMapTileCells[plusCode] = nil
 end
 
-function GetGeocacheHintData8(Cell8) -- the painttown map update call.
+function GetCreaturesInArea(Cell8) -- 
+    --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
+    netTransfer()
+    network.request(serverURL .. "Data/Area/All/" .. currentPlusCode:sub(1,8) .. defaultQueryString, "GET", creaturesListener) 
+end
+
+function creaturesListener(event)
+    if (debug) then print("creatures event started") end
+    if event.status == 200 then 
+        netUp() 
+    else 
+        if (debug) then print("creatures listener failed") end
+        netDown(event) 
+        return
+    end
+    --Format:
+    --Cell10|dataTag|dataValue\n
+    local resultsTable = Split(event.response, "\n")
+    --print('loading to hint memory ' .. #resultsTable)
+    --print(event.response)
+
+    wildCreatures = {} -- clear out existing entries.
+
+    for cell = 1, #resultsTable do
+        local splitData = Split(resultsTable[cell], "|")
+        local key = splitData[1]
+        if (splitData[2] == "creature") then
+            --creature data is JSON here, so we'll decode it to table.
+            wildCreatures[splitData[1]] = json.decode(splitData[3])
+        end
+    end
+    forceRedraw = true
+    if(debug) then print("creatures event ended") end
+end
+
+function GetGeocacheHintData8(Cell8) -- 
     --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
     netTransfer()
     network.request(serverURL .. "Data/Area/All/" .. currentPlusCode:sub(1,8) .. defaultQueryString, "GET", geocacheHintListener) 
@@ -215,6 +252,7 @@ function geocacheHintListener(event)
 end
 
 --Since Paint The Town is meant to be a much faster game mode, we won't save its state in the database, just memory.
+--Rename this, since CreatureCollector also uses this.
 function GetPaintTownMapData8(Cell8) -- the painttown map update call.
     --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
     netTransfer()
