@@ -303,12 +303,14 @@ function spawnProcess()
     --we may already have them in memory, we may not.
     local pluscode8 = currentPlusCode:sub(1,8)
     local terrainInfo = LoadTerrainData(pluscode8)
+    
 
     if #terrainInfo == 0 then
         --let this call again next loop, we don't have terrain data downloaded yet.
         return
     end
 
+    --In theory, we already have this data, since ideally this is the function that would call spawnProcess.
     GetCreaturesInArea(pluscode8) -- this should be called regularly, not explicitly in this loop.
     --so we have creature info in wildCreatures.
 
@@ -363,11 +365,12 @@ function spawnProcess()
 
     i = 0
     --pick rest (if available) cells that aren't on the forbidden list.
-    while i < (creaturesPerCell8 - defaultConfig.minWalkableSpacesOnSpawn - defaultConfig.minOtherSpacesOnSpawn) and i < 400 - #forbidden do
+    --This loop probably doesn't handle edge cases nicely where there are less than 12 non-forbidden spaces, but I would have to see it to figure out how.
+    while i < (defaultConfig.creaturesPerCell8 - defaultConfig.minWalkableSpacesOnSpawn - defaultConfig.minOtherSpacesOnSpawn) do -- and i < (400 - #forbidden)
         if (math.random(1,2) == 2 and #other >= 1) or #walkable == 0 then
             spawnCell = other[math.random(1, #other)]
             table.remove(other, spawnCell)
-        else if #walkable >= 1  or #other == 0 then
+        elseif #walkable >= 1  or #other == 0 then
             spawnCell = walkable[math.random(1, #walkable)]
             table.remove(walkable, spawnCell)
         end
