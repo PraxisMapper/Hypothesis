@@ -85,6 +85,7 @@ function Score()
     end
 end
 
+--THis loads a single terrain data entry from the DB.
 function LoadTerrainData(pluscode) --plus code does not contain a + here
     if (debugDB) then print("loading terrain data for " .. pluscode) end
     local query = "SELECT * from terrainData WHERE plusCode = '" .. pluscode .. "'"
@@ -95,6 +96,15 @@ function LoadTerrainData(pluscode) --plus code does not contain a + here
         return row
     end 
     return {} --empty table means no data found.
+end
+
+--This loads all terrain for a cell8
+function LoadTerrainDataCell8(pluscode) --plus code does not contain a + here
+    if (debugDB) then print("loading terrain data for " .. pluscode) end
+    local query = "SELECT * from terrainData WHERE plusCode LIKE '" .. pluscode .. "%'"
+    local results = Query(query) 
+    
+    return results
 end
 
 function DownloadedCell8(pluscode)

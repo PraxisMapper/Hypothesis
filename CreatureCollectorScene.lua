@@ -109,13 +109,13 @@ function buildSpawnTable()
     for i =0, defaultConfig.creaturesPerCell8 do
         local nextCreature = defaultConfig.creatures[thisTable[math.random(1, #thisTable)]]
         nextCreature.duration = math.random(1800, 3600)
-        print(dump(nextCreature))
+        --print(dump(nextCreature))
         --pick area.
         --TODO: follow rules for placement. (min 3 on tertiary/trail, min 3 NOT on those, don't overwrite existing creatures)
         local rollX = math.random(1,20)
         local rollY = math.random(1,20)
         local areaSpawned = currentPlusCode:sub(1,8) .. CODE_ALPHABET_:sub(rollY, rollY) .. CODE_ALPHABET_:sub(rollX, rollX)
-        print(areaSpawned)
+        --print(areaSpawned)
         --TODO: custom handler for this.
         local data = json.encode(nextCreature)
         local params = {}
@@ -151,13 +151,13 @@ function generateSpawnTableForCell8(plusCode8)
     local resultsTable = {}
 
     for k,d in pairs(results) do
-        print(dump(d))
+        --print(dump(d))
         if terrainSpawns[d] ~= nil then
             --skip nulls, we dont have any entries for this terrain type in our core table.
             local dataToAdd = terrainSpawns[d]
             for k, entry in dataToAdd do
-                print("adding entry ")
-                print(entry)
+                --print("adding entry ")
+                --print(entry)
                 table.insert(resultsTable, entry)
             end
         end
@@ -298,23 +298,24 @@ function spawnRuleUploadHandler(event)
 end
 
 
-function spawnProcess()
+function spawnProcess(pluscode8)
     --Get data and/or terrain for this area.
     --we may already have them in memory, we may not.
-    local pluscode8 = currentPlusCode:sub(1,8)
-    local terrainInfo = LoadTerrainData(pluscode8)
-    
+    print("spawning")
+    local terrainInfo = LoadTerrainDataCell8(pluscode8)
 
     if #terrainInfo == 0 then
         --let this call again next loop, we don't have terrain data downloaded yet.
+        print("no terrain data, aborting spawn.")
         return
     end
 
     --In theory, we already have this data, since ideally this is the function that would call spawnProcess.
-    GetCreaturesInArea(pluscode8) -- this should be called regularly, not explicitly in this loop.
+    --GetCreaturesInArea(pluscode8) -- this should be called regularly, not explicitly in this loop.
     --so we have creature info in wildCreatures.
 
     local thisTable = generateSpawnTableForCell8(currentPlusCode:sub(1,8))
+    print("have table")
 
     --check for spawnLock
     --if not found, claim spawnlock
@@ -328,55 +329,87 @@ function spawnProcess()
     local forbidden = {}
     local walkable = {}
     local other = {}
+    print("have lists")
 
     for k,v in pairs(wildCreatures) do
         --block spawning in a space with an existing creature.
         table.insert(forbidden, k)
     end
+    print("past existing creatures")
 
     for i,v in ipairs(terrainInfo) do
+        print(dump(v))
         --tertiary being a walkable space is a fairly big assumption, but I can't leave this logic ONLY applying to hiking trails.
-        if (v.areatype == 'trail' or v.areatype == 'tertiary') then
-            table.insert(walkable, v.pluscode)
+        if (v[4] == 'trail' or v[4] == 'tertiary') then
+            table.insert(walkable, v[2])
         else
-            table.insert(other, v.pluscode)
+            table.insert(other, v[2])
         end
     end
+    print("past split into walkable/other")
+    print("sizes")
+    print(#walkable)
+    print(#other)
 
     local i = 0
     --pick 3 (if available) cells from walkable
     local walkableTotal = #walkable
+    print("start walkable pull")
     while i < defaultConfig.minWalkableSpacesOnSpawn and i < walkableTotal do
-        spawnCell = walkable[math.random(1, #walkable)]
-        table.remove(walkable, spawnCell)
+        print(i)
+        local pos = math.random(1, #walkable)
+        spawnCell = walkable[pos]
+        print(spawnCell)
+        table.remove(walkable, pos)
+        print("removed")
         PullOneEntryFromTable(thisTable, spawnCell)
+        print("pulled")
         i = i + 1
     end
+    print("past pulling walkables")
 
     i = 0
     --pick 3 (if available) cells from not-walkable
     local otherTotal = #other
     while i < defaultConfig.minOtherSpacesOnSpawn and i < otherTotal do
-        spawnCell = other[math.random(1, #other)]
-        table.remove(other, spawnCell)
+        local pos = math.random(1, #other)
+        spawnCell = other[pos]
+        table.remove(other, pos)
         PullOneEntryFromTable(thisTable, spawnCell)
         i = i + 1
     end
+
+    print("past pulling forced-others")
+
+    print("sizes")
+    print(#walkable)
+    print(#other)
 
     i = 0
     --pick rest (if available) cells that aren't on the forbidden list.
     --This loop probably doesn't handle edge cases nicely where there are less than 12 non-forbidden spaces, but I would have to see it to figure out how.
     while i < (defaultConfig.creaturesPerCell8 - defaultConfig.minWalkableSpacesOnSpawn - defaultConfig.minOtherSpacesOnSpawn) do -- and i < (400 - #forbidden)
+        print("A")
+        print(i)
         if (math.random(1,2) == 2 and #other >= 1) or #walkable == 0 then
+            print("B")
+            print(#other)
+            local pos = math.random(1, #other)
             spawnCell = other[math.random(1, #other)]
-            table.remove(other, spawnCell)
+            print("B2")
+            table.remove(other, pos)
+            print("B3")
         elseif #walkable >= 1  or #other == 0 then
-            spawnCell = walkable[math.random(1, #walkable)]
-            table.remove(walkable, spawnCell)
+            print("C")
+            local pos = math.random(1, #walkable)
+            spawnCell = walkable[pos]
+            table.remove(walkable, pos)
         end
+        print("D")
         PullOneEntryFromTable(thisTable, spawnCell)
         i = i + 1
     end
+    print("done spawning for " .. pluscode8)
 
 end
 
@@ -390,6 +423,67 @@ function PullOneEntryFromTable(spawnTable, pluscode10)
     table.insert(networkQueue, {url = serverURL .. "Data/Area/" .. pluscode10 .."/creature/noval/" .. nextCreature.duration ..defaultQueryString, verb="PUT", handlerFunc = spawnCreatureToServerHandler, params = params})
 end
 
+function GetCreaturesInArea(Cell8) -- 
+    --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
+    netTransfer()
+    table.insert(networkQueue, { url = serverURL .. "Data/Area/All/" .. Cell8 .. defaultQueryString, verb = "GET", handlerFunc = creaturesListener})
+end
+
+function creaturesListener(event)
+    if (debug) then print("creatures event started") end
+    if event.status == 200 then 
+        netUp() 
+        networkQueueBusy = false
+    else 
+        if (debug) then print("creatures listener failed") end
+        netDown(event) 
+        networkQueueBusy = false
+        return
+    end
+
+    local plusCode = Split(string.gsub(event.url, serverURL .. "Data/Area/All/", ""), '?')[1]
+    --Format:
+    --Cell10|dataTag|dataValue\n
+    local resultsTable = Split(event.response, "\n")
+    -- if #resultsTable < 3 then
+    --     print("spawning creatures")
+    --     spawnProcess()
+    --     return
+    -- end
+    --print('loading to hint memory ' .. #resultsTable)
+    --print(event.response)
+
+    wildCreatures = {} -- clear out existing entries.
+    local creatureCount = 0
+
+    print(#resultsTable)
+    for cell = 1, #resultsTable do
+        print("in loop")
+        local splitData = Split(resultsTable[cell], "|")
+        if (#splitData == 3)  then
+            local key = splitData[1]
+            if (splitData[2] == "creature") then
+                --creature data is JSON here, so we'll decode it to table.
+                creatureCount = creatureCount + 1
+                wildCreatures[splitData[1]] = json.decode(splitData[3])
+            end
+        else
+            --this row is empty, don't do anything
+        end
+    end
+    forceRedraw = true
+    print(creatureCount)
+    print("vs")
+    print(defaultConfig.creatureCountToRespawn)
+    if (creatureCount < defaultConfig.creatureCountToRespawn) then
+        --call spawn process
+        print("running spawn process for " .. plusCode)
+        spawnProcess(plusCode)
+    end
+
+    if(debug) then print("creatures event ended") end
+    
+end
 
 
 local gridzoom = 2 -- 1, 2, 3. 
@@ -621,7 +715,7 @@ local function UpdateLocalOptimized()
 end
 
 local function UpdateMapTiles()
-    --set this to run once a second or so.
+    --set this to run every 5 seconds
     for square = 1, #cellCollection do
         -- check each spot based on current cell, modified by gridX and gridY
         local thisSquaresPluscode = currentPlusCode
@@ -631,6 +725,7 @@ local function UpdateMapTiles()
         local plusCodeNoPlus = removePlus(thisSquaresPluscode):sub(1, 8)
         GetMapData8(plusCodeNoPlus)
         checkTileGeneration(plusCodeNoPlus, "mapTiles")
+        GetCreaturesInArea(plusCodeNoPlus)
     end -- for
 end
 
@@ -705,7 +800,7 @@ function scene:show(event)
         -- Code here runs when the scene is entirely on screen 
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
-        mapTileUpdater = timer.performWithDelay(2000, UpdateMapTiles, -1)
+        mapTileUpdater = timer.performWithDelay(5000, UpdateMapTiles, -1)
 
         buildSpawnTable() --TODO: move this call to after checking that we have the latest config and/or downloading said latest config.
     end

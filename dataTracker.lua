@@ -78,6 +78,7 @@ end
 
 function TrackplusCode8Listener(event)
     --if (debug) then print("plus code 8 event started") end
+    print("getting terrain data")
     local plusCode8 = Split(string.gsub(string.gsub(event.url, serverURL .. "Data/Terrain/", ""), defaultQueryString, ""), '?')[1]
     networkQueueBusy = false
     if event.status == 200 then 
@@ -92,22 +93,25 @@ function TrackplusCode8Listener(event)
     --Format:
     --cell10|name|typeID|mapDataID
     --EX: 82HHWG48=Local Park|4|guid
+    print("terrain count:")
+    print(#resultsTable)
 
-    print('loading ' .. #resultsTable .. ' to terrain db')
+    --print('loading ' .. #resultsTable .. ' to terrain db')
 
+    --TODO: might need to make unique keys for pluscode and pluscode8, or remove the 'or replace' part of the command.
     db:exec("BEGIN TRANSACTION") --transactions for multiple inserts are a huge performance boost.
     for i = 1, #resultsTable do
         if (resultsTable[i] ~= nil and resultsTable[i] ~= "") then 
             local data = Split(resultsTable[i], "|") --4 data parts in order
             data[2] = string.gsub(data[2], "'", "''")--escape data[2] to allow ' in name of places.
-            insertString = "INSERT INTO terrainData (plusCode, name, areatype, MapDataId) VALUES ('" .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "', '" .. data[4] .. "');" 
+            insertString = "INSERT OR REPLACE INTO terrainData (plusCode, name, areatype, MapDataId) VALUES ('" .. data[1] .. "', '" .. data[2] .. "', '" .. data[3] .. "', '" .. data[4] .. "');" 
             local results = db:exec(insertString)
         end
     end
     local e2 = db:exec("END TRANSACTION")
     print("adding successful call to db")
     --save these results to the DB.
-    local updateCmd = "INSERT INTO dataDownloaded (pluscode8, downloadedOn) VALUES ('" .. plusCode8 .. "', '" .. tostring(os.time()) .. "')"
+    local updateCmd = "INSERT OR REPLACE INTO dataDownloaded (pluscode8, downloadedOn) VALUES ('" .. plusCode8 .. "', '" .. tostring(os.time()) .. "')"
     Exec(updateCmd)
     requestedDataCells[plusCode8] = 1
     forceRedraw = true
@@ -182,41 +186,6 @@ function TrackerMPimage811Listener(event)
         --requestedMPMapTileCells[plusCode] = -1
     end
     --requestedMPMapTileCells[plusCode] = nil
-end
-
-function GetCreaturesInArea(Cell8) -- 
-    --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
-    netTransfer()
-    network.request(serverURL .. "Data/Area/All/" .. currentPlusCode:sub(1,8) .. defaultQueryString, "GET", creaturesListener) 
-end
-
-function creaturesListener(event)
-    if (debug) then print("creatures event started") end
-    if event.status == 200 then 
-        netUp() 
-    else 
-        if (debug) then print("creatures listener failed") end
-        netDown(event) 
-        return
-    end
-    --Format:
-    --Cell10|dataTag|dataValue\n
-    local resultsTable = Split(event.response, "\n")
-    --print('loading to hint memory ' .. #resultsTable)
-    --print(event.response)
-
-    wildCreatures = {} -- clear out existing entries.
-
-    for cell = 1, #resultsTable do
-        local splitData = Split(resultsTable[cell], "|")
-        local key = splitData[1]
-        if (splitData[2] == "creature") then
-            --creature data is JSON here, so we'll decode it to table.
-            wildCreatures[splitData[1]] = json.decode(splitData[3])
-        end
-    end
-    forceRedraw = true
-    if(debug) then print("creatures event ended") end
 end
 
 function GetGeocacheHintData8(Cell8) -- 
