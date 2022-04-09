@@ -18,7 +18,7 @@ requestedMPMapTileCells = {}
 requestedPaintTownCells = {} --Should be a table by instance types, since multiple PaintTheTowns could run at once.
 requestedGeocacheHints = {}
 
-wildCreatures ={} --creature collector entries on the map.
+
 
 defaultQueryString = "?PraxisAuthKey=testingKey" --lazy easier way to authenticate
 headers = {}
