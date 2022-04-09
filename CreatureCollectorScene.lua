@@ -14,9 +14,13 @@ require("plusCodes")
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
 -- -----------------------------------------------------------------------------------
 
-local wildCreatures ={} --creature collector entries on the map.
-local mostRecentCreatures = {}
+local cellCollection = {} -- main background map tiles
+local creaturesOnMap = {} -- the icons for creatures drawn on top of map tiles.
+local wildCreatures ={} --creature collector entries on the visible map.
+local mostRecentCreatures = {} -- last downloaded set of data for each Cell8
 local gridzoom = 2 -- 1, 2, 3. 
+local creatureIcons = {}
+local caughtCreatures = {} --list of decimal uid values from spawned creatures we walked into.
  
 local function GoToSceneSelect()
     local options = {effect = "flip", time = 125}
@@ -26,10 +30,8 @@ end
 local deviceId = system.getInfo("deviceID")
 
 -- current TODOS:
--- wildCreatures gets blanked for every cell8 loaded. I need to keep a table of most-recent cell8 data, and use those to feed wildCreatures for drawing purposes.
--- Re-order or re-layer UI so that creature ? icons show up over map, under UI items. They could be put into a specific group for that.
--- Still need a list of creatures found and counts of times seen, 
--- still need to remove previously found creatures from display.
+-- Still need a list of creatures found and counts of times seen, probably a separate scene.
+-- still need to remove previously found creatures from display. READY FOR TEST ON DEVICE
 
 
 --valid terrain-gameplay options:
@@ -426,6 +428,7 @@ end
 function PullOneEntryFromTable(spawnTable, pluscode10)
     local nextCreature = defaultConfig.creatures[spawnTable[math.random(1, #spawnTable)]]
     nextCreature.duration = math.random(1800, 3600)
+    nextCreature.uid = math.random() --client tracks this value to determine which creatures to show or not show.
 
     local data = json.encode(nextCreature)
     local params = {}
@@ -464,7 +467,11 @@ function creaturesListener(event)
     --print(event.response)
 
     --wildCreatures = {} -- clear out existing entries. TODO correctly repopulate this table from mostRecentCreatures cache
-    mostRecentCreatures[plusCode] = {}
+    if mostRecentCreatures[plusCode] == nil then
+        mostRecentCreatures[plusCode] = {}
+    end
+    thisCellCreatures = mostRecentCreatures[plusCode]
+    thisCellCreatures = {}
     local creatureCount = 0
 
     print(#resultsTable)
@@ -478,14 +485,17 @@ function creaturesListener(event)
                 --creature data is JSON here, so we'll decode it to table.
                 creatureCount = creatureCount + 1
                 local creatureData = json.decode(splitData[3])
-                print(dump(creatureData))
-                wildCreatures[splitData[1]] = creatureData
-                print(dump(wildCreatures[splitData[1]]))
+                --print(dump(creatureData))
+                thisCellCreatures[splitData[1]] = creatureData
+                --print(dump(thisCellCreatures[splitData[1]]))
             end
         else
             --this row is empty, don't do anything
         end
     end
+
+    mostRecentCreatures[plusCode] = thisCellCreatures
+    
     forceRedraw = true
     print(creatureCount)
     print("vs")
@@ -503,13 +513,13 @@ end
 function differenceX(centerPlusCode, destPlusCode)
     --Takes in 2 Cell10 values (no pluses), returns cells away on the X axis they are
     local xCellsAway = 0
-    print("diff x")
+    --print("diff x")
 
     --center is FF, dest of GG should be + 1. Only have to check the last 2 since we cannot draw enough maptiles for higher boundaries to matter.
     xCellsAway = CODE_ALPHABET_:find(destPlusCode:sub(10,10)) - CODE_ALPHABET_:find(centerPlusCode:sub(10,10))
-    print("1")
+    --print("1")
     xCellsAway = xCellsAway + ((CODE_ALPHABET_:find(destPlusCode:sub(8,8)) - CODE_ALPHABET_:find(centerPlusCode:sub(8,8))) * 20)
-    print("2")
+    --print("2")
     return xCellsAway
 end
 
@@ -528,14 +538,68 @@ function drawIcons()
     -- check for all the creatures in range.
     -- Put the ? icon on the spaces they are in
     --local sceneGroup = self.view
+
+    print("starting drawIcon")
+    --remove existing icons
     if (creatureIcons ~= nil) then
+        print("removing existing icons")
+        print(#creatureIcons)
         for i = 1, #creatureIcons do
             creatureIcons[i]:removeSelf()
         end
     end
     creatureIcons = {}
-    print("get scene group")
-    local sceneGroup = scene.view  
+
+
+    local currentCell8 = currentPlusCode:sub(1,8)
+    print(currentCell8)
+    if cellCollection == nil then
+        print("no cell collection?")
+        return
+    end
+
+    print(#cellCollection)
+    --make a list of the cells to use for icons.
+    local cellList = {}
+     for square = 1, #cellCollection do
+         print("adding " .. removePlus(cellCollection[square].pluscode):sub(1,8))
+         cellList[square] = removePlus(cellCollection[square].pluscode):sub(1,8)
+     end
+
+    --cellList[1] = currentCell8
+
+    print("built Cell list")
+    print(dump(cellList))
+
+    --rebuild visible wildCreaturesTable
+    wildCreatures = {}
+    print(#cellList)
+    for i, v in ipairs(cellList) do
+        print(i)
+        print(v)
+        if(mostRecentCreatures[v] == nil) then
+            print("no creature list for " .. v)
+            return
+        end
+        for kk, vv in pairs(mostRecentCreatures[v]) do
+            print("adding creature at " .. kk)
+            print(dump(vv))
+            if (caughtCreatures[vv.uid] == nil) then --skip adding if we already caught this creature.
+                wildCreatures[kk] = vv
+            end
+
+        end
+    end
+    print("wild creatures built")
+
+    
+    --for i = 1, #mostRecentCreatures[currentCell8] do
+    
+
+
+
+    --print("get scene group")
+    --local sceneGroup = scene.view  
     print("drawing icons")
 
     -- if (#wildCreatures == 0) then
@@ -544,8 +608,6 @@ function drawIcons()
     -- end
 
     print("going on")
-
-    
 
     local shiftPixelsX = 0
     local shiftPixelsY= 0
@@ -569,38 +631,47 @@ function drawIcons()
     -- i will have more tracking  and removing unnecessary things than just updating a grid of 400 things.
     local centerValue = removePlus(currentPlusCode):sub(1,8) .. "FF" -- center of the plus code in the center of the screen.
     print(centerValue)
+
+    --dumb test check
+    --creatureIcons:toFront()
     for k,v in pairs(wildCreatures) do
         -- k is Cell10, v is json data.
+        print("wild creature")
         print(k)
         print(dump(v))
 
-        local moveX = differenceX(centerValue, k)
-        print(moveX)
-        local moveY = differenceY(centerValue, k)
-        print(moveY)
-        print("moves calced")
 
-        thisIcon = display.newImageRect(sceneGroup, "themables/creatureSpot.png", shiftPixelsX, shiftPixelsY)
+        local moveX = differenceX(centerValue, k)
+        --print(moveX)
+        local moveY = differenceY(centerValue, k)
+        --print(moveY)
+        --print("moves calced")
+
+        thisIcon = display.newImageRect(creaturesOnMap, "themables/creatureSpot.png", shiftPixelsX, shiftPixelsY)
         
-        print("icon exists")
+        --print("icon exists")
         thisIcon.x = display.contentCenterX + (moveX * shiftPixelsX)
         thisIcon.anchorX = .5
-        print("xs set")
+        --print("xs set")
         thisIcon.y = display.contentCenterY + (moveY * shiftPixelsY)
         thisIcon.anchorY = .5
-        print("ys set")
+        --print("ys set")
         table.insert(creatureIcons, thisIcon)
+        print(thisIcon.x)
+        print(thisIcon.y)
+        print(thisIcon.width)
+        print(thisIcon.height)
+        thisIcon:toFront()
         print("icon added")
     end
+
+    print("done drawing icons")
 end
 
 
 
-
-
-
-local cellCollection = {} -- main background map tiles
 local overlayCollection = {} -- any overlay tiles needed.
+
 
 local touchDetector = {} -- Determines what cell10 was tapped on the screen.
 
@@ -617,7 +688,7 @@ local locationName = ""
 
 local creatureIDsToSkip = {}
 
-local creatureIcons = {}
+
 
 
 local function testDrift()
@@ -642,6 +713,7 @@ local function ToggleZoom()
     makeGrid()
 
     directionArrow:toFront()
+    drawIcons()
     forceRedraw = true
     timer.resume(timerResults)
     return true
@@ -858,6 +930,10 @@ function scene:create(event)
     if (debug) then print("creating MPAreaControlScene2") end
     local sceneGroup = self.view
 
+    creaturesOnMap = display.newGroup()
+    sceneGroup:insert(creaturesOnMap)
+    creaturesOnMap:toFront()
+
     touchDetector = display.newRect(sceneGroup, display.contentCenterX, display.contentCenterY, 720, 1280)
     touchDetector:addEventListener("tap", DetectLocationClick)
     touchDetector.fill = {0, 0.1}
@@ -874,8 +950,9 @@ function scene:create(event)
     timeText:setFillColor(0, 0, 0);
     locationName:setFillColor(0, 0, 0);
 
-    CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
-    CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with overlay
+    --CreateRectangleGrid(3, 320, 400, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
+    --CreateRectangleGrid(3, 320, 400, sceneGroup, overlayCollection) -- rectangular Cell11 grid with overlay
+    makeGrid()
 
     directionArrow = display.newImageRect(sceneGroup, "themables/arrow1.png", 16, 20)
     directionArrow.x = display.contentCenterX
@@ -920,7 +997,7 @@ function scene:show(event)
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
         mapTileUpdater = timer.performWithDelay(5000, UpdateMapTiles, -1)
-        iconUpdater = timer.performWithDelay(500, drawIcons, -1)
+        iconUpdater = timer.performWithDelay(3000, drawIcons, -1)
 
 
         buildSpawnTable() --TODO: move this call to after checking that we have the latest config and/or downloading said latest config.
