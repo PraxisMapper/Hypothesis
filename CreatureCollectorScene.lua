@@ -27,12 +27,16 @@ local function GoToSceneSelect()
     composer.gotoScene("SceneSelect", options)
 end
 
+local function ShowCreatureList()
+    composer.showOverlay("creatureList")
+end
+
 local deviceId = system.getInfo("deviceID")
 
 -- current TODOS:
 -- catch a creature when you're in the same cell10 as it, and add its uid to the list of caught creatures. READY FOR TEST ON DEVICE.
 -- still need to remove previously found creatures from display. READY FOR TEST ON DEVICE
--- Still need a list of creatures found and counts of times seen, probably a separate scene.
+-- Still need a list of creatures found and counts of times seen, probably a separate scene. READY FOR TEST ON DEVICE
 
 --valid terrain-gameplay options:
 -- university, retail, tourism, historical, building, water, wetland, park, beach, natureReserve, cemetery, trail,
@@ -61,7 +65,7 @@ defaultConfig ={
         Acceleret = { name ="Acceleret", type1 ="Normal", type2 = "Flying", imageName ="themables/CreatureImages/acceleret.png", terrainSpawns ={}, areaSpawns = {x86HQ =1, x86HR = 1, x86HV =1, x86GQ =1,}, }, -- toledo area
         Aeolagio = { name ="Aeolagio", type1 ="Water", type2 = "Poison", imageName ="themables/CreatureImages/aeolagio.png", terrainSpawns ={water = 2, wetland = 1, beach = 2}, areaSpawns = {x86 = 1}, },
         Bandibat = { name ="Bandibat", type1 ="Electric", type2 = "Dark", imageName ="themables/CreatureImages/bandibat.png", terrainSpawns ={building = 5}, areaSpawns = {x86 = 1}, },
-        Belamrine = { name ="Belamrine", type1 ="Bug", type2 = "Water", imageName ="themables/CreatureImages/belmarine.png", terrainSpawns ={water = 2, beach = 2, natureReserve = 1, }, areaSpawns = {x86 = 1}, },
+        Belmarine = { name ="Belmarine", type1 ="Bug", type2 = "Water", imageName ="themables/CreatureImages/belmarine.png", terrainSpawns ={water = 2, beach = 2, natureReserve = 1, }, areaSpawns = {x86 = 1}, },
         Bojina = { name ="Bojina", type1 ="Ghost", type2 = "", imageName ="themables/CreatureImages/bojina.png", terrainSpawns ={cemetery = 5}, areaSpawns = {x86 = 1}, },
         Caslot = { name ="Caslot", type1 ="Dark", type2 = "Fairy", imageName ="themables/CreatureImages/caslot.png", terrainSpawns ={tourism = 3, building = 2}, areaSpawns = {x86 = 1}, },
         Cindigre = { name ="Cindigre", type1 ="Fire", type2 = "", imageName ="themables/CreatureImages/cindigre.png", terrainSpawns ={}, areaSpawns = {x86HW = 1, x86HX = 1, x86GW =1, x86GX =1, x86FX = 1, x86FW =1}, }, --cleveland area
@@ -980,13 +984,20 @@ function scene:create(event)
     zoom.y = 100
     zoom:addEventListener("tap", ToggleZoom)
 
+    local listbutton = display.newImageRect(sceneGroup, "themables/creatureList.png",300, 100)
+    listbutton.x = display.contentCenterX
+    listbutton.y = 1100
+    listbutton:addEventListener("tap", ShowCreatureList)
+    listbutton:toFront()
+
+
     if (debug) then
         debugText = display.newText(sceneGroup, "location data", display.contentCenterX, 1180, 600, 0, native.systemFont, 22)
         debugText:toFront()
     end
     zoom:toFront()
     contrastSquare:toFront()
-    if (debug) then print("created baseline scene") end
+
 
     --first-time database setup
     local tableEntries = Query("SELECT name FROM creaturesCaught")
