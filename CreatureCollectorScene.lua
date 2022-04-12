@@ -1,4 +1,4 @@
- 
+
 -- the minimum stuff to get a scene with maptiles going. Copy and build upon it for new modes with maptiles.
 local composer = require("composer")
 local scene = composer.newScene()
@@ -6,9 +6,9 @@ local scene = composer.newScene()
 local json = require("json")
 require("UIParts")
 require("database")
-require("dataTracker") 
+require("dataTracker")
 require("plusCodes")
- 
+
 -- -----------------------------------------------------------------------------------
 -- Code outside of the scene event functions below will only be executed ONCE unless
 -- the scene is removed entirely (not recycled) via "composer.removeScene()"
@@ -18,33 +18,33 @@ local cellCollection = {} -- main background map tiles
 local creaturesOnMap = {} -- the icons for creatures drawn on top of map tiles.
 local wildCreatures ={} --creature collector entries on the visible map.
 local mostRecentCreatures = {} -- last downloaded set of data for each Cell8
-local gridzoom = 2 -- 1, 2, 3. 
+local gridzoom = 2 -- 1, 2, 3.
 local creatureIcons = {}
 local caughtCreatures = {} --list of decimal uid values from spawned creatures we walked into.
- 
+
 local function GoToSceneSelect()
     local options = {effect = "flip", time = 125}
     composer.gotoScene("SceneSelect", options)
 end
- 
+
 local deviceId = system.getInfo("deviceID")
 
 -- current TODOS:
--- Still need a list of creatures found and counts of times seen, probably a separate scene.
+-- catch a creature when you're in the same cell10 as it, and add its uid to the list of caught creatures. READY FOR TEST ON DEVICE.
 -- still need to remove previously found creatures from display. READY FOR TEST ON DEVICE
-
+-- Still need a list of creatures found and counts of times seen, probably a separate scene.
 
 --valid terrain-gameplay options:
--- university, retail, tourism, historical, building, water, wetland, park, beach, natureReserve, cemetery, trail, 
+-- university, retail, tourism, historical, building, water, wetland, park, beach, natureReserve, cemetery, trail,
 --additional styles that are probably poor choices:
 --tertiary, motorway, primary, secondary, admin, parking, greenspace, alsobeach, darkgreenspace, industrial, residential, greyFill
---reasoning: roads will be highly common in a lot of areas, and could overwhelm other spawns. The color areas are places that aren't really interactable. 
+--reasoning: roads will be highly common in a lot of areas, and could overwhelm other spawns. The color areas are places that aren't really interactable.
 --Industrial areas are poor places to walk and play, and residential is a common tag that isn't used evenly across a map.
 --Admin is more or less the 'default' result, since essentially every area will have some kind of city/county/state/country area attached to it, and this picks the smallest of those.
 
 --LUA limit: strings must start with a letter, so I can't save "86HW" as a key in a table this way. Adding an x to areas, i will need to :sub() that out later.
 
---initial plan: give each creature 5 points in terrain spawn slots. Most should have an entry in area for the whole state (86). 
+--initial plan: give each creature 5 points in terrain spawn slots. Most should have an entry in area for the whole state (86).
 --some should be limited to a region of the state. AreaSpawns are added to the table after terrain, so they may need different numbers since terrain will have up to 400 entries.
 --I have 4 region-specific entries here to demonstrate how to set those up client-side (a server-side app might be able to attach it to specific admin areas, perhaps.)
 --and 4 entries that only spawn in their terrain types.
@@ -225,7 +225,7 @@ function cc1Listener(event)
     network.request(serverURL .. "Data/Global/ccConfigId/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)
     network.request(serverURL .. "Data/Global/ccPics/" .. deviceId .. defaultQueryString, "PUT", DefaultNetCallHandler)
     network.request(serverURL .. "Data/Player/" .. deviceId .. "/ccPics/pending/60" .. defaultQueryString, "PUT", DefaultNetCallHandler)
-    network.request(serverURL .. "Data/Global/ccPicsId/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)  
+    network.request(serverURL .. "Data/Global/ccPicsId/1" .. defaultQueryString, "PUT", DefaultNetCallHandler)
 
     print("post-claiming config")
 
@@ -436,7 +436,7 @@ function PullOneEntryFromTable(spawnTable, pluscode10)
     table.insert(networkQueue, {url = serverURL .. "Data/Area/" .. pluscode10 .."/creature/noval/" .. nextCreature.duration ..defaultQueryString, verb="PUT", handlerFunc = spawnCreatureToServerHandler, params = params})
 end
 
-function GetCreaturesInArea(Cell8) -- 
+function GetCreaturesInArea(Cell8) --
     --this doesn't get saved to the device at all. Keep it in memory, update it every few seconds.
     netTransfer()
     table.insert(networkQueue, { url = serverURL .. "Data/Area/All/" .. Cell8 .. defaultQueryString, verb = "GET", handlerFunc = creaturesListener})
@@ -444,12 +444,12 @@ end
 
 function creaturesListener(event)
     if (debug) then print("creatures event started") end
-    if event.status == 200 then 
-        netUp() 
+    if event.status == 200 then
+        netUp()
         networkQueueBusy = false
-    else 
+    else
         if (debug) then print("creatures listener failed") end
-        netDown(event) 
+        netDown(event)
         networkQueueBusy = false
         return
     end
@@ -495,7 +495,7 @@ function creaturesListener(event)
     end
 
     mostRecentCreatures[plusCode] = thisCellCreatures
-    
+
     forceRedraw = true
     print(creatureCount)
     print("vs")
@@ -507,7 +507,7 @@ function creaturesListener(event)
     end
 
     if(debug) then print("creatures event ended") end
-    
+
 end
 
 function differenceX(centerPlusCode, destPlusCode)
@@ -592,14 +592,14 @@ function drawIcons()
     end
     print("wild creatures built")
 
-    
+
     --for i = 1, #mostRecentCreatures[currentCell8] do
-    
+
 
 
 
     --print("get scene group")
-    --local sceneGroup = scene.view  
+    --local sceneGroup = scene.view
     print("drawing icons")
 
     -- if (#wildCreatures == 0) then
@@ -648,7 +648,7 @@ function drawIcons()
         --print("moves calced")
 
         thisIcon = display.newImageRect(creaturesOnMap, "themables/creatureSpot.png", shiftPixelsX, shiftPixelsY)
-        
+
         --print("icon exists")
         thisIcon.x = display.contentCenterX + (moveX * shiftPixelsX)
         thisIcon.anchorX = .5
@@ -688,9 +688,6 @@ local locationName = ""
 
 local creatureIDsToSkip = {}
 
-
-
-
 local function testDrift()
     if (os.time() % 2 == 0) then
         currentPlusCode = shiftCell(currentPlusCode, 1, 9) -- move north
@@ -720,7 +717,7 @@ local function ToggleZoom()
 end
 
 function makeGrid()
-    local sceneGroup = scene.view   
+    local sceneGroup = scene.view
     if (gridzoom == 1) then
         CreateRectangleGrid(3, 640, 800, sceneGroup, cellCollection) -- rectangular Cell11 grid with map tiles
         CreateRectangleGrid(3, 640, 800, sceneGroup, overlayCollection) -- rectangular Cell11 grid with overlay
@@ -735,14 +732,14 @@ function makeGrid()
     for square = 1, #overlayCollection do
         overlayCollection[square]:toBack()
         cellCollection[square]:toBack() --same count
-    end    
+    end
     touchDetector:toBack()
 end
 
 --"tap" event
 local function DetectLocationClick(event)
     print("Detecting location")
-    -- we have a click somewhere in our rectangle. 
+    -- we have a click somewhere in our rectangle.
     -- gridzoom3 is 5x5 lowres tiles, 800 x 1000 total, each pixel is 1 Cell 11
     -- gridzoom2 is 3x3 highres tiles, 960 x 1200 total, each 2x2 pixels is 1 Cell 11
     -- gridzoom1 is 3x3 doubled highres tiles, 1960 x 2400 total, each 4x4 pixels is 1 cell 11.
@@ -793,12 +790,12 @@ local function DetectLocationClick(event)
     else
         tappedAreaName = terrainInfo[3]
     end
-    
+
     --tappedCell = newCell
     --tappedAreaScore = 0 --i don't save this locally, this requires a network call to get and update
     --tappedAreaMapDataId = terrainInfo[6]
     --composer.showOverlay("overlayMPAreaClaim", {isModal = true})
-    
+
 end
 
 local function GoToSceneSelect()
@@ -856,11 +853,11 @@ local function UpdateLocalOptimized()
             --Update this loop to pull the overlay tiles if needed
             -- imageRequested = requestedMPMapTileCells[plusCodeNoPlus] -- read from DataTracker because we want to know if we can paint the cell or not.
             -- imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
-            -- if (imageRequested == nil) then 
+            -- if (imageRequested == nil) then
             --     imageExists = doesFileExist(plusCodeNoPlus .. "-AC-11.png", system.TemporaryDirectory)
             -- end
- 
-            -- if (imageExists == false or imageExists == nil) then 
+
+            -- if (imageExists == false or imageExists == nil) then
             --      GetTeamControlMapTile8(plusCodeNoPlus)
             -- else
             --     overlayCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
@@ -896,6 +893,16 @@ local function UpdateLocalOptimized()
         directionArrow.x = display.contentCenterX + (shift * 8) + 4
         directionArrow.y = display.contentCenterY - (shift2 * 10) + 5
     end
+
+    if wildCreatures[currentPlusCode] ~= nil then
+        local creatureName = wildCreatures[currentPlusCode].name
+        composer.setVariable("creatureCaught", creatureName)
+        caughtCreatures[wildCreatures[currentPlusCode].uid] = 1 --mark this ID as caught so we won't redisplay it again.
+        table.remove(wildCreatures, currentPlusCode)
+        Exec("UPDATE creaturesCaught SET count = count + 1 WHERE name = '" .. creatureName .. "', 0)")
+        composer.showOverlay("creatureOverlay", {effect = "fromLeft", time = 100})
+    end
+
 
     locationText:toFront()
     timeText:toFront()
@@ -945,7 +952,7 @@ function scene:create(event)
     locationText = display.newText(sceneGroup, "Current location:" .. currentPlusCode, display.contentCenterX, 200, native.systemFont, 20)
     timeText = display.newText(sceneGroup, "Current time:" .. os.date("%X"), display.contentCenterX, 220, native.systemFont, 20)
     locationName = display.newText(sceneGroup, "", display.contentCenterX, 240, native.systemFont, 20)
-    
+
     locationText:setFillColor(0, 0, 0);
     timeText:setFillColor(0, 0, 0);
     locationName:setFillColor(0, 0, 0);
@@ -981,6 +988,15 @@ function scene:create(event)
     contrastSquare:toFront()
     if (debug) then print("created baseline scene") end
 
+    --first-time database setup
+    local tableEntries = Query("SELECT name FROM creaturesCaught")
+    print(dump(tableEntries))
+    if #tableEntries == 0 then
+        for k,v in pairs(defaultConfig["creatures"]) do
+            Exec("INSERT INTO creaturesCaught(name, count) VALUES ('" .. k .. "', 0)")
+        end
+    end
+
     ccSetupCheck()
 end
 
@@ -993,7 +1009,7 @@ function scene:show(event)
         -- Code here runs when the scene is still off screen (but is about to come on screen)
         firstRun = true
     elseif (phase == "did") then
-        -- Code here runs when the scene is entirely on screen 
+        -- Code here runs when the scene is entirely on screen
         timer.performWithDelay(50, UpdateLocalOptimized, 1)
         if (debugGPS) then timer.performWithDelay(3000, testDrift, -1) end
         mapTileUpdater = timer.performWithDelay(5000, UpdateMapTiles, -1)

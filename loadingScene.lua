@@ -133,6 +133,7 @@ function scene:show( event )
         CREATE TABLE IF NOT EXISTS idleStats(id INTEGER PRIMARY KEY, lastAddTime, allPerSec, parkPerSec, naturePerSec, trailPerSec, touristPerSec, graveyardPerSec, allTotal, parkTotal, natureTotal, trailTotal, touristTotal, graveyardTotal, wins);
         CREATE TABLE IF NOT EXISTS tileGenerationData (id INTEGER PRIMARY KEY, plusCode, styleSet, generationId);
         CREATE TABLE IF NOT EXISTS geocacheHints(id INTERGER PRIMARY KEY, plusCode8, hintsLeft, secretsLeft);
+        CREATE TABLE IF NOT EXISTS creaturesCaught(id INTERGER PRIMARY KEY, name, count);
         CREATE INDEX IF NOT EXISTS indexPCodes on plusCodesVisited(pluscode);
         CREATE INDEX IF NOT EXISTS indexEightCodes on plusCodesVisited(eightCode);
         CREATE INDEX IF NOT EXISTS indexOwnedMapIds on areasOwned(mapDataId);

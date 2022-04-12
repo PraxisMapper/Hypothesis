@@ -54,7 +54,7 @@ function Query(sql)
     for row in db:rows(sql) do
         table.insert(results, row) 
     end
-    if (debugDB) then dump(results) end
+    if (debugDB) then print(dump(results)) end
     return results --results is a table of tables EX {[1] : {[1] : 1}} for count(*) when there are results.
 end
 
