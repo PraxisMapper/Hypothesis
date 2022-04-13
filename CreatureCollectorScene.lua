@@ -530,13 +530,14 @@ end
 
 function differenceY(centerPlusCode, destPlusCode)
     --Takes in 2 Cell10 values (no pluses), returns cells away on the Y axis they are
+    --remember, Y 0 values are at the BOTTOM, not the TOP.
     local yCellsAway = 0
 
     --center is FF, dest of GG should be + 1. Only have to check the last 2 since we cannot draw enough maptiles for higher boundaries to matter.
     yCellsAway = CODE_ALPHABET_:find(destPlusCode:sub(9,9)) - CODE_ALPHABET_:find(centerPlusCode:sub(9,9))
     yCellsAway = yCellsAway + ((CODE_ALPHABET_:find(destPlusCode:sub(7,7)) - CODE_ALPHABET_:find(centerPlusCode:sub(7,7))) * 20)
 
-    return yCellsAway
+    return -yCellsAway
 end
 
 function drawIcons()
@@ -589,7 +590,10 @@ function drawIcons()
         for kk, vv in pairs(mostRecentCreatures[v]) do
             --print("adding creature at " .. kk)
             --print(dump(vv))
+            print("caught creatures size:")
+            print(#caughtCreatures)
             if (caughtCreatures[vv.uid] == nil) then --skip adding if we already caught this creature.
+                print("nil entry for " .. vv.uid)
                 wildCreatures[kk] = vv
             end
 
@@ -655,13 +659,15 @@ function drawIcons()
         thisIcon = display.newImageRect(creaturesOnMap, "themables/creatureSpot.png", shiftPixelsX, shiftPixelsY)
 
         --print("icon exists")
-        thisIcon.x = display.contentCenterX + (moveX * shiftPixelsX)
-        thisIcon.anchorX = .5
+        thisIcon.x = display.contentCenterX - shiftPixelsX + (moveX * shiftPixelsX)
+        thisIcon.anchorX = 0
         --print("xs set")
-        thisIcon.y = display.contentCenterY + (moveY * shiftPixelsY)
-        thisIcon.anchorY = .5
+        thisIcon.y = display.contentCenterY  + (moveY * shiftPixelsY) -- adding hte +shiftPixelsY as a correction factor
+        thisIcon.anchorY = 0
         --print("ys set")
         table.insert(creatureIcons, thisIcon)
+        print("drawing icon for " .. k)
+        print(thisIcon.x .. ", " .. thisIcon.y)
         --print(thisIcon.x)
         --print(thisIcon.y)
         --print(thisIcon.width)
