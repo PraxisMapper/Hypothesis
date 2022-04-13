@@ -142,6 +142,7 @@ end
 
 function spawnCreatureToServerHandler(event)
     networkQueueBusy = false
+    print("creature spawn response:" .. event.response)
 end
 
 function generateSpawnTableForCell8(plusCode8)
@@ -480,11 +481,11 @@ function creaturesListener(event)
 
     print(#resultsTable)
     for cell = 1, #resultsTable do
-        print("in loop")
+        --print("in loop")
         local splitData = Split(resultsTable[cell], "|")
         if (#splitData == 3)  then
             local key = splitData[1]
-            print(dump(splitData))
+            --print(dump(splitData))
             if (splitData[2] == "creature") then
                 --creature data is JSON here, so we'll decode it to table.
                 creatureCount = creatureCount + 1
@@ -501,9 +502,9 @@ function creaturesListener(event)
     mostRecentCreatures[plusCode] = thisCellCreatures
 
     forceRedraw = true
-    print(creatureCount)
-    print("vs")
-    print(defaultConfig.creatureCountToRespawn)
+    --print(creatureCount)
+    --print("vs")
+    --print(defaultConfig.creatureCountToRespawn)
     if (creatureCount < defaultConfig.creatureCountToRespawn) then
         --call spawn process
         print("running spawn process for " .. plusCode)
@@ -546,8 +547,8 @@ function drawIcons()
     print("starting drawIcon")
     --remove existing icons
     if (creatureIcons ~= nil) then
-        print("removing existing icons")
-        print(#creatureIcons)
+        --print("removing existing icons")
+        --print(#creatureIcons)
         for i = 1, #creatureIcons do
             creatureIcons[i]:removeSelf()
         end
@@ -586,8 +587,8 @@ function drawIcons()
             return
         end
         for kk, vv in pairs(mostRecentCreatures[v]) do
-            print("adding creature at " .. kk)
-            print(dump(vv))
+            --print("adding creature at " .. kk)
+            --print(dump(vv))
             if (caughtCreatures[vv.uid] == nil) then --skip adding if we already caught this creature.
                 wildCreatures[kk] = vv
             end
@@ -604,18 +605,18 @@ function drawIcons()
 
     --print("get scene group")
     --local sceneGroup = scene.view
-    print("drawing icons")
+    --print("drawing icons")
 
     -- if (#wildCreatures == 0) then
     --     print("no wild creatures, cancelling")
     --     return
     -- end
 
-    print("going on")
+    --print("going on")
 
     local shiftPixelsX = 0
     local shiftPixelsY= 0
-    print(gridzoom)
+    --print(gridzoom)
 
     -- +FF is the center square of the current Cell8.
     -- adjust some scaling values for the current zoom levels.
@@ -634,15 +635,15 @@ function drawIcons()
     -- this might be sort of a backwards version of my touch detector logic, since its finding where to draw a position on an open grid.
     -- i will have more tracking  and removing unnecessary things than just updating a grid of 400 things.
     local centerValue = removePlus(currentPlusCode):sub(1,8) .. "FF" -- center of the plus code in the center of the screen.
-    print(centerValue)
+    --print(centerValue)
 
     --dumb test check
     --creatureIcons:toFront()
     for k,v in pairs(wildCreatures) do
         -- k is Cell10, v is json data.
-        print("wild creature")
-        print(k)
-        print(dump(v))
+        --print("wild creature")
+        --print(k)
+        --print(dump(v))
 
 
         local moveX = differenceX(centerValue, k)
@@ -661,12 +662,12 @@ function drawIcons()
         thisIcon.anchorY = .5
         --print("ys set")
         table.insert(creatureIcons, thisIcon)
-        print(thisIcon.x)
-        print(thisIcon.y)
-        print(thisIcon.width)
-        print(thisIcon.height)
+        --print(thisIcon.x)
+        --print(thisIcon.y)
+        --print(thisIcon.width)
+        --print(thisIcon.height)
         thisIcon:toFront()
-        print("icon added")
+        --print("icon added")
     end
 
     print("done drawing icons")
@@ -898,12 +899,15 @@ local function UpdateLocalOptimized()
         directionArrow.y = display.contentCenterY - (shift2 * 10) + 5
     end
 
-    if wildCreatures[currentPlusCode] ~= nil then
-        local creatureName = wildCreatures[currentPlusCode].name
+
+    local cell10NoPlus = removePlus(currentPlusCode)
+    print("checking for creatures at " .. cell10NoPlus)
+    if wildCreatures[cell10NoPlus] ~= nil then
+        local creatureName = wildCreatures[cell10NoPlus].name
         composer.setVariable("creatureCaught", creatureName)
-        caughtCreatures[wildCreatures[currentPlusCode].uid] = 1 --mark this ID as caught so we won't redisplay it again.
-        table.remove(wildCreatures, currentPlusCode)
-        Exec("UPDATE creaturesCaught SET count = count + 1 WHERE name = '" .. creatureName .. "', 0)")
+        caughtCreatures[wildCreatures[cell10NoPlus].uid] = 1 --mark this ID as caught so we won't redisplay it again.
+        wildCreatures[cell10NoPlus] = nil
+        Exec("UPDATE creaturesCaught SET count = count + 1 WHERE name = '" .. creatureName .. "'")
         composer.showOverlay("creatureOverlay", {effect = "fromLeft", time = 100})
     end
 

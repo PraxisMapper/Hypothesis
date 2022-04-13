@@ -18,6 +18,7 @@ local mainView = {}
 
  function hideThis()
     composer.hideOverlay()
+    return true
  end
  
  
