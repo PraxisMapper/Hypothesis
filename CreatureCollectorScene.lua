@@ -168,11 +168,16 @@ function generateSpawnTableForCell8(plusCode8)
     local resultsTable = {}
 
     for k,d in pairs(results) do
+        --print(k)
         --print(dump(d))
-        if terrainSpawns[d] ~= nil then
+        local terrain = d[1]
+        --print(terrain)
+        if terrainSpawns[terrain] ~= nil then
+            --print("adding terrain entry for " .. terrain)
             --skip nulls, we dont have any entries for this terrain type in our core table.
-            local dataToAdd = terrainSpawns[d]
-            for k, entry in dataToAdd do
+            local dataToAdd = terrainSpawns[terrain]
+            --print(dump(dataToAdd))
+            for k, entry in ipairs(dataToAdd) do
                 --print("adding entry ")
                 --print(entry)
                 table.insert(resultsTable, entry)
@@ -192,7 +197,8 @@ function generateSpawnTableForCell8(plusCode8)
     end
     print("past area table")
 
-    print(dump(resultsTable))
+    --print("spawn table done:")
+    --print(dump(resultsTable))
 
     return resultsTable
 end
@@ -333,6 +339,9 @@ function spawnProcess(pluscode8)
 
     local thisTable = generateSpawnTableForCell8(currentPlusCode:sub(1,8))
     print("have table")
+    if (#thisTable == 0) then
+        print("HEY YOU - no spawn table for this area somehow.")
+    end
 
     --check for spawnLock
     --if not found, claim spawnlock
@@ -355,7 +364,7 @@ function spawnProcess(pluscode8)
     print("past existing creatures")
 
     for i,v in ipairs(terrainInfo) do
-        print(dump(v))
+        --print(dump(v))
         --tertiary being a walkable space is a fairly big assumption, but I can't leave this logic ONLY applying to hiking trails.
         if (v[4] == 'trail' or v[4] == 'tertiary') then
             table.insert(walkable, v[2])
@@ -431,6 +440,8 @@ function spawnProcess(pluscode8)
 end
 
 function PullOneEntryFromTable(spawnTable, pluscode10)
+    print("pulling entry from table, size:")
+    print(#spawnTable)
     local nextCreature = defaultConfig.creatures[spawnTable[math.random(1, #spawnTable)]]
     nextCreature.duration = math.random(1800, 3600)
     nextCreature.uid = math.random() --client tracks this value to determine which creatures to show or not show.
@@ -448,12 +459,12 @@ function GetCreaturesInArea(Cell8) --
 end
 
 function creaturesListener(event)
-    if (debug) then print("creatures event started") end
+    if (debug) then print("got creature list") end
     if event.status == 200 then
         netUp()
         networkQueueBusy = false
     else
-        if (debug) then print("creatures listener failed") end
+        if (debug) then print("get creature list failed") end
         netDown(event)
         networkQueueBusy = false
         return
@@ -479,7 +490,7 @@ function creaturesListener(event)
     thisCellCreatures = {}
     local creatureCount = 0
 
-    print(#resultsTable)
+    --print(#resultsTable)
     for cell = 1, #resultsTable do
         --print("in loop")
         local splitData = Split(resultsTable[cell], "|")
