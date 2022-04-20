@@ -21,7 +21,7 @@ require("dataTracker")
  local function startGame()
     statusText.text = "Opening Game..."
     composer.gotoScene("SceneSelect")
-    --    composer.gotoScene("geocacheScene")
+    --    composer.gotoScene("uploadTest")
  end
 
  function loadingGpsListener(event)
@@ -50,6 +50,7 @@ require("dataTracker")
        --currentPlusCode = "376QRVF4+MP" --Antartic SPOI
        --currentPlusCode = "85872779+F4" --Hoover Dam Lookout
        --currentPlusCode = "85PFF56C+5P" --Old Faithful 
+       -- currentPlusCode = "87G8Q2GH+7H" --Central park.
 end
 
 --These 2 are mostly duplicates of the ones in dataTracker, but I want to stop the loading process until I get the server bounds.
@@ -140,6 +141,7 @@ function scene:show( event )
         CREATE INDEX IF NOT EXISTS terrainIndex on terrainData(pluscode);
         CREATE INDEX IF NOT EXISTS generationIndex on tileGenerationData(pluscode);
         CREATE INDEX IF NOT EXISTS hintIndex on geocacheHints(plusCode8);
+        CREATE INDEX IF NOT EXISTS creatureNameIndex on creaturesCaught(name);
         INSERT OR IGNORE INTO systemData(id, dbVersionID, serverAddress) values (1, ]] .. currentDbVersion .. [[, 'https://oh.praxismapper.org:5001/');
         INSERT OR IGNORE INTO playerData(id, factionID, totalPoints) values (1, 0, 0);
         INSERT OR IGNORE INTO idleStats(id, lastAddTime, allPerSec, parkPerSec, naturePerSec, trailPerSec, graveyardPerSec, touristPerSec, allTotal, parkTotal, natureTotal, trailTotal, graveyardTotal, touristTotal, wins) values (1, ]] .. os.time() .. [[, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0);
@@ -170,9 +172,10 @@ function scene:show( event )
 
         --Debug setup
         --if (debug) then
-            --serverURL = "http://localhost/praxismapper/"
+            -- serverURL = "http://localhost/praxismapper/"
+            --serverURL = "http://localhost:5000/"
             --serverURL = "http://192.168.50.247/praxismapper/"
-            serverURL = "https://oh.praxismapper.org:5001/"
+              --serverURL = "https://oh.praxismapper.org:5001/"
             --serverURL = "https://us.praxismapper.org/praxismapper/"
         --end
 

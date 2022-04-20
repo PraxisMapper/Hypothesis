@@ -154,7 +154,11 @@ function backListener(event)
     if (debug) then print("key listener got")  end
     if (event.keyName == "back" and event.phase == "up") then
         local currentScene = composer.getSceneName("current")
-        if (currentScene == "SceneSelect") then
+        --TOOD: this detection does not work
+        if currentScene == "leaveHintOverlay" or currentScene == "creatureOverlay" or currentScene == "creatureList" 
+        or currentScene == "getSecretOverlay" or currentScene == "leaveSecretOverlay" or currentScene == "overlayMPAreaClaim" then
+            composer.hideOverlay()
+        elseif (currentScene == "SceneSelect") then
             return false
         end
         if (debug) then print("back to scene select") end
@@ -221,10 +225,19 @@ function DefaultNetCallHandler(event)
     end
 end
 
+function DefaultQueuedNetCallHandler(event)
+    if (event.status ~= 200) then
+        netDown(event)
+    else
+        netUp()
+    end
+    networkQueueBusy = false
+end
+
 function netQueueCheck()
     if #networkQueue> 0 and networkQueueBusy == false then
         nextNetworkQueue()
     end
 end
 
-timer.performWithDelay(25, netQueueCheck,  -1)
+timer.performWithDelay(5, netQueueCheck,  -1)
