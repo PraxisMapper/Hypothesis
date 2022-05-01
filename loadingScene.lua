@@ -24,6 +24,34 @@ require("dataTracker")
     --    composer.gotoScene("uploadTest")
  end
 
+ function GetCurrentTiles()
+    statusText.text = "Grabbing nearby map tiles and terrain info..."
+    for x = -2, 2 do
+        for y = -2, 2 do
+            local thisPlusCode = shiftCell(currentPlusCode, x, 8)
+            thisPlusCode = shiftCell(thisPlusCode, y, 7)
+            thisPlusCode = thisPlusCode:sub(1,8)
+            if doesFileExist(thisPlusCode .. "-11.png", system.CachesDirectory) == false then
+                TrackerGetCell8Image11(thisPlusCode)
+            end
+            if not DownloadedCell8(thisPlusCode) then
+                GetCell8TerrainData(thisPlusCode)
+            end
+        end
+    end
+
+    timer.performWithDelay(50, checkWait, 1)
+ end
+
+ function checkWait()
+    statusText.text = "Downloading tiles and terrain info: " .. #networkQueue
+    if (#networkQueue > 0) then
+        timer.performWithDelay(50, checkWait, 1)
+    else
+        startGame()
+    end
+ end
+
  function loadingGpsListener(event)
     local eventL = event
 
@@ -68,8 +96,8 @@ function GetServerBoundsListenerStartup(event)
         serverBounds["north"] = tonumber(boundValues[3])
         serverBounds["east"] = tonumber(boundValues[4])
         netUp()
-        statusText.text = "Starting Game"
-        startGame()
+        
+        GetCurrentTiles()
     else
         statusText.text = "Failed to get server bounds, retrying....."
         GetServerBoundsStartup()

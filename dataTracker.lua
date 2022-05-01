@@ -129,7 +129,7 @@ function TrackerGetCell8Image11(plusCode)
     local params = {}
     params.response  = {filename = plusCode .. "-11.png", baseDirectory = system.CachesDirectory}
     --network.request(serverURL .. "MapTile/Area/" .. plusCode .. defaultQueryString, "GET", Trackerimage811Listener, params)
-    table.insert(networkQueue, { url = serverURL .. "MapTile/Area/" .. plusCode .. defaultQueryString, verb = "GET", handlerFunc = TrackplusCode8Listener, params = params})
+    table.insert(networkQueue, { url = serverURL .. "MapTile/Area/" .. plusCode .. defaultQueryString, verb = "GET", handlerFunc = Trackerimage811Listener, params = params})
     --print('called for mapTiles on ' .. plusCode)
 end
 
