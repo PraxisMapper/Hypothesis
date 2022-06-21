@@ -5,7 +5,7 @@ A test application for PraxisMapper (https://github.com/drakewill-CRL/PraxisMapp
 
 
 # Compilation
-A pre-built apk for Hypothesis should be available in the Google Play Store for approx. $3.
+A pre-built apk for Hypothesis should be available in the Google Play Store. Note that this build uses images that are non-commercial licensed.
 If you want to build your own copy, or use the app as a baseline:
 * Install Solar2D (https://solar2d.com/)
 * Check out or download the code from this repo

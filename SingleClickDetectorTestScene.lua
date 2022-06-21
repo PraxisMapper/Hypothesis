@@ -223,7 +223,7 @@ local function UpdateLocalOptimized()
             if (imageExists == false or imageExists == nil) then 
                  GetMapTile8(plusCodeNoPlus)
             else
-                cellCollection[square].fill = {0, 0} -- required to make Solar2d actually update the texture.
+                cellCollection[square].fill = {0.1, 0.1} -- required to make Solar2d actually update the texture.
                 local paint = {
                     type = "image",
                     filename = plusCodeNoPlus .. "-11.png",

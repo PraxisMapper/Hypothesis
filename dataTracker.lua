@@ -388,7 +388,6 @@ function tileGenHandler(event)
     local hasData = false
     local redownload = false
 
-
     --loop, but should be 1 result.
     for i, v in ipairs(Query(currentGenQuery)) do
         hasData = true
@@ -432,7 +431,6 @@ end
 networkQueue = {}
 networkQueueBusy = false --current idea, check every 50ms if the network queue is busy, if not then call next.
 
---a quick queue doesnt seem to work better than calling it all at once. 
 function nextNetworkQueue()
     networkQueueBusy = true
     netData = networkQueue[1]
