@@ -1,6 +1,9 @@
 # Hypothesis
 A test application for PraxisMapper (https://github.com/drakewill-CRL/PraxisMapper). Connect to an instance, download area data, map tiles, and play a couple simple modes.
 
+## Discontinued
+I've stopped working on Hypothesis, as I changed client engines from Solar2D to Godot. The new demo client is [PraxisGodotComponents](https://github.com/PraxisMapper/PraxisGodotComponents).
+
 ![image](https://user-images.githubusercontent.com/46307022/163604513-fb2271a4-0d42-43ce-8fa2-300be87cc475.png)
 
 
